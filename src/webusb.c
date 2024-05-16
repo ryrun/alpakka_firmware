@@ -19,9 +19,11 @@ uint16_t webusb_ptr_in = 0;
 uint16_t webusb_ptr_out = 0;
 bool webusb_timedout = false;
 
-uint8_t webusb_pending_config_share = 0;
-uint8_t webusb_pending_profile_share = 0;
-uint8_t webusb_pending_section_share = 0;
+static bool webusb_pending_empty = false;
+static bool webusb_pending_handshake_share = false;
+static uint8_t webusb_pending_config_share = 0;
+static uint8_t webusb_pending_profile_share = 0;
+static uint8_t webusb_pending_section_share = 0;
 
 void webusb_flush_force() {
     uint16_t i = 0;
@@ -40,48 +42,62 @@ void webusb_flush_force() {
     }
 }
 
+bool webusb_transfer(Ctrl ctrl) {
+    if (!tud_ready()) return false;
+    if (usbd_edpt_busy(0, ADDR_WEBUSB_IN)) return false;
+    if (!usbd_edpt_claim(0, ADDR_WEBUSB_IN)) return false;
+    if (!usbd_edpt_xfer(0, ADDR_WEBUSB_IN, (char*)&ctrl, ctrl.len+4)) return false;
+    usbd_edpt_release(0, ADDR_WEBUSB_IN);
+    return true;
+}
+
 bool webusb_flush() {
     // Check if there is anything to flush.
     if (
         webusb_ptr_in == 0 &&
+        !webusb_pending_handshake_share &&
         !webusb_pending_config_share &&
         !webusb_pending_profile_share &&
         !webusb_pending_section_share
     ) {
         return true;
     }
-    // Check if the WebUSB interface/endpoint is ready.
-    if (
-        !tud_ready() ||
-        usbd_edpt_busy(0, ADDR_WEBUSB_IN) ||
-        !usbd_edpt_claim(0, ADDR_WEBUSB_IN)
-    ) {
-        return false;
-    }
     // Using static to ensure the variable lives long enough in memory to be
     // referenced by the transfer underlying mechanisms.
     static Ctrl ctrl;
     // Generate message.
-    if (webusb_pending_config_share) {
+    if (webusb_pending_empty) {
+        ctrl = ctrl_empty();
+        bool sent = webusb_transfer(ctrl);
+        if (sent) webusb_pending_empty = false;
+    } else if (webusb_pending_handshake_share) {
+        ctrl = ctrl_handshake_share();
+        bool sent = webusb_transfer(ctrl);
+        if (sent) webusb_pending_handshake_share = false;
+    } else if (webusb_pending_config_share) {
         ctrl = ctrl_config_share(webusb_pending_config_share);
-        webusb_pending_config_share = 0;
+        bool sent = webusb_transfer(ctrl);
+        if (sent) webusb_pending_config_share = 0;
     } else if (webusb_pending_profile_share || webusb_pending_section_share) {
         ctrl = ctrl_profile_share(webusb_pending_profile_share, webusb_pending_section_share);
-        webusb_pending_profile_share = 0;
-        webusb_pending_section_share = 0;
+        bool sent = webusb_transfer(ctrl);
+        if (sent) {
+            webusb_pending_profile_share = 0;
+            webusb_pending_section_share = 0;
+        }
     } else {
         uint8_t len = constrain(webusb_ptr_in-webusb_ptr_out, 0, CTRL_MAX_PAYLOAD_SIZE);
         uint8_t *offset_ptr = webusb_buffer + webusb_ptr_out;
         ctrl = ctrl_log(offset_ptr, len);
-        webusb_ptr_out += len;
-        if (webusb_ptr_out >= webusb_ptr_in) {
-            webusb_ptr_in = 0;
-            webusb_ptr_out = 0;
+        bool sent = webusb_transfer(ctrl);
+        if (sent) {
+            webusb_ptr_out += len;
+            if (webusb_ptr_out >= webusb_ptr_in) {
+                webusb_ptr_in = 0;
+                webusb_ptr_out = 0;
+            }
         }
     }
-    // Transfer message.
-    usbd_edpt_xfer(0, ADDR_WEBUSB_IN, (unsigned char *)&ctrl, ctrl.len+4);
-    usbd_edpt_release(0, ADDR_WEBUSB_IN);
     return true;
 }
 
@@ -105,6 +121,17 @@ void webusb_write(char *msg) {
     } else {
         webusb_timedout = false;
     }
+}
+
+void webusb_handle_handshake_get() {
+    debug("WebUSB: Received handshake GET from app\n");
+    webusb_pending_empty = true;
+    webusb_pending_handshake_share = true;
+}
+
+void webusb_handle_handshake_set(uint8_t time[8]) {
+    debug("WebUSB: Received handshake SET from app\n");
+    // set_system_clock(*(uint64_t*)time);  // TODO: Backport from other branch.
 }
 
 void webusb_handle_proc(uint8_t proc) {
@@ -176,6 +203,8 @@ void webusb_read() {
     usbd_edpt_release(0, ADDR_WEBUSB_OUT);
     // Handle incomming message.
     if (ctrl.message_type == PROC) webusb_handle_proc(ctrl.payload[0]);
+    if (ctrl.message_type == HANDSHAKE_GET) webusb_handle_handshake_get();
+    if (ctrl.message_type == HANDSHAKE_SET) webusb_handle_handshake_set(ctrl.payload);
     if (ctrl.message_type == CONFIG_GET) webusb_handle_config_get(ctrl.payload[0]);
     if (ctrl.message_type == CONFIG_SET) {
         webusb_handle_config_set(

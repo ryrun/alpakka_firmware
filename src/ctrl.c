@@ -2,10 +2,23 @@
 // Copyright (C) 2022, Input Labs Oy.
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "ctrl.h"
 #include "thumbstick.h"
 #include "config.h"
 #include "common.h"
+#include "version.h"
+
+Ctrl ctrl_empty() {
+    Ctrl ctrl = {
+        .protocol_version = CTRL_PROTOCOL_VERSION,
+        .device_id = ALPAKKA,
+        .message_type = 0,
+        .len = 0
+    };
+    return ctrl;
+}
 
 Ctrl ctrl_log(uint8_t* offset_ptr, uint8_t len) {
     Ctrl ctrl = {
@@ -17,6 +30,25 @@ Ctrl ctrl_log(uint8_t* offset_ptr, uint8_t len) {
     for (uint8_t i=0; i<len; i++) {
         ctrl.payload[i] = offset_ptr[i];
     }
+    return ctrl;
+}
+
+Ctrl ctrl_handshake_share() {
+    Ctrl ctrl = {
+        .protocol_version = CTRL_PROTOCOL_VERSION,
+        .device_id = ALPAKKA,
+        .message_type = HANDSHAKE_SHARE,
+        .len = 3
+    };
+    char version[] = VERSION;
+    char *version_temp = version;
+    char *dash = "-";
+    char *dot = ".";
+    char *semantic;
+    semantic = strsep(&version_temp, dash);  // Split semantic from git tag.
+    ctrl.payload[0] = atoi(strsep(&semantic, dot));  // Version major.
+    ctrl.payload[1] = atoi(strsep(&semantic, dot));  // Version mid.
+    ctrl.payload[2] = atoi(strsep(&semantic, dot));  // Version minor.
     return ctrl;
 }
 
