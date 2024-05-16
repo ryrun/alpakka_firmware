@@ -42,9 +42,12 @@ PROC | 2
 CONFIG_GET | 3
 CONFIG_SET | 4
 CONFIG_SHARE | 5
-PROFILE_GET | 10
-PROFILE_SET | 11
-PROFILE_SHARE | 12
+PROFILE_GET | 6
+PROFILE_SET | 7
+PROFILE_SHARE | 8
+HANDSHAKE_GET | 9
+HANDSHAKE_SET | 10
+HANDSHAKE_SHARE | 11
 
 ### Procedure index
 Procedure index as defined in [hid.h](/src/headers/hid.h).
@@ -137,6 +140,36 @@ Direction: `Controller` <- `App`
 | - | - | - | - | - |
 | Version | Device Id | Message type | Payload size | Payload
 |         |           | PROC         | 1            | PROC INDEX
+
+## Handshake GET message
+Request handshake data from the controller.
+
+Direction: `Controller` <- `App`
+
+| Byte 0 | 1 | 2 | 3 | 4 |
+| - | - | - | - | - |
+| Version | Device Id | Message type    | Payload size | Payload
+|         |           | HANDSHAKE_GET   | 0            | -
+
+## Handshake SET message
+Send handshake data to the controller.
+
+Direction: `Controller` <- `App`
+
+| Byte 0 | 1 | 2 | 3 | 4~10
+| - | - | - | - | - |
+| Version | Device Id | Message type    | Payload size | Payload
+|         |           | HANDSHAKE_SET   | 8            | SYSTEM CLOCK
+
+## Handshake SHARE message
+Send handshake data to the app.
+
+Direction: `Controller` -> `App`
+
+| Byte 0 | 1 | 2 | 3 | 4~6
+| - | - | - | - | - |
+| Version | Device Id | Message type    | Payload size | Payload
+|         |           | HANDSHAKE_SHARE | 3            | FW SEMANTIC VERSION
 
 ## Config GET message
 Request the current value of some specific configuration parameter.
