@@ -219,6 +219,9 @@ void Gyro__report(Gyro *self) {
     else if (self->mode == GYRO_MODE_TOUCH_OFF) {
         if (!self->is_engaged(self)) self->report_incremental(self);
     }
+    else if (self->mode == GYRO_MODE_ALWAYS_ON) {
+        self->report_incremental(self);
+    }
     else if (self->mode == GYRO_MODE_AXIS_ABSOLUTE) {
         self->report_absolute(self);
     }
