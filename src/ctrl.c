@@ -11,6 +11,9 @@
 #include "version.h"
 
 Ctrl ctrl_empty() {
+    // For some reason, the very first USB message goes to "waste" and ignored
+    // by the other end, but it is needed to kickstart the communication.
+    // So we will be sending this bogus message first.
     Ctrl ctrl = {
         .protocol_version = CTRL_PROTOCOL_VERSION,
         .device_id = ALPAKKA,
@@ -33,11 +36,11 @@ Ctrl ctrl_log(uint8_t* offset_ptr, uint8_t len) {
     return ctrl;
 }
 
-Ctrl ctrl_handshake_share() {
+Ctrl ctrl_status_share() {
     Ctrl ctrl = {
         .protocol_version = CTRL_PROTOCOL_VERSION,
         .device_id = ALPAKKA,
-        .message_type = HANDSHAKE_SHARE,
+        .message_type = STATUS_SHARE,
         .len = 3
     };
     char version[] = VERSION;

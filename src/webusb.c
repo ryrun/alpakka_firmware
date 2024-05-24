@@ -20,7 +20,7 @@ uint16_t webusb_ptr_out = 0;
 bool webusb_timedout = false;
 
 static bool webusb_pending_empty = false;
-static bool webusb_pending_handshake_share = false;
+static bool webusb_pending_status_share = false;
 static uint8_t webusb_pending_config_share = 0;
 static uint8_t webusb_pending_profile_share = 0;
 static uint8_t webusb_pending_section_share = 0;
@@ -43,10 +43,15 @@ void webusb_flush_force() {
 }
 
 bool webusb_transfer(Ctrl ctrl) {
+    // Check if TinyUSB device is ready (connected).
     if (!tud_ready()) return false;
+    // Check if USB endpoint is free.
     if (usbd_edpt_busy(0, ADDR_WEBUSB_IN)) return false;
+    // Claim USB endpoint.
     if (!usbd_edpt_claim(0, ADDR_WEBUSB_IN)) return false;
+    // Transfer data.
     if (!usbd_edpt_xfer(0, ADDR_WEBUSB_IN, (char*)&ctrl, ctrl.len+4)) return false;
+    // Release USB endpoint.
     usbd_edpt_release(0, ADDR_WEBUSB_IN);
     return true;
 }
@@ -55,7 +60,7 @@ bool webusb_flush() {
     // Check if there is anything to flush.
     if (
         webusb_ptr_in == 0 &&
-        !webusb_pending_handshake_share &&
+        !webusb_pending_status_share &&
         !webusb_pending_config_share &&
         !webusb_pending_profile_share &&
         !webusb_pending_section_share
@@ -70,10 +75,10 @@ bool webusb_flush() {
         ctrl = ctrl_empty();
         bool sent = webusb_transfer(ctrl);
         if (sent) webusb_pending_empty = false;
-    } else if (webusb_pending_handshake_share) {
-        ctrl = ctrl_handshake_share();
+    } else if (webusb_pending_status_share) {
+        ctrl = ctrl_status_share();
         bool sent = webusb_transfer(ctrl);
-        if (sent) webusb_pending_handshake_share = false;
+        if (sent) webusb_pending_status_share = false;
     } else if (webusb_pending_config_share) {
         ctrl = ctrl_config_share(webusb_pending_config_share);
         bool sent = webusb_transfer(ctrl);
@@ -123,14 +128,14 @@ void webusb_write(char *msg) {
     }
 }
 
-void webusb_handle_handshake_get() {
-    debug("WebUSB: Received handshake GET from app\n");
+void webusb_handle_status_get() {
+    debug("WebUSB: Received status GET from app\n");
     webusb_pending_empty = true;
-    webusb_pending_handshake_share = true;
+    webusb_pending_status_share = true;
 }
 
-void webusb_handle_handshake_set(uint8_t time[8]) {
-    debug("WebUSB: Received handshake SET from app\n");
+void webusb_handle_status_set(uint8_t time[8]) {
+    debug("WebUSB: Received status SET from app\n");
     // set_system_clock(*(uint64_t*)time);  // TODO: Backport from other branch.
 }
 
@@ -203,8 +208,8 @@ void webusb_read() {
     usbd_edpt_release(0, ADDR_WEBUSB_OUT);
     // Handle incomming message.
     if (ctrl.message_type == PROC) webusb_handle_proc(ctrl.payload[0]);
-    if (ctrl.message_type == HANDSHAKE_GET) webusb_handle_handshake_get();
-    if (ctrl.message_type == HANDSHAKE_SET) webusb_handle_handshake_set(ctrl.payload);
+    if (ctrl.message_type == STATUS_GET) webusb_handle_status_get();
+    if (ctrl.message_type == STATUS_SET) webusb_handle_status_set(ctrl.payload);
     if (ctrl.message_type == CONFIG_GET) webusb_handle_config_get(ctrl.payload[0]);
     if (ctrl.message_type == CONFIG_SET) {
         webusb_handle_config_set(
