@@ -42,9 +42,12 @@ PROC | 2
 CONFIG_GET | 3
 CONFIG_SET | 4
 CONFIG_SHARE | 5
-PROFILE_GET | 10
-PROFILE_SET | 11
-PROFILE_SHARE | 12
+PROFILE_GET | 6
+PROFILE_SET | 7
+PROFILE_SHARE | 8
+STATUS_GET | 9
+STATUS_SET | 10
+STATUS_SHARE | 11
 
 ### Procedure index
 Procedure index as defined in [hid.h](/src/headers/hid.h).
@@ -137,6 +140,36 @@ Direction: `Controller` <- `App`
 | - | - | - | - | - |
 | Version | Device Id | Message type | Payload size | Payload
 |         |           | PROC         | 1            | PROC INDEX
+
+## Status GET message
+Request status data from the controller.
+
+Direction: `Controller` <- `App`
+
+| Byte 0 | 1 | 2 | 3 | 4 |
+| - | - | - | - | - |
+| Version | Device Id | Message type | Payload size | Payload
+|         |           | STATUS_GET   | 0            | -
+
+## Status SET message
+Send status data to the controller.
+
+Direction: `Controller` <- `App`
+
+| Byte 0 | 1 | 2 | 3 | 4~10
+| - | - | - | - | - |
+| Version | Device Id | Message type | Payload size | Payload
+|         |           | STATUS_SET   | 8            | SYSTEM CLOCK
+
+## Status SHARE message
+Send status data to the app.
+
+Direction: `Controller` -> `App`
+
+| Byte 0 | 1 | 2 | 3 | 4~6
+| - | - | - | - | - |
+| Version | Device Id | Message type | Payload size | Payload
+|         |           | STATUS_SHARE | 3            | FW SEMANTIC VERSION
 
 ## Config GET message
 Request the current value of some specific configuration parameter.
