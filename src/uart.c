@@ -30,15 +30,15 @@ void uart_listen_char_do(bool limited) {
     }
     if (input == 'F') {
         info("UART: Reset to factory settings\n");
-        config_factory();
+        config_reset_factory();
     }
     if (input == 'D') {
         info("UART: Reset config\n");
-        config_delete();
+        config_reset_config();
     }
     if (input == 'P') {
         info("UART: Reset profiles\n");
-        config_profile_default_all();
+        config_reset_profiles();
     }
     if (input == 'T') {
         info("UART: Self-test\n");

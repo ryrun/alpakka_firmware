@@ -43,16 +43,20 @@ void config_load() {
 }
 
 void config_profile_load(uint8_t index) {
-    // Load a profile from NVM (or default) into the cache.
     debug("Config: Profile %i load from NVM or default\n");
+    // Nuke cache.
+    memset(&config_profile_cache[index], 0, NVM_PROFILE_SIZE);
+    // Load NVM into cache.
     uint32_t addr = NVM_CONFIG_ADDR + (NVM_PROFILE_SIZE * (index+1));
     nvm_read(addr, (uint8_t*)&config_profile_cache[index], NVM_PROFILE_SIZE);
+    // Check if loaded profile is valid, otherwise load default.
     CtrlProfile profile = config_profile_cache[index];
     uint32_t profile_version = profile.sections[SECTION_META].meta.version;
     if (profile_version < NVM_PROFILE_VERSION) {
         info("Config: Profile %i version outdated (%lu)\n", index, profile_version);
         config_profile_default(index);
     }
+    // Tag as synced.
     config_profile_cache_synced[index] = true;
 }
 
@@ -303,9 +307,21 @@ void config_bootsel() {
     reset_usb_boot(0, 0);
 }
 
-void config_factory() {
+void config_reset_factory() {
     info("NVM: Reset to factory defaults\n");
+    config_profile_default_all();
     config_delete();
+    config_reboot();
+}
+
+void config_reset_config() {
+    info("NVM: Reset config\n");
+    config_delete();
+    config_reboot();
+}
+
+void config_reset_profiles() {
+    info("NVM: Reset profiles\n");
     config_profile_default_all();
     config_reboot();
 }
@@ -463,6 +479,7 @@ bool config_problems_are_pending() {
 
 void config_profile_default(uint8_t index) {
     info("Config: Profile %i init from default\n", index);
+    memset(&config_profile_cache[index], 0, NVM_PROFILE_SIZE);
     if (index ==  0) config_profile_default_home(           &(config_profile_cache[index]));
     if (index ==  1) config_profile_default_fps_fusion(     &(config_profile_cache[index]));
     if (index ==  2) config_profile_default_racing(         &(config_profile_cache[index]));
