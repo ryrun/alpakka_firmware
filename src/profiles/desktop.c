@@ -8,10 +8,14 @@
 #include "thumbstick.h"
 #include "glyph.h"
 #include "gyro.h"
+#include "config.h"
 
 void config_profile_default_desktop(CtrlProfile *profile){
-    // Profile name.
-    profile->sections[SECTION_NAME].name = (CtrlProfileName){.name="Desktop"};
+    // Profile meta.
+    profile->sections[SECTION_META].meta = (CtrlProfileMeta){
+        .name="Desktop",
+        .version=NVM_PROFILE_VERSION,
+    };
 
     // ABXY.
     profile->sections[SECTION_A].button = (CtrlButton){

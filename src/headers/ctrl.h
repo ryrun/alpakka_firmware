@@ -36,7 +36,7 @@ typedef enum Ctrl_cfg_type_enum {
 } Ctrl_cfg_type;
 
 typedef enum CtrlSectionType_enum {
-    SECTION_NAME = 1,
+    SECTION_META = 1,
     SECTION_A,
     SECTION_B,
     SECTION_X,
@@ -100,11 +100,12 @@ typedef struct Ctrl_struct {
     uint8_t payload[CTRL_MAX_PAYLOAD_SIZE];
 } Ctrl;
 
-typedef struct CtrlProfileName_struct {
+typedef struct CtrlProfileMeta_struct {
     // Must be packed (58 bytes).
     char name[24];
-    char padding[34];
-} CtrlProfileName;
+    uint32_t version;
+    uint8_t padding[33];
+} CtrlProfileMeta;
 
 typedef struct CtrlButton_struct {
     // Must be packed (58 bytes).
@@ -191,7 +192,7 @@ typedef struct CtrlMacro_struct {
 } CtrlMacro;
 
 typedef union CtrlSection_union {
-    CtrlProfileName name;
+    CtrlProfileMeta meta;
     CtrlButton button;
     CtrlRotary rotary;
     CtrlThumbstick thumbstick;

@@ -143,7 +143,9 @@ void webusb_handle_proc(uint8_t proc) {
     if (proc == PROC_RESTART) config_reboot();
     else if (proc == PROC_BOOTSEL) config_bootsel();
     else if (proc == PROC_CALIBRATE) config_calibrate();
-    else if (proc == PROC_FACTORY) config_factory();
+    else if (proc == PROC_RESET_FACTORY) config_factory();
+    else if (proc == PROC_RESET_CONFIG) config_delete();
+    else if (proc == PROC_RESET_PROFILES) config_profile_default_all();
 }
 
 void webusb_handle_config_get(Ctrl_cfg_type key) {

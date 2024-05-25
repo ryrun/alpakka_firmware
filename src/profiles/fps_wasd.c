@@ -8,10 +8,14 @@
 #include "button.h"
 #include "thumbstick.h"
 #include "gyro.h"
+#include "config.h"
 
 void config_profile_default_fps_wasd(CtrlProfile *profile){
-    // Profile name.
-    profile->sections[SECTION_NAME].name = (CtrlProfileName){.name="FPS WASD"};
+    // Profile meta.
+    profile->sections[SECTION_META].meta = (CtrlProfileMeta){
+        .name="FPS WASD",
+        .version=NVM_PROFILE_VERSION,
+    };
 
     // ABXY.
     profile->sections[SECTION_A].button = (CtrlButton){

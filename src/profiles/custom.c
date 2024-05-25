@@ -8,10 +8,14 @@
 #include "button.h"
 #include "thumbstick.h"
 #include "gyro.h"
+#include "config.h"
 
 void config_profile_default_custom(CtrlProfile *profile){
-    // Profile name.
-    profile->sections[SECTION_NAME].name = (CtrlProfileName){.name="Custom"};
+    // Profile meta.
+    profile->sections[SECTION_META].meta = (CtrlProfileMeta){
+        .name="Custom",
+        .version=NVM_PROFILE_VERSION,
+    };
 
     // ABXY.
     profile->sections[SECTION_A].button = (CtrlButton){};

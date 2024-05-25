@@ -237,31 +237,33 @@
 #define PROC_CALIBRATE        PROC_INDEX + 19
 #define PROC_RESTART          PROC_INDEX + 20
 #define PROC_BOOTSEL          PROC_INDEX + 21
-#define PROC_FACTORY          PROC_INDEX + 22
-#define PROC_THANKS           PROC_INDEX + 23
-#define PROC_HOME_GAMEPAD     PROC_INDEX + 24
+#define PROC_RESET_FACTORY    PROC_INDEX + 22
+#define PROC_RESET_CONFIG     PROC_INDEX + 23
+#define PROC_RESET_PROFILES   PROC_INDEX + 24
+#define PROC_THANKS           PROC_INDEX + 25
+#define PROC_HOME_GAMEPAD     PROC_INDEX + 26
 
-#define PROC_MACRO_1          PROC_INDEX + 25
-#define PROC_MACRO_2          PROC_INDEX + 26
-#define PROC_MACRO_3          PROC_INDEX + 27
-#define PROC_MACRO_4          PROC_INDEX + 28
-#define PROC_MACRO_5          PROC_INDEX + 29
-#define PROC_MACRO_6          PROC_INDEX + 30
-#define PROC_MACRO_7          PROC_INDEX + 31
-#define PROC_MACRO_8          PROC_INDEX + 32
+#define PROC_MACRO_1          PROC_INDEX + 27
+#define PROC_MACRO_2          PROC_INDEX + 28
+#define PROC_MACRO_3          PROC_INDEX + 29
+#define PROC_MACRO_4          PROC_INDEX + 30
+#define PROC_MACRO_5          PROC_INDEX + 31
+#define PROC_MACRO_6          PROC_INDEX + 32
+#define PROC_MACRO_7          PROC_INDEX + 33
+#define PROC_MACRO_8          PROC_INDEX + 34
 
-#define PROC_ROTARY_MODE_0  PROC_INDEX + 33
-#define PROC_ROTARY_MODE_1  PROC_INDEX + 34
-#define PROC_ROTARY_MODE_2  PROC_INDEX + 35
-#define PROC_ROTARY_MODE_3  PROC_INDEX + 36
-#define PROC_ROTARY_MODE_4  PROC_INDEX + 37
-#define PROC_ROTARY_MODE_5  PROC_INDEX + 38
+#define PROC_ROTARY_MODE_0  PROC_INDEX + 35
+#define PROC_ROTARY_MODE_1  PROC_INDEX + 36
+#define PROC_ROTARY_MODE_2  PROC_INDEX + 37
+#define PROC_ROTARY_MODE_3  PROC_INDEX + 38
+#define PROC_ROTARY_MODE_4  PROC_INDEX + 39
+#define PROC_ROTARY_MODE_5  PROC_INDEX + 40
 
-#define PROC_IGNORE_LED_WARNINGS  PROC_INDEX + 39
+#define PROC_IGNORE_LED_WARNINGS  PROC_INDEX + 41
 
 // Experimental anti-deadzone.
-#define PROC_ADZ    PROC_INDEX + 40
-#define PROC_ADZN   PROC_INDEX + 41
+#define PROC_ADZ    PROC_INDEX + 42
+#define PROC_ADZN   PROC_INDEX + 43
 
 void hid_thanks();
 void hid_matrix_reset();

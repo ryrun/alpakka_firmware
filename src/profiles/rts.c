@@ -8,10 +8,14 @@
 #include "button.h"
 #include "thumbstick.h"
 #include "gyro.h"
+#include "config.h"
 
 void config_profile_default_rts(CtrlProfile *profile){
-    // Profile name.
-    profile->sections[SECTION_NAME].name = (CtrlProfileName){.name="RTS"};
+    // Profile meta.
+    profile->sections[SECTION_META].meta = (CtrlProfileMeta){
+        .name="RTS",
+        .version=NVM_PROFILE_VERSION,
+    };
 
     // ABXY.
     profile->sections[SECTION_A].button = (CtrlButton){};
