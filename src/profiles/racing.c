@@ -13,8 +13,9 @@
 void config_profile_default_racing(CtrlProfile *profile){
     // Metadata.
     profile->sections[SECTION_META].meta = (CtrlProfileMeta){
-        .name="Racing",
+        .control_byte=NVM_CONTROL_BYTE,
         .version=NVM_PROFILE_VERSION,
+        .name="Racing",
     };
 
     // ABXY.

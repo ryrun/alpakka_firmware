@@ -43,17 +43,20 @@ void config_load() {
 }
 
 void config_profile_load(uint8_t index) {
-    debug("Config: Profile %i load from NVM or default\n");
+    debug("Config: Profile %i load from NVM\n", index);
     // Nuke cache.
     memset(&config_profile_cache[index], 0, NVM_PROFILE_SIZE);
     // Load NVM into cache.
     uint32_t addr = NVM_CONFIG_ADDR + (NVM_PROFILE_SIZE * (index+1));
     nvm_read(addr, (uint8_t*)&config_profile_cache[index], NVM_PROFILE_SIZE);
     // Check if loaded profile is valid, otherwise load default.
-    CtrlProfile profile = config_profile_cache[index];
-    uint32_t profile_version = profile.sections[SECTION_META].meta.version;
-    if (profile_version < NVM_PROFILE_VERSION) {
-        debug("Config: Profile %i incompatible version (%lu)\n", index, profile_version);
+    CtrlProfileMeta meta = config_profile_cache[index].sections[SECTION_META].meta;
+    if (meta.control_byte != NVM_CONTROL_BYTE) {
+        debug("Config: Profile %i not found\n", index);
+        config_profile_default(index);
+    }
+    if (meta.version < NVM_PROFILE_VERSION) {
+        debug("Config: Profile %i incompatible version (%lu)\n", index, meta.version);
         config_profile_default(index);
     }
     // Tag as synced.
@@ -107,7 +110,7 @@ void config_sync() {
 void config_write_init() {
     // Default values when the config is created for first time.
     config_cache = (Config){
-        .header = NVM_CONFIG_HEADER,
+        .header = NVM_CONTROL_BYTE,
         .config_version = NVM_CONFIG_VERSION,
         .profile = 1,
         .protocol = 0,
@@ -518,7 +521,7 @@ void config_init() {
     info("INIT: Config\n");
     config_load();
     if (
-        config_cache.header != NVM_CONFIG_HEADER ||
+        config_cache.header != NVM_CONTROL_BYTE ||
         config_cache.config_version != NVM_CONFIG_VERSION
     ) {
         warn("NVM config not found or incompatible, writing default instead\n");

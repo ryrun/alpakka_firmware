@@ -13,8 +13,9 @@
 void config_profile_default_flight(CtrlProfile *profile){
     // Metadata.
     profile->sections[SECTION_META].meta = (CtrlProfileMeta){
-        .name="Flight",
+        .control_byte=NVM_CONTROL_BYTE,
         .version=NVM_PROFILE_VERSION,
+        .name="Flight",
     };
 
     // ABXY.

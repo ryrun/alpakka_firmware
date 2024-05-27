@@ -7,8 +7,8 @@
 #include <stdbool.h>
 #include "ctrl.h"
 
+#define NVM_CONTROL_BYTE 0b01010101
 #define NVM_CONFIG_ADDR 0x001D0000
-#define NVM_CONFIG_HEADER 0b01010101
 #define NVM_CONFIG_SIZE 256
 #define NVM_CONFIG_VERSION 96000
 #define NVM_PROFILE_VERSION 96000
