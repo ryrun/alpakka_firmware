@@ -50,4 +50,3 @@ Gyro Gyro_ (
 );
 
 void gyro_update_sensitivity();
-void gyro_wheel_antideadzone(int8_t increment);

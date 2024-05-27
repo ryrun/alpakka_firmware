@@ -139,7 +139,8 @@ typedef struct CtrlThumbstick_struct {
     uint8_t deadzone;
     uint8_t overlap;
     uint8_t deadzone_override;
-    uint8_t padding[53];
+    uint8_t antideadzone;
+    uint8_t padding[52];
 } CtrlThumbstick;
 
 typedef struct CtrlGlyph_struct {

@@ -67,6 +67,7 @@ struct Thumbstick_struct {
     ThumbstickDistance distance_mode;
     bool deadzone_override;
     float deadzone;
+    float antideadzone;
     float overlap;
     Button left;
     Button right;
@@ -86,6 +87,7 @@ Thumbstick Thumbstick_ (
     ThumbstickDistance distance_mode,
     bool deadzone_override,
     float deadzone,
+    float antideadzone,
     float overlap
 );
 

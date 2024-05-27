@@ -282,7 +282,12 @@ void Thumbstick__report(Thumbstick *self) {
     float angle = atan2(x, -y) * (180 / M_PI);
     float radius = sqrt(powf(x, 2) + powf(y, 2));
     radius = constrain(radius, 0, 1);
-    radius = ramp_low(radius, deadzone);
+    if (radius < deadzone) {
+        radius = 0;
+    } else {
+        radius = ramp_low(radius, deadzone);
+        radius = ramp_inv(radius, self->antideadzone);
+    }
     x = sin(radians(angle)) * radius;
     y = -cos(radians(angle)) * radius;
     ThumbstickPosition pos = {x, y, angle, radius};
@@ -315,6 +320,7 @@ Thumbstick Thumbstick_ (
     ThumbstickDistance distance_mode,
     bool deadzone_override,
     float deadzone,
+    float antideadzone,
     float overlap
 ) {
     Thumbstick thumbstick;
@@ -334,6 +340,7 @@ Thumbstick Thumbstick_ (
     thumbstick.distance_mode = distance_mode;
     thumbstick.deadzone_override = deadzone_override;
     thumbstick.deadzone = deadzone;
+    thumbstick.antideadzone = antideadzone;
     thumbstick.overlap = overlap;
     thumbstick.glyphstick_index = 0;
     return thumbstick;
