@@ -11,7 +11,7 @@
 #include "config.h"
 
 void config_profile_default_console_legacy(CtrlProfile *profile){
-    // Profile meta.
+    // Metadata.
     profile->sections[SECTION_META].meta = (CtrlProfileMeta){
         .name="Console Legacy",
         .version=NVM_PROFILE_VERSION,

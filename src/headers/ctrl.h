@@ -104,7 +104,7 @@ typedef struct CtrlProfileMeta_struct {
     // Must be packed (58 bytes).
     char name[24];
     uint32_t version;
-    uint8_t padding[33];
+    uint8_t padding[30];
 } CtrlProfileMeta;
 
 typedef struct CtrlButton_struct {

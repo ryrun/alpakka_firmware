@@ -11,7 +11,7 @@
 #include "config.h"
 
 void config_profile_default_racing(CtrlProfile *profile){
-    // Profile name.
+    // Metadata.
     profile->sections[SECTION_META].meta = (CtrlProfileMeta){
         .name="Racing",
         .version=NVM_PROFILE_VERSION,

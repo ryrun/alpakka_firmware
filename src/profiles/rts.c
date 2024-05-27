@@ -11,7 +11,7 @@
 #include "config.h"
 
 void config_profile_default_rts(CtrlProfile *profile){
-    // Profile meta.
+    // Metadata.
     profile->sections[SECTION_META].meta = (CtrlProfileMeta){
         .name="RTS",
         .version=NVM_PROFILE_VERSION,
