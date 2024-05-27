@@ -53,7 +53,7 @@ void config_profile_load(uint8_t index) {
     CtrlProfile profile = config_profile_cache[index];
     uint32_t profile_version = profile.sections[SECTION_META].meta.version;
     if (profile_version < NVM_PROFILE_VERSION) {
-        info("Config: Profile %i version outdated (%lu)\n", index, profile_version);
+        debug("Config: Profile %i incompatible version (%lu)\n", index, profile_version);
         config_profile_default(index);
     }
     // Tag as synced.
