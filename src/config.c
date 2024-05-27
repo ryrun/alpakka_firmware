@@ -42,13 +42,18 @@ void config_load() {
     nvm_read(NVM_CONFIG_ADDR, (uint8_t*)&config_cache, NVM_CONFIG_SIZE);
 }
 
+void config_profile_clear_cache(uint8_t index) {
+    debug("Config: Clear profile %i cache\n", index);
+    memset(&config_profile_cache[index], 0, sizeof(CtrlProfile));
+}
+
 void config_profile_load(uint8_t index) {
     debug("Config: Profile %i load from NVM\n", index);
     // Nuke cache.
-    memset(&config_profile_cache[index], 0, NVM_PROFILE_SIZE);
+    config_profile_clear_cache(index);
     // Load NVM into cache.
     uint32_t addr = NVM_CONFIG_ADDR + (NVM_PROFILE_SIZE * (index+1));
-    nvm_read(addr, (uint8_t*)&config_profile_cache[index], NVM_PROFILE_SIZE);
+    nvm_read(addr, (uint8_t*)&config_profile_cache[index], sizeof(CtrlProfile));
     // Check if loaded profile is valid, otherwise load default.
     CtrlProfileMeta meta = config_profile_cache[index].sections[SECTION_META].meta;
     if (meta.control_byte != NVM_CONTROL_BYTE) {
@@ -482,7 +487,7 @@ bool config_problems_are_pending() {
 
 void config_profile_default(uint8_t index) {
     info("Config: Profile %i init from default\n", index);
-    memset(&config_profile_cache[index], 0, NVM_PROFILE_SIZE);
+    config_profile_clear_cache(index);
     if (index ==  0) config_profile_default_home(           &(config_profile_cache[index]));
     if (index ==  1) config_profile_default_fps_fusion(     &(config_profile_cache[index]));
     if (index ==  2) config_profile_default_racing(         &(config_profile_cache[index]));
