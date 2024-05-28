@@ -60,8 +60,13 @@ void config_profile_load(uint8_t index) {
         debug("Config: Profile %i not found\n", index);
         config_profile_default(index);
     }
-    if (meta.version < NVM_PROFILE_VERSION) {
-        debug("Config: Profile %i incompatible version (%lu)\n", index, meta.version);
+    uint32_t version = (
+        (meta.version_major * 1000000) +
+        (meta.version_minor * 1000) +
+        (meta.version_patch)
+    );
+    if (version < NVM_PROFILE_VERSION) {
+        debug("Config: Profile %i incompatible version (%lu)\n", index, version);
         config_profile_default(index);
     }
     // Tag as synced.

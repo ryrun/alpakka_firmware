@@ -104,8 +104,10 @@ typedef struct __attribute__((packed)) {
     // Must be packed (58 bytes).
     char name[24];
     uint8_t control_byte;
-    uint32_t version;
-    uint8_t _padding[29];
+    uint8_t version_major;
+    uint8_t version_minor;
+    uint8_t version_patch;
+    uint8_t _padding[30];
 } CtrlProfileMeta;
 
 typedef struct __attribute__((packed)) {

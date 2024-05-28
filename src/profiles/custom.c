@@ -13,9 +13,11 @@
 void config_profile_default_custom(CtrlProfile *profile){
     // Metadata.
     profile->sections[SECTION_META].meta = (CtrlProfileMeta){
-        .control_byte=NVM_CONTROL_BYTE,
-        .version=NVM_PROFILE_VERSION,
-        .name="Custom",
+        .name = "Custom",
+        .control_byte = NVM_CONTROL_BYTE,
+        .version_major = NVM_PROFILE_VERSION / 1000000,
+        .version_minor = (NVM_PROFILE_VERSION / 1000) % 1000,
+        .version_patch = NVM_PROFILE_VERSION % 1000,
     };
 
     // ABXY.
