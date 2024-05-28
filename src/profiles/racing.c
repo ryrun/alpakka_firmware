@@ -8,10 +8,17 @@
 #include "button.h"
 #include "thumbstick.h"
 #include "gyro.h"
+#include "config.h"
 
 void config_profile_default_racing(CtrlProfile *profile){
-    // Profile name.
-    profile->sections[SECTION_NAME].name = (CtrlProfileName){.name="Racing"};
+    // Metadata.
+    profile->sections[SECTION_META].meta = (CtrlProfileMeta){
+        .name="Racing",
+        .control_byte = NVM_CONTROL_BYTE,
+        .version_major = NVM_PROFILE_VERSION / 1000000,
+        .version_minor = (NVM_PROFILE_VERSION / 1000) % 1000,
+        .version_patch = NVM_PROFILE_VERSION % 1000,
+    };
 
     // ABXY.
     profile->sections[SECTION_A].button = (CtrlButton){

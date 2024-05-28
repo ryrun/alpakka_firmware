@@ -7,10 +7,11 @@
 #include <stdbool.h>
 #include "ctrl.h"
 
+#define NVM_CONTROL_BYTE 0b01010101
 #define NVM_CONFIG_ADDR 0x001D0000
-#define NVM_CONFIG_HEADER 0b01010101
-#define NVM_STRUCT_VERSION 16
 #define NVM_CONFIG_SIZE 256
+#define NVM_CONFIG_VERSION 96000
+#define NVM_PROFILE_VERSION 96000
 #define NVM_PROFILE_SIZE 4096
 #define NVM_PROFILE_SLOTS 14
 
@@ -53,7 +54,7 @@
 
 typedef struct Config_struct {
     uint8_t header;
-    uint8_t config_version;
+    uint32_t config_version;
     uint8_t profile;
     int8_t protocol;
     int8_t sens_mouse;
@@ -81,11 +82,10 @@ typedef struct Config_struct {
 } Config;
 
 void config_init();
-void config_init_profiles_from_defaults();
 void config_sync();
 Config* config_read();
-void config_set_profile(uint8_t profile);
-uint8_t config_get_profile();
+void config_delete();
+
 void config_set_thumbstick_offset(float x, float y);
 void config_set_gyro_offset(double ax, double ay, double az, double bx, double by, double bz);
 void config_set_accel_offset(double ax, double ay, double az, double bx, double by, double bz);
@@ -95,7 +95,9 @@ void config_tune(bool direction);
 void config_calibrate();
 void config_reboot();
 void config_bootsel();
-void config_factory();
+void config_reset_config();
+void config_reset_profiles();
+void config_reset_factory();
 void config_write_init();
 void config_print();
 void config_set_pcb_gen(uint8_t gen);
@@ -120,9 +122,13 @@ void config_set_mouse_sens_values(double* values);
 void config_set_deadzone_values(float* values);
 
 // Profiles.
+uint8_t config_get_profile();
+void config_set_profile(uint8_t profile);
 CtrlProfile* config_profile_read(uint8_t index);
 void config_profile_write(uint8_t index);
 void config_profile_set_sync(uint8_t index, bool state);
+void config_profile_default_all();
+void config_profile_default(uint8_t index);
 void config_profile_default_home(CtrlProfile *profile);
 void config_profile_default_fps_fusion(CtrlProfile *profile);
 void config_profile_default_fps_wasd(CtrlProfile *profile);
