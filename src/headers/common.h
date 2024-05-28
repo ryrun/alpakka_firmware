@@ -35,7 +35,7 @@ uint8_t random8();
 // Input K: Factor as unit value.
 // Original: (0,0)->(1,1)
 // Result:   (0,0)->(k,0)->(1,1)
-#define ramp_low(x, k)  ( x<k ? 0 : (x-k) * (1 / (1-k)) )
+#define ramp_low(x, k)  ( (x-k) * (1 / (1-k)) )
 
 // Ramp function that results in "anti-deadzone" in the lower part of the range.
 // (Suited only for negative K values).

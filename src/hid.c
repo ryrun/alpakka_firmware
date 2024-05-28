@@ -81,9 +81,6 @@ void hid_procedure_press(uint8_t procedure){
     if (procedure == PROC_MACRO_6) hid_macro(6);
     if (procedure == PROC_MACRO_7) hid_macro(7);
     if (procedure == PROC_MACRO_8) hid_macro(8);
-    // Experimental.
-    if (procedure == PROC_ADZ) gyro_wheel_antideadzone(1);
-    if (procedure == PROC_ADZN) gyro_wheel_antideadzone(-1);
 }
 
 void hid_procedure_release(uint8_t procedure) {

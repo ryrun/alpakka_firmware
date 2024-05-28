@@ -143,7 +143,8 @@ typedef struct __attribute__((packed)) {
     uint8_t deadzone;
     uint8_t overlap;
     uint8_t deadzone_override;
-    uint8_t _padding[53];
+    uint8_t antideadzone;
+    uint8_t _padding[52];
 } CtrlThumbstick;
 
 typedef struct __attribute__((packed)) {

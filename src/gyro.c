@@ -16,7 +16,6 @@
 #include "vector.h"
 
 double sensitivity_multiplier;
-double antideadzone = 0; // TODO: Experimental.
 
 uint8_t world_init = 0;
 Vector world_top;
@@ -27,26 +26,6 @@ Vector accel_smooth;
 void gyro_update_sensitivity() {
     uint8_t preset = config_get_mouse_sens_preset();
     sensitivity_multiplier = config_get_mouse_sens_value(preset);
-}
-
-// TODO: Experimental.
-void gyro_wheel_antideadzone(int8_t increment) {
-    if (increment > 0) antideadzone += 0.01;
-    else antideadzone -= 0.01;
-    antideadzone = constrain(antideadzone, 0, 0.50);
-    printf("antideadzone=%f\n", antideadzone);
-    uint8_t adz = (antideadzone * 100) + 0.001;
-    led_static_mask(LED_NONE);
-    if      (adz==1  || adz==11 || adz==21) led_blink_mask(0b0001);
-    else if (adz==2  || adz==12 || adz==22) led_blink_mask(0b0010);
-    else if (adz==3  || adz==13 || adz==23) led_blink_mask(0b0100);
-    else if (adz==4  || adz==14 || adz==24) led_blink_mask(0b1000);
-    else if (adz==5  || adz==15 || adz==25) led_blink_mask(0b0011);
-    else if (adz==6  || adz==16 || adz==26) led_blink_mask(0b0110);
-    else if (adz==7  || adz==17 || adz==27) led_blink_mask(0b1100);
-    else if (adz==8  || adz==18 || adz==28) led_blink_mask(0b1001);
-    else if (adz==9  || adz==19 || adz==29) led_blink_mask(0b1011);
-    else if (adz==10 || adz==20 || adz==30) led_blink_mask(0b0111);
 }
 
 void gyro_accel_correction() {
@@ -160,7 +139,6 @@ void Gyro__report_absolute(Gyro *self) {
     float z = degrees(asin(world_fw.z)) / 90;
     if (fabs(x) > 0.5 && z < 0) x += -z * 2 * sign(x); // Steering lock.
     x = constrain(x * 1.1, -1, 1); // Additional saturation.
-    x = x > 0 ? ramp_inv(x, antideadzone) : -ramp_inv(-x, antideadzone); // Deadzone.
     x = ramp(x, self->absolute_x_min/90, self->absolute_x_max/90); // Adjust range.
     y = ramp(y, self->absolute_y_min/90, self->absolute_y_max/90); // Adjust range.
     // Output mapping.

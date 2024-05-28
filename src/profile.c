@@ -131,6 +131,7 @@ void Profile__load_from_config(Profile *self, CtrlProfile *profile) {
         ctrl_thumbtick.distance_mode,
         ctrl_thumbtick.deadzone_override,
         ctrl_thumbtick.deadzone / 100.0,
+        ctrl_thumbtick.antideadzone / 100.0,
         (int8_t)ctrl_thumbtick.overlap / 100.0
     );
     if (ctrl_thumbtick.mode == THUMBSTICK_MODE_4DIR) {

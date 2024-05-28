@@ -261,9 +261,6 @@
 
 #define PROC_IGNORE_LED_WARNINGS  PROC_INDEX + 41
 
-// Experimental anti-deadzone.
-#define PROC_ADZ    PROC_INDEX + 42
-#define PROC_ADZN   PROC_INDEX + 43
 
 void hid_thanks();
 void hid_matrix_reset();
