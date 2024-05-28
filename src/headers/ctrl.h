@@ -36,7 +36,7 @@ typedef enum Ctrl_cfg_type_enum {
 } Ctrl_cfg_type;
 
 typedef enum CtrlSectionType_enum {
-    SECTION_NAME = 1,
+    SECTION_META = 1,
     SECTION_A,
     SECTION_B,
     SECTION_X,
@@ -100,13 +100,17 @@ typedef struct Ctrl_struct {
     uint8_t payload[CTRL_MAX_PAYLOAD_SIZE];
 } Ctrl;
 
-typedef struct CtrlProfileName_struct {
+typedef struct __attribute__((packed)) {
     // Must be packed (58 bytes).
     char name[24];
-    char padding[34];
-} CtrlProfileName;
+    uint8_t control_byte;
+    uint8_t version_major;
+    uint8_t version_minor;
+    uint8_t version_patch;
+    uint8_t _padding[30];
+} CtrlProfileMeta;
 
-typedef struct CtrlButton_struct {
+typedef struct __attribute__((packed)) {
     // Must be packed (58 bytes).
     uint8_t mode;
     uint8_t reserved;
@@ -118,7 +122,7 @@ typedef struct CtrlButton_struct {
     uint8_t hint_secondary[14];
 } CtrlButton;
 
-typedef struct CtrlRotary_struct {
+typedef struct __attribute__((packed)) {
     // Must be packed (58 bytes).
     uint8_t actions_0[4];
     uint8_t actions_1[4];
@@ -132,22 +136,22 @@ typedef struct CtrlRotary_struct {
     uint8_t hint_4[6];
 } CtrlRotary;
 
-typedef struct CtrlThumbstick_struct {
+typedef struct __attribute__((packed)) {
     // Must be packed (58 bytes).
     uint8_t mode;
     uint8_t distance_mode;
     uint8_t deadzone;
     uint8_t overlap;
     uint8_t deadzone_override;
-    uint8_t padding[53];
+    uint8_t _padding[53];
 } CtrlThumbstick;
 
-typedef struct CtrlGlyph_struct {
+typedef struct __attribute__((packed)) {
     uint8_t actions[4];
     uint8_t glyph;
 } CtrlGlyph;
 
-typedef struct CtrlGlyphs_struct {
+typedef struct __attribute__((packed)) {
     // Must be packed (58 bytes).
     CtrlGlyph glyphs[11];
     uint8_t padding[3];
@@ -163,14 +167,14 @@ typedef struct CtrlDaisyGroup_struct {
 typedef struct CtrlDaisy_struct {
     // Must be packed (58 bytes).
     CtrlDaisyGroup groups[2];
-    uint8_t padding[26];
+    uint8_t _padding[26];
 } CtrlDaisy;
 
 typedef struct CtrlGyro_struct {
     // Must be packed (58 bytes).
     uint8_t mode;
     uint8_t engage;
-    uint8_t padding[56];
+    uint8_t _padding[56];
 } CtrlGyro;
 
 typedef struct CtrlGyroAxis_struct {
@@ -181,17 +185,17 @@ typedef struct CtrlGyroAxis_struct {
     uint8_t angle_max;
     uint8_t hint_neg[14];
     uint8_t hint_pos[14];
-    uint8_t padding[20];
+    uint8_t _padding[20];
 } CtrlGyroAxis;
 
 typedef struct CtrlMacro_struct {
     // Must be packed (58 bytes).
     uint8_t macro[2][28];
-    uint8_t padding[2];
+    uint8_t _padding[2];
 } CtrlMacro;
 
 typedef union CtrlSection_union {
-    CtrlProfileName name;
+    CtrlProfileMeta meta;
     CtrlButton button;
     CtrlRotary rotary;
     CtrlThumbstick thumbstick;

@@ -38,8 +38,14 @@ bootsel:
 calibrate:
 	screen -S alpakka -X stuff C
 
-format:
+factory:
 	screen -S alpakka -X stuff F
+
+reset_config:
+	screen -S alpakka -X stuff N
+
+reset_profiles:
+	screen -S alpakka -X stuff P
 
 test:
 	screen -S alpakka -X stuff T

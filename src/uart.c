@@ -29,8 +29,16 @@ void uart_listen_char_do(bool limited) {
         config_calibrate();
     }
     if (input == 'F') {
-        info("UART: Format NVM\n");
-        config_factory();
+        info("UART: Reset to factory settings\n");
+        config_reset_factory();
+    }
+    if (input == 'D') {
+        info("UART: Reset config\n");
+        config_reset_config();
+    }
+    if (input == 'P') {
+        info("UART: Reset profiles\n");
+        config_reset_profiles();
     }
     if (input == 'T') {
         info("UART: Self-test\n");

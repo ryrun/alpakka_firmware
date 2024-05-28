@@ -42,10 +42,34 @@ void config_load() {
     nvm_read(NVM_CONFIG_ADDR, (uint8_t*)&config_cache, NVM_CONFIG_SIZE);
 }
 
+void config_profile_clear_cache(uint8_t index) {
+    debug("Config: Clear profile %i cache\n", index);
+    memset(&config_profile_cache[index], 0, sizeof(CtrlProfile));
+}
+
 void config_profile_load(uint8_t index) {
-    // Load a profile from NVM into the cache.
+    debug("Config: Profile %i load from NVM\n", index);
+    // Nuke cache.
+    config_profile_clear_cache(index);
+    // Load NVM into cache.
     uint32_t addr = NVM_CONFIG_ADDR + (NVM_PROFILE_SIZE * (index+1));
-    nvm_read(addr, (uint8_t*)&config_profile_cache[index], NVM_PROFILE_SIZE);
+    nvm_read(addr, (uint8_t*)&config_profile_cache[index], sizeof(CtrlProfile));
+    // Check if loaded profile is valid, otherwise load default.
+    CtrlProfileMeta meta = config_profile_cache[index].sections[SECTION_META].meta;
+    if (meta.control_byte != NVM_CONTROL_BYTE) {
+        debug("Config: Profile %i not found\n", index);
+        config_profile_default(index);
+    }
+    uint32_t version = (
+        (meta.version_major * 1000000) +
+        (meta.version_minor * 1000) +
+        (meta.version_patch)
+    );
+    if (version < NVM_PROFILE_VERSION) {
+        debug("Config: Profile %i incompatible version (%lu)\n", index, version);
+        config_profile_default(index);
+    }
+    // Tag as synced.
     config_profile_cache_synced[index] = true;
 }
 
@@ -96,8 +120,8 @@ void config_sync() {
 void config_write_init() {
     // Default values when the config is created for first time.
     config_cache = (Config){
-        .header = NVM_CONFIG_HEADER,
-        .config_version = NVM_STRUCT_VERSION,
+        .header = NVM_CONTROL_BYTE,
+        .config_version = NVM_CONFIG_VERSION,
         .profile = 1,
         .protocol = 0,
         .sens_mouse = 0,
@@ -130,6 +154,7 @@ void config_write_init() {
 }
 
 void config_delete() {
+    debug("Config: Delete config header sector\n");
     config_cache = (Config){
         .header = 0,
         .config_version = 0,
@@ -295,9 +320,22 @@ void config_bootsel() {
     reset_usb_boot(0, 0);
 }
 
-void config_factory() {
+void config_reset_factory() {
     info("NVM: Reset to factory defaults\n");
+    config_profile_default_all();
     config_delete();
+    config_reboot();
+}
+
+void config_reset_config() {
+    info("NVM: Reset config\n");
+    config_delete();
+    config_reboot();
+}
+
+void config_reset_profiles() {
+    info("NVM: Reset profiles\n");
+    config_profile_default_all();
     config_reboot();
 }
 
@@ -452,24 +490,30 @@ bool config_problems_are_pending() {
     return problem_calibration || problem_gyro;
 }
 
-void config_init_profiles_from_defaults() {
-    warn("Loading profiles from defaults\n");
-    config_profile_default_home(           &(config_profile_cache[PROFILE_HOME]));
-    config_profile_default_fps_fusion(     &(config_profile_cache[PROFILE_FPS_FUSION]));
-    config_profile_default_racing(         &(config_profile_cache[PROFILE_RACING]));
-    config_profile_default_console(        &(config_profile_cache[PROFILE_CONSOLE]));
-    config_profile_default_desktop(        &(config_profile_cache[PROFILE_DESKTOP]));
-    config_profile_default_fps_wasd(       &(config_profile_cache[PROFILE_FPS_WASD]));
-    config_profile_default_flight(         &(config_profile_cache[PROFILE_FLIGHT]));
-    config_profile_default_console_legacy( &(config_profile_cache[PROFILE_CONSOLE_LEGACY]));
-    config_profile_default_rts(            &(config_profile_cache[PROFILE_RTS]));
-    config_profile_default_custom(         &(config_profile_cache[PROFILE_CUSTOM_1]));
-    config_profile_default_custom(         &(config_profile_cache[PROFILE_CUSTOM_2]));
-    config_profile_default_custom(         &(config_profile_cache[PROFILE_CUSTOM_3]));
-    config_profile_default_custom(         &(config_profile_cache[PROFILE_CUSTOM_4]));
-    config_profile_default_console_legacy( &(config_profile_cache[PROFILE_HOME_GAMEPAD]));
+void config_profile_default(uint8_t index) {
+    info("Config: Profile %i init from default\n", index);
+    config_profile_clear_cache(index);
+    if (index ==  0) config_profile_default_home(           &(config_profile_cache[index]));
+    if (index ==  1) config_profile_default_fps_fusion(     &(config_profile_cache[index]));
+    if (index ==  2) config_profile_default_racing(         &(config_profile_cache[index]));
+    if (index ==  3) config_profile_default_console(        &(config_profile_cache[index]));
+    if (index ==  4) config_profile_default_desktop(        &(config_profile_cache[index]));
+    if (index ==  5) config_profile_default_fps_wasd(       &(config_profile_cache[index]));
+    if (index ==  6) config_profile_default_flight(         &(config_profile_cache[index]));
+    if (index ==  7) config_profile_default_console_legacy( &(config_profile_cache[index]));
+    if (index ==  8) config_profile_default_rts(            &(config_profile_cache[index]));
+    if (index ==  9) config_profile_default_custom(         &(config_profile_cache[index]));
+    if (index == 10) config_profile_default_custom(         &(config_profile_cache[index]));
+    if (index == 11) config_profile_default_custom(         &(config_profile_cache[index]));
+    if (index == 12) config_profile_default_custom(         &(config_profile_cache[index]));
+    if (index == 13) config_profile_default_console_legacy( &(config_profile_cache[index]));
+    config_profile_write(index);
+}
+
+void config_profile_default_all() {
+    debug("Config: Init all profiles from defaults\n");
     for(uint8_t i=0; i<NVM_PROFILE_SLOTS; i++) {
-        config_profile_write(i);
+        config_profile_default(i);
     }
 }
 
@@ -487,15 +531,13 @@ void config_init() {
     info("INIT: Config\n");
     config_load();
     if (
-        config_cache.header != NVM_CONFIG_HEADER ||
-        config_cache.config_version != NVM_STRUCT_VERSION
+        config_cache.header != NVM_CONTROL_BYTE ||
+        config_cache.config_version != NVM_CONFIG_VERSION
     ) {
         warn("NVM config not found or incompatible, writing default instead\n");
         config_write_init();
-        config_init_profiles_from_defaults();
-    } else {
-        config_init_profiles_from_nvm();
     }
+    config_init_profiles_from_nvm();
     config_print();
 }
 
