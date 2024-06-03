@@ -11,15 +11,13 @@
 
 typedef uint8_t Actions[ACTIONS_LEN];
 
-// https://inputlabs.io/alpakka/manual/dev_profiles#button_mode
-typedef enum ButtonMode_enum {
-    NORMAL,
-    STICKY,
-    HOLD_EXCLUSIVE,
-    HOLD_EXCLUSIVE_LONG,
-    HOLD_OVERLAP,
-    HOLD_OVERLAP_LONG,
-    HOLD_DOUBLE_PRESS,
+typedef enum _ButtonMode {
+    NORMAL = 1,
+    HOLD = 2,
+    DOUBLE = 4,
+    OVERLAP = 8,
+    LONG = 16,
+    STICKY = 32,
 } ButtonMode;
 
 typedef struct Button_struct Button;
@@ -28,26 +26,31 @@ struct Button_struct {
     void (*report) (Button *self);
     void (*reset) (Button *self);
     void (*handle_normal) (Button *self);
+    void (*handle_hold) (Button *self, bool overlap, uint16_t time);
+    void (*handle_double) (Button *self, bool overlap, uint16_t time);
+    void (*handle_hold_double) (Button *self, bool overlap, uint16_t hold_time, uint16_t double_time);
     void (*handle_sticky) (Button *self);
-    void (*handle_hold_exclusive) (Button *self, uint16_t time);
-    void (*handle_hold_overlap) (Button *self,  uint16_t time);
-    void (*handle_hold_double_press) (Button *self);
     uint8_t pin;
     ButtonMode mode;
     Actions actions;
     Actions actions_secondary;
-    bool state;
+    Actions actions_terciary;
+    bool state_primary;
     bool state_secondary;
+    bool state_terciary;
+    bool emitted_primary;
     bool virtual_press;
     uint64_t press_timestamp;
-    uint64_t hold_timestamp;
+    uint64_t press_timestamp_prev;
+    bool timestamps_updated;
 };
 
 Button Button_ (
     uint8_t pin,
     ButtonMode mode,
     Actions actions,
-    Actions actions_secondary
+    Actions actions_secondary,
+    Actions actions_terciary
 );
 
 Button Button_from_ctrl(

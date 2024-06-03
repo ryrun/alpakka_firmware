@@ -113,7 +113,7 @@ void config_profile_default_fps_wasd(CtrlProfile *profile){
         .hint="Jump",
     };
     profile->sections[SECTION_R4].button = (CtrlButton){
-        .mode=HOLD_OVERLAP,
+        .mode=HOLD|OVERLAP,
         .actions={KEY_CONTROL_LEFT},
         .hint="Crouch",
         .actions_secondary={KEY_P},

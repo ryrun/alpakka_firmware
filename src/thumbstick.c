@@ -71,10 +71,10 @@ void thumbstick_init() {
     thumbstick_update_deadzone();
     // Alternative usage of ABXY while doing daisywheel.
     Actions none = {0,};
-    daisy_a = Button_(PIN_A, NORMAL, none, none);
-    daisy_b = Button_(PIN_B, NORMAL, none, none);
-    daisy_x = Button_(PIN_X, NORMAL, none, none);
-    daisy_y = Button_(PIN_Y, NORMAL, none, none);
+    daisy_a = Button_(PIN_A, NORMAL, none, none, none);
+    daisy_b = Button_(PIN_B, NORMAL, none, none, none);
+    daisy_x = Button_(PIN_X, NORMAL, none, none, none);
+    daisy_y = Button_(PIN_Y, NORMAL, none, none, none);
 }
 
 void thumbstick_report_axis(uint8_t axis, float value) {

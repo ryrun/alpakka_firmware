@@ -90,7 +90,7 @@ void config_profile_default_console_legacy(CtrlProfile *profile){
         .actions={GAMEPAD_A},
     };
     profile->sections[SECTION_R4].button = (CtrlButton){
-        .mode=HOLD_OVERLAP,
+        .mode=HOLD,
         .actions={GAMEPAD_B},
     };
 
