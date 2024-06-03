@@ -100,25 +100,22 @@ void Button__handle_hold(Button *self, bool immediate, uint16_t time) {
             self->state_secondary = true;
         }
     }
-    if(!pressed) {
-        if (self->state_primary) {
-            if (immediate) {
-                // Released, immediate actions were triggered.
-                hid_release_multiple(self->actions);
-            } else {
-                // Released, it was never condidered held.
-                hid_press_multiple(self->actions);
-                hid_release_multiple_later(self->actions, 100);
-            }
-            self->state_primary = false;
-            return;
+    if(!pressed && self->state_primary) {
+        if (immediate) {
+            // Released, immediate actions were triggered.
+            hid_release_multiple(self->actions);
+        } else {
+            // Released, it was never condidered held.
+            hid_press_multiple(self->actions);
+            hid_release_multiple_later(self->actions, 100);
         }
-        if (self->state_secondary) {
-            // Relased and it was condidered held.
-            hid_release_multiple(self->actions_secondary);
-            self->state_secondary = false;
-            return;
-        }
+        self->state_primary = false;
+        return;
+    }
+    if(!pressed && self->state_secondary) {
+        // Relased and it was condidered held.
+        hid_release_multiple(self->actions_secondary);
+        self->state_secondary = false;
     }
 }
 
