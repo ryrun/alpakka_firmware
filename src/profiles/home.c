@@ -42,22 +42,22 @@ void config_profile_default_home(CtrlProfile *profile){
 
     // DPad.
     profile->sections[SECTION_DPAD_UP].button = (CtrlButton){
-        .mode=HOLD|OVERLAP,
+        .mode=HOLD|IMMEDIATE,
         .actions={PROC_PROFILE_1},
         .actions_secondary={PROC_PROFILE_5},
     };
     profile->sections[SECTION_DPAD_RIGHT].button = (CtrlButton){
-        .mode=HOLD|OVERLAP,
+        .mode=HOLD|IMMEDIATE,
         .actions={PROC_PROFILE_2},
         .actions_secondary={PROC_PROFILE_6},
     };
     profile->sections[SECTION_DPAD_DOWN].button = (CtrlButton){
-        .mode=HOLD|OVERLAP,
+        .mode=HOLD|IMMEDIATE,
         .actions={PROC_PROFILE_3},
         .actions_secondary={PROC_PROFILE_7},
     };
     profile->sections[SECTION_DPAD_LEFT].button = (CtrlButton){
-        .mode=HOLD|OVERLAP,
+        .mode=HOLD|IMMEDIATE,
         .actions={PROC_PROFILE_4},
         .actions_secondary={PROC_PROFILE_8},
     };

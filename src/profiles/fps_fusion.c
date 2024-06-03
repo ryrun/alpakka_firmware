@@ -113,7 +113,7 @@ void config_profile_default_fps_fusion(CtrlProfile *profile){
         .hint="Jump",
     };
     profile->sections[SECTION_R4].button = (CtrlButton){
-        .mode=HOLD|OVERLAP,
+        .mode=HOLD|IMMEDIATE,
         .actions={KEY_CONTROL_LEFT},
         .hint="Crouch",
         .actions_secondary={KEY_P},

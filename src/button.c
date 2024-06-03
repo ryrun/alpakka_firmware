@@ -44,20 +44,20 @@ void Button__report(Button *self) {
         return;
     };
     if (self->mode & HOLD && self->mode & DOUBLE) {
-        bool overlap = self->mode & OVERLAP;
+        bool immediate = self->mode & IMMEDIATE;
         uint64_t hold_time = (self->mode & LONG) ? CFG_HOLD_LONG_TIME : CFG_HOLD_TIME;
-        self->handle_hold_double(self, overlap, hold_time, CFG_DOUBLE_PRESS_TIME);
+        self->handle_hold_double(self, immediate, hold_time, CFG_DOUBLE_PRESS_TIME);
         return;
     }
     if (self->mode & HOLD) {
-        bool overlap = self->mode & OVERLAP;
+        bool immediate = self->mode & IMMEDIATE;
         uint64_t time = (self->mode & LONG) ? CFG_HOLD_LONG_TIME : CFG_HOLD_TIME;
-        self->handle_hold(self, overlap, time);
+        self->handle_hold(self, immediate, time);
         return;
     }
     if (self->mode & DOUBLE) {
-        bool overlap = self->mode & OVERLAP;
-        self->handle_double(self, overlap, CFG_DOUBLE_PRESS_TIME);
+        bool immediate = self->mode & IMMEDIATE;
+        self->handle_double(self, immediate, CFG_DOUBLE_PRESS_TIME);
         return;
     }
     if (self->mode == STICKY) {
@@ -83,11 +83,11 @@ void Button__handle_normal(Button *self) {
     }
 }
 
-void Button__handle_hold(Button *self, bool overlap, uint16_t time) {
+void Button__handle_hold(Button *self, bool immediate, uint16_t time) {
     bool pressed = self->is_pressed(self);
     if(pressed && !self->state_primary && !self->state_secondary) {
         // Initial press.
-        if (overlap) hid_press_multiple(self->actions);
+        if (immediate) hid_press_multiple(self->actions);
         self->state_primary = true;
         self->press_timestamp = time_us_64();
         return;
@@ -96,17 +96,17 @@ void Button__handle_hold(Button *self, bool overlap, uint16_t time) {
         if (time_us_64() > self->press_timestamp + (time * 1000)) {
             // Pressed and being held long enough.
             hid_press_multiple(self->actions_secondary);
-            if (!overlap) self->state_primary = false;
+            if (!immediate) self->state_primary = false;
             self->state_secondary = true;
         }
     }
     if(!pressed) {
         if (self->state_primary) {
-            if (overlap) {
-                // Released and overlap was triggered.
+            if (immediate) {
+                // Released, immediate actions were triggered.
                 hid_release_multiple(self->actions);
             } else {
-                // Relased and it was never condidered held.
+                // Released, it was never condidered held.
                 hid_press_multiple(self->actions);
                 hid_release_multiple_later(self->actions, 100);
             }
@@ -122,7 +122,7 @@ void Button__handle_hold(Button *self, bool overlap, uint16_t time) {
     }
 }
 
-void Button__handle_double(Button *self, bool overlap, uint16_t time) {
+void Button__handle_double(Button *self, bool immediate, uint16_t time) {
     bool pressed = self->is_pressed(self);
     if (pressed && !self->timestamps_updated) {
         self->press_timestamp_prev = self->press_timestamp;
@@ -143,8 +143,8 @@ void Button__handle_double(Button *self, bool overlap, uint16_t time) {
             // It is a first press.
             self->state_primary = true;
             if (!self->emitted_primary) {
-                if (overlap) {
-                    // Trigger overlap immediately.
+                if (immediate) {
+                    // Trigger primary immediately.
                     hid_press_multiple(self->actions);
                     self->emitted_primary = true;
                 } else {
@@ -183,7 +183,7 @@ void Button__handle_double(Button *self, bool overlap, uint16_t time) {
     }
 }
 
-void Button__handle_hold_double(Button *self, bool overlap, uint16_t hold_time, uint16_t double_time) {
+void Button__handle_hold_double(Button *self, bool immediate, uint16_t hold_time, uint16_t double_time) {
     bool pressed = self->is_pressed(self);
     if (pressed && !self->timestamps_updated) {
         self->press_timestamp_prev = self->press_timestamp;
@@ -203,8 +203,8 @@ void Button__handle_hold_double(Button *self, bool overlap, uint16_t hold_time, 
         } else {
             self->state_primary = true;
             if (!self->state_secondary) {
-                if (overlap && !self->emitted_primary) {
-                    // Trigger overlap immediately.
+                if (immediate && !self->emitted_primary) {
+                    // Trigger primary immediately.
                     hid_press_multiple(self->actions);
                     self->emitted_primary = true;
                 }
@@ -219,11 +219,11 @@ void Button__handle_hold_double(Button *self, bool overlap, uint16_t hold_time, 
         return;
     }
     if (!pressed && self->emitted_primary) {
-        // Released and primary actions (overlap) was triggered.
+        // Released and primary actions (immediate) was triggered.
         hid_release_multiple(self->actions);
         self->emitted_primary = false;
     }
-    if(!pressed && self->state_primary && !self->state_secondary && !self->state_terciary && !overlap) {
+    if(!pressed && self->state_primary && !self->state_secondary && !self->state_terciary && !immediate) {
         uint64_t timeout = time_us_64() > self->press_timestamp + (double_time * 1000);
         if (timeout) {
             // Released for so long that the next press cannot be a double press.
