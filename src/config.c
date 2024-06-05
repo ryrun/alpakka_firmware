@@ -507,6 +507,14 @@ void config_profile_default(uint8_t index) {
     if (index == 11) config_profile_default_custom(         &(config_profile_cache[index]));
     if (index == 12) config_profile_default_custom(         &(config_profile_cache[index]));
     if (index == 13) config_profile_default_console_legacy( &(config_profile_cache[index]));
+    // Add number to the name of the default custom profiles.
+    if (index >= 9 && index<=12) {
+        char *name = config_profile_cache[index].sections[SECTION_META].meta.name;
+        char custom_name[9];  // Custom=6 +space +digit +nullterm.
+        snprintf(custom_name, 9, "Custom %i", index-8);
+        memcpy(name, custom_name, sizeof(custom_name));
+    }
+    // Save in NVM.
     config_profile_write(index);
 }
 

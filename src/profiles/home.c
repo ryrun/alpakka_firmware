@@ -42,24 +42,28 @@ void config_profile_default_home(CtrlProfile *profile){
 
     // DPad.
     profile->sections[SECTION_DPAD_UP].button = (CtrlButton){
-        .mode=HOLD|IMMEDIATE,
+        .mode=HOLD|DOUBLE|IMMEDIATE,
         .actions={PROC_PROFILE_1},
         .actions_secondary={PROC_PROFILE_5},
+        .actions_terciary={PROC_PROFILE_9},
     };
     profile->sections[SECTION_DPAD_RIGHT].button = (CtrlButton){
-        .mode=HOLD|IMMEDIATE,
+        .mode=HOLD|DOUBLE|IMMEDIATE,
         .actions={PROC_PROFILE_2},
         .actions_secondary={PROC_PROFILE_6},
+        .actions_terciary={PROC_PROFILE_10},
     };
     profile->sections[SECTION_DPAD_DOWN].button = (CtrlButton){
-        .mode=HOLD|IMMEDIATE,
+        .mode=HOLD|DOUBLE|IMMEDIATE,
         .actions={PROC_PROFILE_3},
         .actions_secondary={PROC_PROFILE_7},
+        .actions_terciary={PROC_PROFILE_11},
     };
     profile->sections[SECTION_DPAD_LEFT].button = (CtrlButton){
-        .mode=HOLD|IMMEDIATE,
+        .mode=HOLD|DOUBLE|IMMEDIATE,
         .actions={PROC_PROFILE_4},
         .actions_secondary={PROC_PROFILE_8},
+        .actions_terciary={PROC_PROFILE_12},
     };
 
     // Select.
