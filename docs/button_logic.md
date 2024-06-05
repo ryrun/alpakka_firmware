@@ -17,20 +17,20 @@ When the physical button is pressed, the defined actions are engaged.
 When the physical button is released, the defined actions are disengaged.
 
 ### HOLD mode
-When the physical button is pressed for a short period (shorter than the specified threshold) and released, the defined "short" actions are engaged and immediately disengaged. The delay between the press and release is considered a tradeoff compromise (undesired lag).
+When the physical button is pressed for a short period (shorter than the specified threshold) and released, the defined "short" actions are engaged and immediately disengaged. The delay between the press and release is considered a tradeoff compromise (activation lag).
 
 When the physical button is pressed for a long period (longer than the specified threshold), the defined "long" actions are engaged. Then when the physical button is released the "long" actions are disengaged.
 
 It is compatible with the "LONG" modifier, which increases the time threshold, and therefore how long the button has to be pressed to be considered a long press.
 
-It is compatible with the "IMMEDIATE" modifier, which will make the "short" actions to always be engaged immediately on button press, regardless of the press being considered long press or not later. In the case of a long press, both "short" and "long" set of actions will coexist until the physical button release makes them both to be disengaged. This modifier removes the "lag" mentioned previously, in the cases in which is acceptable to have both set of actions being engaged.
+It is compatible with the "IMMEDIATE" modifier, which will make the "short" actions to always be engaged immediately on button press, regardless of the press being considered long press or not later. In the case of a long press, both "short" and "long" set of actions will coexist until the physical button release makes them both to be disengaged. This modifier removes the "activation lag" mentioned previously, in the cases in which is acceptable to have both set of actions being engaged.
 
 ### DOUBLE mode (aka double press)
-When the physical button is pressed a single time (there is a brief delay until is determined that there is no subsequent press) the defined "single" actions are engaged and immediately disengaged. The delay between the initial press and the waiting period for a potential second press is considered a tradeoff compromise (undesired lag).
+When the physical button is pressed a single time (there is a brief delay until is determined that there is no subsequent press) the defined "single" actions are engaged and immediately disengaged. The delay between the initial press and the waiting period for a potential second press is considered a tradeoff compromise (activation lag).
 
 When the physical button is pressed twice (fast enough to be considered double press) the defined "double" actions are engaged. Then when the physical button is released the "double" actions are disengaged.
 
-It is compatible with the "IMMEDIATE" modifier, which will make the "single" actions to always be engaged immediately on button press, regardless of subsequent button presses being considered double press or not later. In the case of a double press, both "single" and "double" sets of actions will coexist until the physical button release makes them both to be disengaged. This modifier removes the "lag" mentioned previously, in the cases in which is acceptable to have both set of actions being engaged.
+It is compatible with the "IMMEDIATE" modifier, which will make the "single" actions to always be engaged immediately on button press, regardless of subsequent button presses being considered double press or not later. In the case of a double press, both "single" and "double" sets of actions will coexist until the physical button release makes them both to be disengaged. This modifier removes the "activation lag" mentioned previously, in the cases in which is acceptable to have both set of actions being engaged.
 
 ### HOLD and DOUBLE modes combined
 When the physical button is pressed a single time (there is a brief delay until is determined that there is no subsequent press), then this initial press will be evaluated for "short" or "long" according to the rules of the HOLD mode.
@@ -41,7 +41,7 @@ The combination of HOLD and DOUBLE logics could be implemented in different ways
 
 It is compatible with the "LONG" modifier, which increases the (long press) time threshold, and therefore how long the button has to be pressed to be considered a long press.
 
-It is compatible with the "IMMEDIATE" modifier, which will make the "short" actions to always be engaged immediately on button press, regardless of subsequent button presses being considered long press or double press later. In the case of a long press or double press, both "short" and ("long" or "double") sets of actions will coexist until the physical button release makes them both to be disengaged. This modifier removes the "lag" mentioned previously, in the cases in which is acceptable to have both set of actions being engaged.
+It is compatible with the "IMMEDIATE" modifier, which will make the "short" actions to always be engaged immediately on button press, regardless of subsequent button presses being considered long press or double press later. In the case of a long press, both "short" and "long" sets of actions will coexist until the physical button release makes them both to be disengaged. In the case of a double press, "short" actions will be engaged/disengaged in the first press/release, and "double actions" will be engaged/disengaged in the second press/release. This modifier removes the "activation lag", in the cases in which is acceptable to have both set of actions being engaged.
 
 ### STICKY mode (aka home-cycle)
 When the home button is held, the first press on the complementary physical button will engage both "main" and "cycle" sets of actions.

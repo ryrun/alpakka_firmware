@@ -113,14 +113,13 @@ typedef struct __packed _CtrlProfileMeta {
 typedef struct __packed _CtrlButton {
     // Must be packed (58 bytes).
     uint8_t mode;
-    uint8_t reserved;
     uint8_t actions[4];
     uint8_t actions_secondary[4];
     uint8_t actions_terciary[4];
-    uint8_t actions_reserved[12];
-    uint8_t chords[4];
     uint8_t hint[14];
     uint8_t hint_secondary[14];
+    uint8_t hint_terciary[14];
+    uint8_t _padding[3];
 } CtrlButton;
 
 typedef struct __packed _CtrlRotary {
