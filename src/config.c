@@ -58,7 +58,7 @@ void config_profile_load(uint8_t index) {
     CtrlProfileMeta meta = config_profile_cache[index].sections[SECTION_META].meta;
     if (meta.control_byte != NVM_CONTROL_BYTE) {
         debug("Config: Profile %i not found\n", index);
-        config_profile_default(index);
+        config_profile_default(index, index);
     }
     uint32_t version = (
         (meta.version_major * 1000000) +
@@ -67,7 +67,7 @@ void config_profile_load(uint8_t index) {
     );
     if (version < NVM_PROFILE_VERSION) {
         debug("Config: Profile %i incompatible version (%lu)\n", index, version);
-        config_profile_default(index);
+        config_profile_default(index, index);
     }
     // Tag as synced.
     config_profile_cache_synced[index] = true;
@@ -105,6 +105,11 @@ void config_profile_set_sync(uint8_t index, bool state) {
 }
 
 void config_sync() {
+    // Do not check in every cycle.
+    static uint16_t i = 0;
+    i++;
+    if (i != NVM_SYNC_FREQUENCY) return;
+    else i = 0;
     // Sync main config.
     if (!config_cache_synced) {
         config_write();
@@ -490,39 +495,61 @@ bool config_problems_are_pending() {
     return problem_calibration || problem_gyro;
 }
 
-void config_profile_default(uint8_t index) {
-    info("Config: Profile %i init from default\n", index);
-    config_profile_clear_cache(index);
-    if (index ==  0) config_profile_default_home(           &(config_profile_cache[index]));
-    if (index ==  1) config_profile_default_fps_fusion(     &(config_profile_cache[index]));
-    if (index ==  2) config_profile_default_racing(         &(config_profile_cache[index]));
-    if (index ==  3) config_profile_default_console(        &(config_profile_cache[index]));
-    if (index ==  4) config_profile_default_desktop(        &(config_profile_cache[index]));
-    if (index ==  5) config_profile_default_fps_wasd(       &(config_profile_cache[index]));
-    if (index ==  6) config_profile_default_flight(         &(config_profile_cache[index]));
-    if (index ==  7) config_profile_default_console_legacy( &(config_profile_cache[index]));
-    if (index ==  8) config_profile_default_rts(            &(config_profile_cache[index]));
-    if (index ==  9) config_profile_default_custom(         &(config_profile_cache[index]));
-    if (index == 10) config_profile_default_custom(         &(config_profile_cache[index]));
-    if (index == 11) config_profile_default_custom(         &(config_profile_cache[index]));
-    if (index == 12) config_profile_default_custom(         &(config_profile_cache[index]));
-    if (index == 13) config_profile_default_console_legacy( &(config_profile_cache[index]));
+void config_profile_default(uint8_t indexTo, int8_t indexFrom) {
+    info("Config: Profile %i init from default %i\n", indexTo, indexFrom);
+    config_profile_clear_cache(indexTo);
+    if (indexFrom ==  0) config_profile_default_home(           &(config_profile_cache[indexTo]));
+    if (indexFrom ==  1) config_profile_default_fps_fusion(     &(config_profile_cache[indexTo]));
+    if (indexFrom ==  2) config_profile_default_racing(         &(config_profile_cache[indexTo]));
+    if (indexFrom ==  3) config_profile_default_console(        &(config_profile_cache[indexTo]));
+    if (indexFrom ==  4) config_profile_default_desktop(        &(config_profile_cache[indexTo]));
+    if (indexFrom ==  5) config_profile_default_fps_wasd(       &(config_profile_cache[indexTo]));
+    if (indexFrom ==  6) config_profile_default_flight(         &(config_profile_cache[indexTo]));
+    if (indexFrom ==  7) config_profile_default_console_legacy( &(config_profile_cache[indexTo]));
+    if (indexFrom ==  8) config_profile_default_rts(            &(config_profile_cache[indexTo]));
+    if (indexFrom ==  9) config_profile_default_custom(         &(config_profile_cache[indexTo]));
+    if (indexFrom == 10) config_profile_default_custom(         &(config_profile_cache[indexTo]));
+    if (indexFrom == 11) config_profile_default_custom(         &(config_profile_cache[indexTo]));
+    if (indexFrom == 12) config_profile_default_custom(         &(config_profile_cache[indexTo]));
+    if (indexFrom == 13) config_profile_default_console_legacy( &(config_profile_cache[indexTo]));
     // Add number to the name of the default custom profiles.
-    if (index >= 9 && index<=12) {
-        char *name = config_profile_cache[index].sections[SECTION_META].meta.name;
+    if (indexTo >= 9 && indexTo<=12) {
+        char *name = config_profile_cache[indexTo].sections[SECTION_META].meta.name;
         char custom_name[9];  // Custom=6 +space +digit +nullterm.
-        snprintf(custom_name, 9, "Custom %i", index-8);
+        snprintf(custom_name, 9, "Custom %i", indexTo-8);
         memcpy(name, custom_name, sizeof(custom_name));
     }
     // Save in NVM.
-    config_profile_write(index);
+    config_profile_write(indexTo);
 }
 
 void config_profile_default_all() {
     debug("Config: Init all profiles from defaults\n");
     for(uint8_t i=0; i<NVM_PROFILE_SLOTS; i++) {
-        config_profile_default(i);
+        config_profile_default(i, i);
     }
+}
+
+void config_profile_overwrite(uint8_t indexTo, int8_t indexFrom) {
+    debug("Config: Profile overwrite %i -> %i\n", indexFrom, indexTo);
+    // Remember name.
+    char name[24];
+    CtrlProfileMeta *meta = &(config_profile_cache[indexTo]).sections[SECTION_META].meta;
+    memcpy(name, meta->name, 24);
+    // From default.
+    if (indexFrom < 0) {
+        config_profile_default(indexTo, -indexFrom);
+    }
+    // From other profile slot.
+    if (indexFrom > 0) {
+        memcpy(
+            &config_profile_cache[indexTo],
+            &config_profile_cache[indexFrom],
+            sizeof(CtrlProfile)
+        );
+    }
+    // Restore name.
+    memcpy(meta->name, name, 24);
 }
 
 void config_init_profiles_from_nvm() {

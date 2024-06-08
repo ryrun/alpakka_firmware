@@ -190,6 +190,8 @@ void webusb_handle_config_set(Ctrl_cfg_type key, uint8_t preset, uint8_t values[
 }
 
 void webusb_handle_profile_set(uint8_t profileIndex, uint8_t sectionIndex, uint8_t section[58]) {
+    debug("WebUSB: Handle profile SET %i %i\n", profileIndex, sectionIndex);
+    print_array(section, 58);
     // Update profile in config.
     CtrlProfile *profile_cfg = config_profile_read(profileIndex);
     profile_cfg->sections[sectionIndex] = *(CtrlSection*)section;
@@ -197,6 +199,9 @@ void webusb_handle_profile_set(uint8_t profileIndex, uint8_t sectionIndex, uint8
     Profile *profile = profile_get(profileIndex);
     profile->load_from_config(profile, profile_cfg);
     config_profile_set_sync(profileIndex, false);
+    // Send back data as confirmation.
+    webusb_pending_profile_share = profileIndex;
+    webusb_pending_section_share = sectionIndex;
 }
 
 void webusb_read() {
@@ -220,15 +225,18 @@ void webusb_read() {
             &ctrl.payload[2]  // Preset values. (Reference to sub-array).
         );
     }
-    if (ctrl.message_type == PROFILE_GET) {
+    if (ctrl.message_type == SECTION_GET) {
         webusb_handle_profile_get(ctrl.payload[0], ctrl.payload[1]);
     }
-    if (ctrl.message_type == PROFILE_SET) {
+    if (ctrl.message_type == SECTION_SET) {
         webusb_handle_profile_set(
             ctrl.payload[0],
             ctrl.payload[1],
             &ctrl.payload[2]
         );
+    }
+    if (ctrl.message_type == PROFILE_OVERWRITE) {
+        config_profile_overwrite(ctrl.payload[0], ctrl.payload[1]);
     }
 }
 

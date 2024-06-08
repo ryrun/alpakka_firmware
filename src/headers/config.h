@@ -26,6 +26,8 @@
 #define CFG_IMU_TICK_SAMPLES 128  // Multi-sampling per pooling cycle.
 #define CFG_HID_REPORT_PRIORITY_RATIO 8
 
+#define NVM_SYNC_FREQUENCY  (CFG_TICK_FREQUENCY / 2)
+
 #define CFG_CALIBRATION_SAMPLES_THUMBSTICK 100000  // Samples.
 #define CFG_CALIBRATION_SAMPLES_GYRO 200000  // Samples.
 #define CFG_CALIBRATION_SAMPLES_ACCEL 100000  // Samples.
@@ -126,7 +128,7 @@ CtrlProfile* config_profile_read(uint8_t index);
 void config_profile_write(uint8_t index);
 void config_profile_set_sync(uint8_t index, bool state);
 void config_profile_default_all();
-void config_profile_default(uint8_t index);
+void config_profile_default(uint8_t indexTo, int8_t indexFrom);
 void config_profile_default_home(CtrlProfile *profile);
 void config_profile_default_fps_fusion(CtrlProfile *profile);
 void config_profile_default_fps_wasd(CtrlProfile *profile);
@@ -137,6 +139,7 @@ void config_profile_default_console_legacy(CtrlProfile *profile);
 void config_profile_default_desktop(CtrlProfile *profile);
 void config_profile_default_rts(CtrlProfile *profile);
 void config_profile_default_custom(CtrlProfile *profile);
+void config_profile_overwrite(uint8_t indexTo, int8_t indexFrom);
 
 // Problems.
 void config_set_problem_calibration(bool state);

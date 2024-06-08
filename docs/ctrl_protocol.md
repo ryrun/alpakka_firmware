@@ -42,12 +42,13 @@ PROC | 2
 CONFIG_GET | 3
 CONFIG_SET | 4
 CONFIG_SHARE | 5
-PROFILE_GET | 6
-PROFILE_SET | 7
-PROFILE_SHARE | 8
+SECTION_GET | 6
+SECTION_SET | 7
+SECTION_SHARE | 8
 STATUS_GET | 9
 STATUS_SET | 10
 STATUS_SHARE | 11
+PROFILE_OVERWRITE | 12
 
 ### Procedure index
 Procedure index as defined in [hid.h](/src/headers/hid.h).
@@ -201,7 +202,7 @@ Direction: `Controller` -> `App`
 | Version | Device Id | Message type | Payload size | Payload      | Payload       | Payload
 |         |           | CONFIG_SHARE | 6            | CONFIG INDEX | PRESET INDEX  | PRESETS VALUE
 
-## Profile GET message
+## Section GET message
 Request the current value of some specific profile section.
 
 Direction: `Controller` <- `App`
@@ -209,9 +210,9 @@ Direction: `Controller` <- `App`
 | Byte 0  | 1         | 2            | 3            | 4             | 5 |
 | -       | -         | -            | -            | -             | - |
 | Version | Device Id | Message type | Payload size | Payload       | Payload
-|         |           | PROFILE_GET  | 2            | PROFILE INDEX | SECTION INDEX
+|         |           | SECTION_GET  | 2            | PROFILE INDEX | SECTION INDEX
 
-## Profile SET message
+## Section SET message
 Change the value of some specific profile section.
 
 Direction: `Controller` <- `App`
@@ -219,9 +220,9 @@ Direction: `Controller` <- `App`
 | Byte 0  | 1         | 2            | 3            | 4             | 5             | 6~64 |
 | -       | -         | -            | -            | -             | -             | -    |
 | Version | Device Id | Message type | Payload size | Payload       | Payload       | Payload
-|         |           | PROFILE_SET  | 58           | PROFILE INDEX | SECTION INDEX | SECTION DATA
+|         |           | SECTION_SET  | 58           | PROFILE INDEX | SECTION INDEX | SECTION DATA
 
-## Profile SHARE message
+## Section SHARE message
 Notify the current value of some specific profile section.
 
 Direction: `Controller` -> `App`
@@ -229,7 +230,21 @@ Direction: `Controller` -> `App`
 | Byte 0  | 1         | 2              | 3            | 4             | 5             | 6~64 |
 | -       | -         | -              | -            | -             | -             | -    |
 | Version | Device Id | Message type   | Payload size | Payload       | Payload       | Payload
-|         |           | PROFILE_SHARE  | 58           | PROFILE INDEX | SECTION INDEX | SECTION DATA
+|         |           | SECTION_SHARE  | 58           | PROFILE INDEX | SECTION INDEX | SECTION DATA
+
+## Profile OVERWRITE message
+Replaces a controller profile with a profile from another slot or default profile.
+
+Direction: `App` -> `Controller`
+
+| Byte 0  | 1         | 2                  | 3            | 4             | 5
+| -       | -         | -                  | -            | -             | -
+| Version | Device Id | Message type       | Payload size | Payload       | Payload
+|         |           | PROFILE_OVERWRITE  | 2            | PROFILE TO    | PROFILE FROM
+
+**Profile To:** The target profile slot index to be overwritten (1 to 12).
+
+**Profile From:** The profile index to be used as data source. Positive values (1, 12) to use another profile from memory as is. Negative values (-1 to -9) to use profile built-in defaults.
 
 ## Example of config interchange
 ```mermaid

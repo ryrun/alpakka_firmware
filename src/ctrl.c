@@ -94,7 +94,7 @@ Ctrl ctrl_profile_share(uint8_t profile_index, uint8_t section_index) {
     Ctrl ctrl = {
         .protocol_version = CTRL_PROTOCOL_VERSION,
         .device_id = ALPAKKA,
-        .message_type = PROFILE_SHARE,
+        .message_type = SECTION_SHARE,
         .len = 60
     };
     // Profile section struct cast into packed int array.
