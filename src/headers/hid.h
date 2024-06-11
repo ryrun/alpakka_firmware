@@ -2,8 +2,10 @@
 // Copyright (C) 2022, Input Labs Oy.
 
 #pragma once
+#include <stdbool.h>
 #include <pico/time.h>
 #include "common.h"
+#include "xinput.h"
 
 #define MODIFIER_INDEX 154
 #define MOUSE_INDEX 162
@@ -261,9 +263,11 @@
 
 #define PROC_IGNORE_LED_WARNINGS  PROC_INDEX + 41
 
-
+void hid_init();
 void hid_thanks();
 void hid_matrix_reset();
+
+// Keys.
 void hid_press(uint8_t key);
 void hid_release(uint8_t key);
 void hid_press_multiple(uint8_t *keys);
@@ -277,16 +281,70 @@ void hid_release_later_callback(alarm_id_t alarm, uint8_t key);
 void hid_press_multiple_later_callback(alarm_id_t alarm, uint8_t *keys);
 void hid_release_multiple_later_callback(alarm_id_t alarm, uint8_t *keys);
 void hid_macro(uint8_t index);
-bool hid_is_axis(uint8_t key);
+
+// Mouse axis.
 void hid_mouse_move(int16_t x, int16_t y);
 void hid_mouse_wheel(int8_t z);
+
+// Gamepad.
+bool hid_is_axis(uint8_t key);
 void hid_gamepad_lx(double value);
 void hid_gamepad_ly(double value);
 void hid_gamepad_rx(double value);
 void hid_gamepad_ry(double value);
 void hid_gamepad_lz(double value);
 void hid_gamepad_rz(double value);
-void hid_report();
-void hid_init();
+
+// Report.
+bool hid_report();
+void hid_report_wireless();
 
 extern bool hid_allow_communication;
+
+#define REPORT_KEYBOARD 1
+#define REPORT_MOUSE 2
+#define REPORT_GAMEPAD 3
+#define REPORT_XINPUT 4
+#define REPORT_WEBUSB 5
+#define REPORT_MOUSE_EOT 6
+#define REPORT_TIMESTAMP 7
+
+#define REPORT_QUEUE_ITEM_SIZE 20
+#define REPORT_QUEUE_LEN 16
+
+typedef struct __packed _KeyboardReport {
+    uint8_t modifier;
+    uint8_t reserved;
+    uint8_t keycode[6];
+} KeyboardReport;
+
+typedef struct __packed _MouseReport {
+    uint8_t buttons;
+    int16_t x;
+    int16_t y;
+    int8_t scroll;
+    int8_t pan;
+} MouseReport;
+
+typedef struct __packed _GamepadReport {
+    int16_t lx;
+    int16_t ly;
+    int16_t rx;
+    int16_t ry;
+    int16_t lz;
+    int16_t rz;
+    uint32_t buttons;
+} GamepadReport;
+
+typedef struct __packed _MetaReport {
+    KeyboardReport kb_report;
+    MouseReport m_report;
+    XInputReport x_report;
+    uint8_t kb_reports;
+    uint8_t m_reports;
+    uint8_t x_reports;
+    bool mouse_eot;  // Mouse End Of Transmission.
+} MetaReport;
+
+
+void hid_report_mouse_direct(MouseReport report); // DELETE
