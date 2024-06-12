@@ -20,12 +20,13 @@ typedef enum Ctrl_msg_type_enum {
     CONFIG_GET,
     CONFIG_SET,
     CONFIG_SHARE,
-    PROFILE_GET,
-    PROFILE_SET,
-    PROFILE_SHARE,
+    SECTION_GET,
+    SECTION_SET,
+    SECTION_SHARE,
     STATUS_GET,
     STATUS_SET,
     STATUS_SHARE,
+    PROFILE_OVERWRITE,
 } Ctrl_msg_type;
 
 typedef enum Ctrl_cfg_type_enum {
@@ -215,4 +216,4 @@ Ctrl ctrl_empty();
 Ctrl ctrl_log(uint8_t* offset_ptr, uint8_t len);
 Ctrl ctrl_status_share();
 Ctrl ctrl_config_share(uint8_t index);
-Ctrl ctrl_profile_share(uint8_t profile_index, uint8_t section_index);
+Ctrl ctrl_section_share(uint8_t profile_index, uint8_t section_index);
