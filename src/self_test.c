@@ -22,7 +22,7 @@ void self_test_button_press(const char *buttonName, Button* button) {
 
 void self_test_buttons(Profile* profile) {
     Actions none = {0,};
-    Button home = Button_(PIN_HOME, NORMAL, none, none);
+    Button home = Button_(PIN_HOME, NORMAL, none, none, none);
     self_test_button_press("A", &profile->a);
     self_test_button_press("B", &profile->b);
     self_test_button_press("X", &profile->x);

@@ -96,7 +96,7 @@ void config_profile_default_console(CtrlProfile *profile){
         .actions={KEY_SPACE},
     };
     profile->sections[SECTION_R4].button = (CtrlButton){
-        .mode=HOLD_OVERLAP,
+        .mode=NORMAL,
         .actions={KEY_CONTROL_LEFT},
     };
 

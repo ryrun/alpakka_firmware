@@ -113,7 +113,7 @@ void config_profile_default_racing(CtrlProfile *profile){
         .hint="MDF-",
     };
     profile->sections[SECTION_R4].button = (CtrlButton){
-        .mode=HOLD_OVERLAP,
+        .mode=NORMAL,
         .actions={GAMEPAD_RIGHT},
         .hint="MDF+",
     };

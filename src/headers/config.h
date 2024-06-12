@@ -40,11 +40,9 @@
 #define CFG_ACCEL_CORRECTION_RATE 0.0007  // How fast the correction is applied.
 
 #define CFG_PRESS_DEBOUNCE 50  // Milliseconds.
-#define CFG_HOLD_EXCLUSIVE_TIME 200  // Milliseconds.
-#define CFG_HOLD_EXCLUSIVE_LONG_TIME 2000  // Milliseconds.
-#define CFG_HOLD_OVERLAP_TIME 250  // Milliseconds.
-#define CFG_HOLD_OVERLAP_LONG_TIME 2000  // Milliseconds.
-#define CFG_DOUBLE_PRESS 300  // Milliseconds.
+#define CFG_HOLD_TIME 200  // Milliseconds.
+#define CFG_HOLD_LONG_TIME 2000  // Milliseconds.
+#define CFG_DOUBLE_PRESS_TIME 300  // Milliseconds.
 
 #define CFG_THUMBSTICK_SATURATION 1.6
 #define CFG_THUMBSTICK_INNER_RADIUS 0.75
