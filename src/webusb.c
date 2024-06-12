@@ -191,7 +191,6 @@ void webusb_handle_config_set(Ctrl_cfg_type key, uint8_t preset, uint8_t values[
 
 void webusb_handle_profile_set(uint8_t profileIndex, uint8_t sectionIndex, uint8_t section[58]) {
     debug("WebUSB: Handle profile SET %i %i\n", profileIndex, sectionIndex);
-    print_array(section, 58);
     // Update profile in config.
     CtrlProfile *profile_cfg = config_profile_read(profileIndex);
     profile_cfg->sections[sectionIndex] = *(CtrlSection*)section;
