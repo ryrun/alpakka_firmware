@@ -39,31 +39,11 @@ bool Button__is_pressed(Button *self) {
 }
 
 void Button__report(Button *self) {
-    if (self->mode == NORMAL) {
-        self->handle_normal(self);
-        return;
-    };
-    if (self->mode & HOLD && self->mode & DOUBLE) {
-        bool immediate = self->mode & IMMEDIATE;
-        uint64_t hold_time = (self->mode & LONG) ? CFG_HOLD_LONG_TIME : CFG_HOLD_TIME;
-        self->handle_hold_double(self, immediate, hold_time, CFG_DOUBLE_PRESS_TIME);
-        return;
-    }
-    if (self->mode & HOLD) {
-        bool immediate = self->mode & IMMEDIATE;
-        uint64_t time = (self->mode & LONG) ? CFG_HOLD_LONG_TIME : CFG_HOLD_TIME;
-        self->handle_hold(self, immediate, time);
-        return;
-    }
-    if (self->mode & DOUBLE) {
-        bool immediate = self->mode & IMMEDIATE;
-        self->handle_double(self, immediate, CFG_DOUBLE_PRESS_TIME);
-        return;
-    }
-    if (self->mode == STICKY) {
-        self->handle_sticky(self);
-        return;
-    };
+    if (self->mode == NORMAL) self->handle_normal(self);
+    if ( (self->mode & HOLD) && !(self->mode & DOUBLE)) self->handle_hold(self);
+    if (!(self->mode & HOLD) &&  (self->mode & DOUBLE)) self->handle_double(self);
+    if ( (self->mode & HOLD) &&  (self->mode & DOUBLE)) self->handle_hold_double(self);
+    if (self->mode == STICKY) self->handle_sticky(self);
 }
 
 void Button__handle_normal(Button *self) {
@@ -83,7 +63,9 @@ void Button__handle_normal(Button *self) {
     }
 }
 
-void Button__handle_hold(Button *self, bool immediate, uint16_t time) {
+void Button__handle_hold(Button *self) {
+    bool immediate = self->mode & IMMEDIATE;
+    uint64_t time = (self->mode & LONG) ? CFG_HOLD_LONG_TIME : CFG_HOLD_TIME;
     bool pressed = self->is_pressed(self);
     if(pressed && !self->state_primary && !self->state_secondary) {
         // Initial press.
@@ -119,7 +101,9 @@ void Button__handle_hold(Button *self, bool immediate, uint16_t time) {
     }
 }
 
-void Button__handle_double(Button *self, bool immediate, uint16_t time) {
+void Button__handle_double(Button *self) {
+    bool immediate = self->mode & IMMEDIATE;
+    uint16_t time = CFG_DOUBLE_PRESS_TIME;
     bool pressed = self->is_pressed(self);
     if (pressed && !self->timestamps_updated) {
         self->press_timestamp_prev = self->press_timestamp;
@@ -180,7 +164,10 @@ void Button__handle_double(Button *self, bool immediate, uint16_t time) {
     }
 }
 
-void Button__handle_hold_double(Button *self, bool immediate, uint16_t hold_time, uint16_t double_time) {
+void Button__handle_hold_double(Button *self) {
+    bool immediate = self->mode & IMMEDIATE;
+    uint64_t hold_time = (self->mode & LONG) ? CFG_HOLD_LONG_TIME : CFG_HOLD_TIME;
+    uint16_t double_time = CFG_DOUBLE_PRESS_TIME;
     bool pressed = self->is_pressed(self);
     if (pressed && !self->timestamps_updated) {
         self->press_timestamp_prev = self->press_timestamp;

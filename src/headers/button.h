@@ -26,9 +26,9 @@ struct Button_struct {
     void (*report) (Button *self);
     void (*reset) (Button *self);
     void (*handle_normal) (Button *self);
-    void (*handle_hold) (Button *self, bool immediate, uint16_t time);
-    void (*handle_double) (Button *self, bool immediate, uint16_t time);
-    void (*handle_hold_double) (Button *self, bool immediate, uint16_t hold_time, uint16_t double_time);
+    void (*handle_hold) (Button *self);
+    void (*handle_double) (Button *self);
+    void (*handle_hold_double) (Button *self);
     void (*handle_sticky) (Button *self);
     uint8_t pin;
     ButtonMode mode;
