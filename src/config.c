@@ -517,7 +517,7 @@ void config_profile_default_all() {
     }
 }
 
-void config_init_profiles_from_nvm() {
+void config_init_profiles() {
     info("NVM: Loading profiles\n");
     for(uint8_t i=0; i<NVM_PROFILE_SLOTS; i++) {
         config_profile_load(i);
@@ -525,9 +525,9 @@ void config_init_profiles_from_nvm() {
 }
 
 void config_init() {
-    char pico_id[64];
-    pico_get_unique_board_id_string(pico_id, 64);
-    info("Pico UID: %s\n", pico_id);
+    char board_id[64];
+    pico_get_unique_board_id_string(board_id, 64);
+    info("Board UID: %s\n", board_id);
     info("INIT: Config\n");
     config_load();
     if (
@@ -537,7 +537,6 @@ void config_init() {
         warn("NVM config not found or incompatible, writing default instead\n");
         config_write_init();
     }
-    config_init_profiles_from_nvm();
     config_print();
 }
 

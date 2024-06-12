@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <hardware/gpio.h>
 #include <hardware/i2c.h>
 #include <hardware/spi.h>
@@ -53,12 +54,18 @@ Tristate bus_i2c_io_tristate(uint8_t index) {
 }
 
 void bus_i2c_io_pcb_gen_determine() {
-    bus_i2c_write(I2C_IO_0, I2C_IO_REG_POLARITY+1, 0b00000000);
-    bus_i2c_write(I2C_IO_0, I2C_IO_REG_PULL+1,     0b11111111);
-    Tristate value_0 = bus_i2c_io_tristate(PIN_PCBGEN_0 - PIN_GROUP_IO_0);
-    // NOTE: Use a ternary mask if versions go over 3.
-    // See https://github.com/inputlabs/alpakka_pcb/blob/main/generations.md
-    config_set_pcb_gen(value_0);
+    printf("Bus: I2C determine PCB gen\n");
+    #ifdef DEVICE_ALPAKKA_V0
+        bus_i2c_write(I2C_IO_0, I2C_IO_REG_POLARITY+1, 0b00000000);
+        bus_i2c_write(I2C_IO_0, I2C_IO_REG_PULL+1,     0b11111111);
+        Tristate value_0 = bus_i2c_io_tristate(PIN_PCBGEN_0 - PIN_GROUP_IO_0);
+        // NOTE: Use a ternary mask if versions go over 3.
+        // See https://github.com/inputlabs/alpakka_pcb/blob/main/generations.md
+        config_set_pcb_gen(value_0);
+    #endif
+    #ifdef DEVICE_ALPAKKA_V1
+        config_set_pcb_gen(1);
+    #endif
 }
 
 void bus_i2c_io_cache_update() {
@@ -75,18 +82,26 @@ bool bus_i2c_io_read(uint8_t device_id, uint8_t bit_index) {
     return value & (1 << bit_index);
 }
 
+void bus_spi_write_32(uint8_t cs, uint8_t reg, uint8_t buf[32]) {
+    gpio_put(cs, false);
+    uint8_t regbuf[33] = {reg};
+    memcpy(&regbuf[1], buf, 32);
+    spi_write_blocking(SPI_CHANNEL, regbuf, 33);
+    gpio_put(cs, true);
+}
+
 void bus_spi_write(uint8_t cs, uint8_t reg, uint8_t value) {
     gpio_put(cs, false);
-    uint8_t buf[] = {reg, value};
-    spi_write_blocking(spi1, buf, 2);
+    uint8_t tuple[2] = {reg, value};
+    spi_write_blocking(SPI_CHANNEL, tuple, 2);
     gpio_put(cs, true);
 }
 
 void bus_spi_read(uint8_t cs, uint8_t reg, uint8_t *buf, uint8_t size) {
     gpio_put(cs, false);
-    reg |= 0b10000000;  // Read byte.
-    spi_write_blocking(spi1, &reg, 1);
-    spi_read_blocking(spi1, 0, buf, size);
+    // reg |= 0b10000000;  // Read byte.  // TODO fix IO expander read/write byte
+    spi_write_blocking(SPI_CHANNEL, &reg, 1);
+    spi_read_blocking(SPI_CHANNEL, 0, buf, size);
     gpio_put(cs, true);
 }
 
@@ -99,11 +114,11 @@ uint8_t bus_spi_read_one(uint8_t cs, uint8_t reg) {
 void bus_i2c_init() {
     info("INIT: I2C bus\n");
     i2c_init(i2c1, I2C_FREQ);
-    gpio_set_function(PIN_SDA, GPIO_FUNC_I2C);
-    gpio_set_function(PIN_SCL, GPIO_FUNC_I2C);
-    gpio_pull_up(PIN_SDA);
-    gpio_pull_up(PIN_SCL);
-    if (!gpio_get(PIN_SDA) || !gpio_get(PIN_SCL)) {
+    gpio_set_function(PIN_I2C_SDA, GPIO_FUNC_I2C);
+    gpio_set_function(PIN_I2C_SCL, GPIO_FUNC_I2C);
+    gpio_pull_up(PIN_I2C_SDA);
+    gpio_pull_up(PIN_I2C_SCL);
+    if (!gpio_get(PIN_I2C_SDA) || !gpio_get(PIN_I2C_SCL)) {
         error("I2C bus is not clean, unplug the controller\n");
         exit(1);
     }
@@ -130,20 +145,27 @@ void bus_i2c_io_init() {
 
 void bus_spi_init() {
     info("INIT: SPI bus\n");
-    spi_init(spi1, SPI_FREQ);
+    spi_init(SPI_CHANNEL, SPI_FREQ);
     gpio_set_function(PIN_SPI_CK, GPIO_FUNC_SPI);
     gpio_set_function(PIN_SPI_TX, GPIO_FUNC_SPI);
     gpio_set_function(PIN_SPI_RX, GPIO_FUNC_SPI);
+    // IMUs.
     gpio_init(PIN_SPI_CS0);
     gpio_init(PIN_SPI_CS1);
     gpio_set_dir(PIN_SPI_CS0, GPIO_OUT);
     gpio_set_dir(PIN_SPI_CS1, GPIO_OUT);
     gpio_put(PIN_SPI_CS0, true);
     gpio_put(PIN_SPI_CS1, true);
+    // Radio.
+    #if defined(DEVICE_ALPAKKA_V1) || defined(DEVICE_DONGLE)
+        gpio_init(PIN_SPI_CS_NRF24);
+        gpio_set_dir(PIN_SPI_CS_NRF24, GPIO_OUT);
+        gpio_put(PIN_SPI_CS_NRF24, true);
+    #endif
 }
 
 void bus_init() {
     bus_i2c_init();
-    bus_i2c_io_init();
+    // bus_i2c_io_init();
     bus_spi_init();
 }

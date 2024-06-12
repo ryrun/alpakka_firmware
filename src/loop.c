@@ -82,8 +82,6 @@ static void dongle_title() {
 // }
 
 void loop_device_init() {
-    debug("LOOP: loop_device_init\n");
-    // flash_safe_execute_core_init();
     led_init();
     stdio_uart_init();
     stdio_init_all();
@@ -91,16 +89,17 @@ void loop_device_init() {
     logging_init();
     device_title();
     config_init();
+    config_init_profiles();
     // tusb_init();
     // bool usb = usb_wait_for_init(USB_WAIT_FOR_INIT_MS);
     // wait_for_system_clock();
     bus_init();
     hid_init();
-    thumbstick_init();
-    touch_init();
-    rotary_init();
+    // thumbstick_init();
+    // touch_init();
+    // rotary_init();
     profile_init();
-    imu_init();
+    // imu_init();
     // if (0 && usb) set_wired();
     // else set_wireless();
     wireless_device_init();
@@ -108,20 +107,18 @@ void loop_device_init() {
 }
 
 void loop_host_init() {
-    debug("LOOP: loop_host_init\n");
-    // flash_safe_execute_core_init();
+    led_init();
     stdio_uart_init();
     stdio_init_all();
     logging_set_level(LOG_INFO);
     logging_init();
     dongle_title();
+    config_init();
     tusb_init();
     usb_wait_for_init(-1);  // Negative number = no timeout.
     // wait_for_system_clock();
-    // config_init();
     bus_init();
     hid_init();
-    // multicore_launch_core1(wireless_host_init);
     wireless_host_init();
     loop_cycle();
 }
@@ -160,10 +157,11 @@ void loop_host_task() {
         webusb_read();
         webusb_flush();
     }
+    uart_listen();
 }
 
 void loop_cycle() {
-    info("LOOP: Main loop start (core %i)\n", get_core_num());
+    info("LOOP: Main loop start\n");
     uint16_t i = 0;
     logging_set_onloop(true);
     while (true) {
@@ -171,10 +169,13 @@ void loop_cycle() {
         // Start timer.
         uint32_t start = time_us_32();
         // Task.
-        #ifdef FW_DEVICE_ALPAKKA
+        #ifdef DEVICE_ALPAKKA_V0
             loop_device_task();
         #endif
-        #ifdef FW_DEVICE_DONGLE
+        #ifdef DEVICE_ALPAKKA_V1
+            loop_device_task();
+        #endif
+        #ifdef DEVICE_DONGLE
             loop_host_task();
         #endif
         // Calculate used time.

@@ -4,10 +4,13 @@
 #include "loop.h"
 
 int main() {
-    #ifdef FW_DEVICE_ALPAKKA
+    #ifdef DEVICE_ALPAKKA_V0
         loop_device_init();
     #endif
-    #ifdef FW_DEVICE_DONGLE
+    #ifdef DEVICE_ALPAKKA_V1
+        loop_device_init();
+    #endif
+    #ifdef DEVICE_DONGLE
         loop_host_init();
     #endif
 }

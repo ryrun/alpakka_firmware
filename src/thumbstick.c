@@ -65,8 +65,8 @@ void thumbstick_calibrate() {
 void thumbstick_init() {
     info("INIT: Thumbstick\n");
     adc_init();
-    adc_gpio_init(PIN_TX);
-    adc_gpio_init(PIN_TY);
+    adc_gpio_init(PIN_THUMBSTICK_LX);
+    adc_gpio_init(PIN_THUMBSTICK_LY);
     thumbstick_update_offsets();
     thumbstick_update_deadzone();
     // Alternative usage of ABXY while doing daisywheel.

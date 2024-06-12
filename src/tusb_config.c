@@ -45,7 +45,7 @@ uint8_t descriptor_configuration_xinput[] = {
 uint8_t const *tud_descriptor_device_cb() {
     debug_uart("USB: tud_descriptor_device_cb\n");
     static tusb_desc_device_t descriptor_device = {DESCRIPTOR_DEVICE};
-    #ifdef FW_DEVICE_ALPAKKA
+    #ifdef DEVICE_ALPAKKA_V1
         descriptor_device.idVendor = USB_TEST_VENDOR;
         descriptor_device.idProduct = USB_TEST_PRODUCT;
     #else

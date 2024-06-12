@@ -3,11 +3,7 @@
 
 default: version
 	mkdir -p build
-	cmake . -B build -DFW_DEVICE_ALPAKKA=1 && cd build && make -j16
-
-dongle: version
-	mkdir -p build
-	cmake . -B build -DFW_DEVICE_DONGLE=1 && cd build && make -j16
+	cmake . -B build -DDEVICE=${DEVICE} && cd build && make -j16
 
 rebuild: version
 	cd build && make -j16

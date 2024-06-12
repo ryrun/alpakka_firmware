@@ -21,10 +21,13 @@
 
 #define CFG_LED_BRIGHTNESS 0.2
 
-#ifdef FW_DEVICE_ALPAKKA
+#ifdef DEVICE_ALPAKKA_V0
     #define CFG_TICK_FREQUENCY 250  // Hz.
 #endif
-#ifdef FW_DEVICE_DONGLE
+#ifdef DEVICE_ALPAKKA_V1
+    #define CFG_TICK_FREQUENCY 250  // Hz.
+#endif
+#ifdef DEVICE_DONGLE
     #define CFG_TICK_FREQUENCY 1000  // Hz.
 #endif
 
@@ -91,6 +94,7 @@ typedef struct Config_struct {
 } Config;
 
 void config_init();
+void config_init_profiles();
 void config_sync();
 Config* config_read();
 void config_delete();

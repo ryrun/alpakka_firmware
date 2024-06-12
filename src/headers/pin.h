@@ -3,28 +3,58 @@
 
 #pragma once
 
-// PICO PINS.
-#define PIN_GROUP_PICO 1
-#define PIN_GROUP_PICO_END 99
-#define PIN_HOME 20
-#define PIN_LED_PICO 25
-#define PIN_LED_UP 2
-#define PIN_LED_RIGHT 5
-#define PIN_LED_DOWN 4
-#define PIN_LED_LEFT 3
-#define PIN_TOUCH_OUT 6
-#define PIN_TOUCH_IN 7
-#define PIN_ROTARY_A 9
-#define PIN_ROTARY_B 8
-#define PIN_SDA 14
-#define PIN_SCL 15
-#define PIN_SPI_CK 10
-#define PIN_SPI_TX 11
-#define PIN_SPI_RX 12
-#define PIN_SPI_CS0 18
-#define PIN_SPI_CS1 19
-#define PIN_TX 27
-#define PIN_TY 26
+// BOARD PINS
+#define PIN_GROUP_BOARD 1
+#define PIN_GROUP_BOARD_END 99
+
+// Pico.
+#ifdef DEVICE_ALPAKKA_V0
+    #define PIN_LED_BOARD 25
+    #define PIN_LED_UP 2
+    #define PIN_LED_RIGHT 5
+    #define PIN_LED_DOWN 4
+    #define PIN_LED_LEFT 3
+    #define PIN_HOME 20
+    #define PIN_TOUCH_OUT 6
+    #define PIN_TOUCH_IN 7
+    #define PIN_ROTARY_A 9
+    #define PIN_ROTARY_B 8
+    #define PIN_I2C_SDA 14
+    #define PIN_I2C_SCL 15
+    #define PIN_SPI_CK 10
+    #define PIN_SPI_TX 11
+    #define PIN_SPI_RX 12
+    #define PIN_SPI_CS0 18
+    #define PIN_SPI_CS1 19
+    #define PIN_THUMBSTICK_LX 27
+    #define PIN_THUMBSTICK_LY 26
+    #define SPI_CHANNEL spi1
+#endif
+
+// Custom board.
+#if defined(DEVICE_ALPAKKA_V1) || defined(DEVICE_DONGLE)
+    #define PIN_LED_BOARD 2
+    #define PIN_LED_UP 3
+    #define PIN_LED_RIGHT 4
+    #define PIN_LED_DOWN 5
+    #define PIN_LED_LEFT 6
+    #define PIN_HOME 7
+    #define PIN_TOUCH_OUT 8
+    #define PIN_TOUCH_IN 9
+    #define PIN_ROTARY_A 12
+    #define PIN_ROTARY_B 13
+    #define PIN_I2C_SDA 20
+    #define PIN_I2C_SCL 21
+    #define PIN_SPI_CK 18
+    #define PIN_SPI_TX 19
+    #define PIN_SPI_RX 16
+    #define PIN_SPI_CS0 22
+    #define PIN_SPI_CS1 23
+    #define PIN_SPI_CS_NRF24 17
+    #define PIN_THUMBSTICK_LX 27
+    #define PIN_THUMBSTICK_LY 26
+    #define SPI_CHANNEL spi0
+#endif
 
 // IO EXPANSION 1.
 #define PIN_GROUP_IO_0 100

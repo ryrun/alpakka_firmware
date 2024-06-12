@@ -3,8 +3,6 @@
 
 #pragma once
 
-#define NRF24_CS 13
-
 #define NRF24_REG_W 0b00100000
 
 #define NRF24_REG_CONFIG 0x00
@@ -15,8 +13,6 @@
 #define NRF24_REG_STATUS 0x07
 #define NRF24_REG_OBSERVE_TX 0x08
 #define NRF24_REG_RX_PW_P0 0x11
-
-
 
 // #define NRF24_TX_ADDR 0x10
 // #define NRF24_TX_ADDR_VALUE 0x01700000

@@ -23,12 +23,18 @@ add_executable(${PROJECT}
     src/main.c
 )
 
-if(DEFINED FW_DEVICE_ALPAKKA)
-    message(STATUS "FW_DEVICE_ALPAKKA")
-    target_compile_definitions(${PROJECT} PUBLIC FW_DEVICE_ALPAKKA=1)
-elseif(DEFINED FW_DEVICE_DONGLE)
-    message(STATUS "FW_DEVICE_DONGLE")
-    target_compile_definitions(${PROJECT} PUBLIC FW_DEVICE_DONGLE=1)
+if(DEFINED DEVICE)
+    if(DEVICE MATCHES "alpakka_v0")
+        target_compile_definitions(${PROJECT} PUBLIC DEVICE_ALPAKKA_V0=1)
+    elseif(DEVICE MATCHES "alpakka_v1")
+        target_compile_definitions(${PROJECT} PUBLIC DEVICE_ALPAKKA_V1=1)
+    elseif(DEVICE MATCHES "dongle")
+        target_compile_definitions(${PROJECT} PUBLIC DEVICE_DONGLE=1)
+    else()
+        message(FATAL_ERROR "Target device unknown")
+    endif()
+else()
+    message(FATAL_ERROR "Target device not defined")
 endif()
 
 target_link_libraries(${PROJECT}

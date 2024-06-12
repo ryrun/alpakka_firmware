@@ -2,9 +2,11 @@
 // Copyright (C) 2022, Input Labs Oy.
 
 #include <tusb.h>
+#include <device/usbd_pvt.h>
 #include "config.h"
 #include "ctrl.h"
 #include "hid.h"
+#include "wireless.h"
 #include "led.h"
 #include "profile.h"
 #include "xinput.h"
@@ -256,7 +258,7 @@ void hid_gamepad_rz(double value) {
     synced_gamepad = false;
 }
 
-void hid_mouse_report() {
+void hid_mouse_report(bool wired) {
     // Create button bitmask.
     int8_t buttons = 0;
     for(int i=0; i<5; i++) {
@@ -264,37 +266,37 @@ void hid_mouse_report() {
     }
     uint8_t scroll = state_matrix[MOUSE_SCROLL_UP] - state_matrix[MOUSE_SCROLL_DOWN];
     // Create report.
-    hid_mouse_custom_report_t report = {buttons, mouse_x, mouse_y, scroll, 0};
+    MouseReport report = {buttons, mouse_x, mouse_y, scroll, 0};
     // Reset values.
     mouse_x = 0;
     mouse_y = 0;
     state_matrix[MOUSE_SCROLL_UP] = 0;
     state_matrix[MOUSE_SCROLL_DOWN] = 0;
     // Send report.
-    tud_hid_report(REPORT_MOUSE, &report, sizeof(report));
+    if (wired) tud_hid_report(REPORT_MOUSE, &report, sizeof(report));
+    else wireless_send(REPORT_MOUSE, &report, sizeof(report));
 }
 
-void hid_keyboard_report() {
-    uint8_t report[6] = {0};
+void hid_keyboard_report(bool wired) {
+    uint8_t keys[6] = {0};
     uint8_t keys_available = 6;
     for(int i=0; i<=115; i++) {
         if (state_matrix[i] >= 1) {
-            report[keys_available - 1] = (uint8_t)i;
+            keys[keys_available - 1] = (uint8_t)i;
             keys_available--;
             if (keys_available == 0) {
                 break;
             }
         }
     }
-    uint8_t modifier = 0;
+    uint8_t modifiers = 0;
     for(int i=0; i<8; i++) {
-        modifier += !!state_matrix[MODIFIER_INDEX + i] << i;
+        modifiers += !!state_matrix[MODIFIER_INDEX + i] << i;
     }
-    tud_hid_keyboard_report(
-        REPORT_KEYBOARD,
-        modifier,
-        report
-    );
+    KeyboardReport report = {modifiers};
+    memcpy(report.keycode, keys, 6);
+    if (wired) tud_hid_report(REPORT_KEYBOARD, &report, sizeof(report));
+    else wireless_send(REPORT_KEYBOARD, &report, sizeof(report));
 }
 
 double hid_axis(
@@ -342,7 +344,7 @@ void hid_gamepad_report() {
     // inconsistencies between games (not sure if a bug in Windows' DirectInput or TinyUSB).
     int16_t lz_report = ((hid_axis(gamepad_lz, GAMEPAD_AXIS_LZ, 0) * 2) - 1) * BIT_15;
     int16_t rz_report = ((hid_axis(gamepad_rz, GAMEPAD_AXIS_RZ, 0) * 2) - 1) * BIT_15;
-    hid_gamepad_custom_report_t report = {
+    GamepadReport report = {
         lx_report,
         ly_report,
         rx_report,
@@ -354,7 +356,7 @@ void hid_gamepad_report() {
     tud_hid_report(REPORT_GAMEPAD, &report, sizeof(report));
 }
 
-void hid_xinput_report() {
+void hid_xinput_report(bool wired) {
     int8_t buttons_0 = 0;
     int8_t buttons_1 = 0;
     for(int i=0; i<8; i++) {
@@ -371,7 +373,7 @@ void hid_xinput_report() {
     // Adjust range from [0,1] to [0,255].
     uint16_t lz_report = hid_axis(gamepad_lz, GAMEPAD_AXIS_LZ, 0) * BIT_8;
     uint16_t rz_report = hid_axis(gamepad_rz, GAMEPAD_AXIS_RZ, 0) * BIT_8;
-    xinput_report report = {
+    XInputReport report = {
         .report_id   = 0,
         .report_size = XINPUT_REPORT_SIZE,
         .buttons_0   = buttons_0,
@@ -384,7 +386,8 @@ void hid_xinput_report() {
         .ry          = -ry_report,
         .reserved    = {0, 0, 0, 0, 0, 0}
     };
-    xinput_send_report(&report);
+    if (wired) xinput_send_report(&report);
+    else wireless_send(REPORT_XINPUT, &report, sizeof(report));
 }
 
 void hid_gamepad_reset() {
@@ -396,9 +399,27 @@ void hid_gamepad_reset() {
     gamepad_rz = 0;
 }
 
-void hid_report() {
-    static bool is_tud_ready = false;
-    static bool is_tud_ready_logged = false;
+void hid_report_wireless() {
+    // if (synced_mouse && !synced_mouse_eot) {
+    //     hid_report_to_queue(REPORT_MOUSE_EOT, NULL, 0);
+    //     synced_mouse_eot = true;
+    // }
+    if (!synced_keyboard) {
+        hid_keyboard_report(false);
+        synced_keyboard = true;
+    }
+    if (!synced_mouse) {
+        hid_mouse_report(false);
+        synced_mouse = true;
+    }
+    if (!synced_gamepad) {
+        hid_xinput_report(false);  // TODO: Generic gamepad support.
+        hid_gamepad_reset();
+        synced_gamepad = true;
+    }
+}
+
+bool hid_report() {
     static uint8_t priority_mouse = 0;
     static uint8_t priority_gamepad = 0;
 
@@ -408,24 +429,18 @@ void hid_report() {
     // is a lot of mouse data being sent.
     if (!synced_mouse) priority_mouse += 1 * CFG_HID_REPORT_PRIORITY_RATIO;
     if (!synced_gamepad) priority_gamepad += 1;
-
-    if (!hid_allow_communication) return;
+    if (!hid_allow_communication) return true;
     tud_task();
     if (tud_ready()) {
-        is_tud_ready = true;
-        if (!is_tud_ready_logged) {
-            is_tud_ready_logged = true;
-            info("USB: tud_ready TRUE\n");
-        }
         if (tud_hid_ready()) {
             webusb_read();
             webusb_flush();
             if (!synced_keyboard) {
-                hid_keyboard_report();
+                hid_keyboard_report(true);
                 synced_keyboard = true;
             }
             else if (!synced_mouse && (priority_mouse > priority_gamepad)) {
-                hid_mouse_report();
+                hid_mouse_report(true);
                 synced_mouse = true;
                 priority_mouse = 0;
             }
@@ -439,20 +454,47 @@ void hid_report() {
             if (tud_suspended()) {
                 tud_remote_wakeup();
             }
-            hid_xinput_report();
+            hid_xinput_report(true);
             priority_gamepad = 0;
         }
         // Gamepad values being reset so potentially unsent values are not
         // aggregated with the next cycle.
         hid_gamepad_reset();
+        return true;
     } else {
-        is_tud_ready = false;
-        if (is_tud_ready_logged) {
-            is_tud_ready_logged = false;
-            info("USB: tud_ready FALSE\n");
-        }
+        return false;
     }
 }
+
+// void hid_report_from_queue_mouse() {
+//     MouseReport combined = {0,};
+//     uint8_t num = 0;
+//     while(!queue_is_empty(hid_get_mouse_queue())) {
+//         num += 1;
+//         uint8_t entry[REPORT_QUEUE_ITEM_SIZE];
+//         queue_remove_blocking(hid_get_mouse_queue(), entry);
+//         MouseReport report = *(MouseReport*)entry;
+//         if (num > 1) {
+//             report.x += combined.x;
+//             report.y += combined.y;
+//         }
+//         memcpy(&combined, &report, sizeof(MouseReport));
+//     }
+//     if (num > 1) printf("%i ", num);
+//     if (num > 0) {
+//         tud_task();
+//         if (tud_ready() && tud_hid_ready()) {
+//             tud_hid_report(REPORT_MOUSE, &combined, sizeof(MouseReport));
+//         } else {
+//             printf("M");
+//         }
+//     }
+// }
+
+// void hid_report_from_queue(bool alternate) {
+//     if (alternate) return;
+//     else hid_report_from_queue_mouse();
+// }
 
 // A not-so-secret easter egg.
 void hid_thanks_(alarm_id_t alarm) {
@@ -483,7 +525,17 @@ void hid_thanks() {
     add_alarm_in_ms(5, (alarm_callback_t)hid_thanks_, NULL, true);
 }
 
+// queue_t* hid_get_kb_queue() {
+//     return &kb_queue;
+// }
+
+// queue_t* hid_get_mouse_queue() {
+//     return &mouse_queue;
+// }
+
 void hid_init() {
     info("INIT: HID\n");
     alarm_pool = alarm_pool_create(2, 255);
+    // queue_init(&kb_queue, REPORT_QUEUE_ITEM_SIZE, REPORT_QUEUE_LEN);
+    // queue_init(&mouse_queue, REPORT_QUEUE_ITEM_SIZE, REPORT_QUEUE_LEN);
 }
