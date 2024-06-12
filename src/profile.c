@@ -237,6 +237,10 @@ void profile_update_leds() {
         if (profile_active_index == 6) led_blink_mask(LED_TRIANGLE_RIGHT);
         if (profile_active_index == 7) led_blink_mask(LED_TRIANGLE_DOWN);
         if (profile_active_index == 8) led_blink_mask(LED_TRIANGLE_LEFT);
+        if (profile_active_index == 9) led_blink_mask(LED_UP+LED_RIGHT);
+        if (profile_active_index == 10) led_blink_mask(LED_RIGHT+LED_DOWN);
+        if (profile_active_index == 11) led_blink_mask(LED_DOWN+LED_LEFT);
+        if (profile_active_index == 12) led_blink_mask(LED_LEFT+LED_UP);
         led_set_mode(LED_MODE_BLINK);
     } else {
         if (profile_active_index == 1) led_idle_mask(LED_UP);
@@ -247,6 +251,10 @@ void profile_update_leds() {
         if (profile_active_index == 6) led_idle_mask(LED_TRIANGLE_RIGHT);
         if (profile_active_index == 7) led_idle_mask(LED_TRIANGLE_DOWN);
         if (profile_active_index == 8) led_idle_mask(LED_TRIANGLE_LEFT);
+        if (profile_active_index == 9) led_idle_mask(LED_UP+LED_RIGHT);
+        if (profile_active_index == 10) led_idle_mask(LED_RIGHT+LED_DOWN);
+        if (profile_active_index == 11) led_idle_mask(LED_DOWN+LED_LEFT);
+        if (profile_active_index == 12) led_idle_mask(LED_LEFT+LED_UP);
         led_set_mode(LED_MODE_IDLE);
     }
 }
