@@ -90,7 +90,7 @@ Ctrl ctrl_config_share(uint8_t index) {
     return ctrl;
 }
 
-Ctrl ctrl_profile_share(uint8_t profile_index, uint8_t section_index) {
+Ctrl ctrl_section_share(uint8_t profile_index, uint8_t section_index) {
     Ctrl ctrl = {
         .protocol_version = CTRL_PROTOCOL_VERSION,
         .device_id = ALPAKKA,

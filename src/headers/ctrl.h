@@ -216,4 +216,4 @@ Ctrl ctrl_empty();
 Ctrl ctrl_log(uint8_t* offset_ptr, uint8_t len);
 Ctrl ctrl_status_share();
 Ctrl ctrl_config_share(uint8_t index);
-Ctrl ctrl_profile_share(uint8_t profile_index, uint8_t section_index);
+Ctrl ctrl_section_share(uint8_t profile_index, uint8_t section_index);

@@ -84,7 +84,7 @@ bool webusb_flush() {
         bool sent = webusb_transfer(ctrl);
         if (sent) webusb_pending_config_share = 0;
     } else if (webusb_pending_profile_share || webusb_pending_section_share) {
-        ctrl = ctrl_profile_share(webusb_pending_profile_share, webusb_pending_section_share);
+        ctrl = ctrl_section_share(webusb_pending_profile_share, webusb_pending_section_share);
         bool sent = webusb_transfer(ctrl);
         if (sent) {
             webusb_pending_profile_share = 0;
@@ -152,7 +152,7 @@ void webusb_handle_config_get(Ctrl_cfg_type key) {
     webusb_pending_config_share = key;
 }
 
-void webusb_handle_profile_get(uint8_t profile, uint8_t section) {
+void webusb_handle_section_get(uint8_t profile, uint8_t section) {
     webusb_pending_profile_share = profile;
     webusb_pending_section_share = section;
 }
@@ -189,7 +189,7 @@ void webusb_handle_config_set(Ctrl_cfg_type key, uint8_t preset, uint8_t values[
     }
 }
 
-void webusb_handle_profile_set(uint8_t profileIndex, uint8_t sectionIndex, uint8_t section[58]) {
+void webusb_handle_section_set(uint8_t profileIndex, uint8_t sectionIndex, uint8_t section[58]) {
     debug("WebUSB: Handle profile SET %i %i\n", profileIndex, sectionIndex);
     // Update profile in config.
     CtrlProfile *profile_cfg = config_profile_read(profileIndex);
@@ -225,10 +225,10 @@ void webusb_read() {
         );
     }
     if (ctrl.message_type == SECTION_GET) {
-        webusb_handle_profile_get(ctrl.payload[0], ctrl.payload[1]);
+        webusb_handle_section_get(ctrl.payload[0], ctrl.payload[1]);
     }
     if (ctrl.message_type == SECTION_SET) {
-        webusb_handle_profile_set(
+        webusb_handle_section_set(
             ctrl.payload[0],
             ctrl.payload[1],
             &ctrl.payload[2]
