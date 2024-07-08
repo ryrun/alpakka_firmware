@@ -33,16 +33,16 @@
 
 // Custom board.
 #if defined(DEVICE_ALPAKKA_V1) || defined(DEVICE_DONGLE)
-    #define PIN_LED_BOARD 2
-    #define PIN_LED_UP 3
-    #define PIN_LED_RIGHT 4
-    #define PIN_LED_DOWN 5
-    #define PIN_LED_LEFT 6
-    #define PIN_HOME 7
-    #define PIN_TOUCH_OUT 8
-    #define PIN_TOUCH_IN 9
-    #define PIN_ROTARY_A 12
-    #define PIN_ROTARY_B 13
+    #define PIN_LED_BOARD 3
+    #define PIN_LED_UP 4
+    #define PIN_LED_RIGHT 5
+    #define PIN_LED_DOWN 6
+    #define PIN_LED_LEFT 7
+    #define PIN_HOME 8
+    #define PIN_TOUCH_OUT 9
+    #define PIN_TOUCH_IN 10
+    #define PIN_ROTARY_A 11
+    #define PIN_ROTARY_B 12
     #define PIN_I2C_SDA 20
     #define PIN_I2C_SCL 21
     #define PIN_SPI_CK 18
@@ -53,6 +53,8 @@
     #define PIN_SPI_CS_NRF24 17
     #define PIN_THUMBSTICK_LX 27
     #define PIN_THUMBSTICK_LY 26
+    #define BAT_STAT_1 15
+    #define BAT_STAT_2 14
     #define SPI_CHANNEL spi0
 #endif
 

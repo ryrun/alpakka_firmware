@@ -18,6 +18,9 @@ static void led_task() {
     static bool led_state;
     i++;
     if (i==100) {
+        // printf("%i\n", led_state);
+        // printf("stat1=%i stat2=%i\n", gpio_get(BAT_STAT_1), gpio_get(BAT_STAT_2));
+        // info("bootsel=%i\n", gpio_get(2));
         led_board_set(led_state);
         led_state = !led_state;
         i = 0;
@@ -33,11 +36,17 @@ void wireless_send(uint8_t report_id, void *packet, uint8_t len) {
 
 void wireless_device_init() {
     printf("INIT: RF device\n");
+    // Set config.
     uint8_t config_set = NRF24_REG_CONFIG_PWR_UP | NRF24_REG_CONFIG_EN_CRC;
     bus_spi_write(PIN_SPI_CS_NRF24, NRF24_REG_W | NRF24_REG_CONFIG, config_set);
     uint8_t config_get = bus_spi_read_one(PIN_SPI_CS_NRF24, NRF24_REG_CONFIG);
     if (config_get != config_set) error( "RF: NRF24 configuration mismatch\n");
-    printf("RF: config=%i\n", config_get);
+    // Set frequency.
+    bus_spi_write(PIN_SPI_CS_NRF24, NRF24_REG_W | NRF24_REG_CHANNEL, 48);
+    uint8_t channel = bus_spi_read_one(PIN_SPI_CS_NRF24, NRF24_REG_CHANNEL);
+    // Confirm.
+    printf("RF: config=0b%08i\n", bin(config_get));
+    printf("RF: channel=24%02i\n", channel);
 }
 
 void wireless_host_init() {
@@ -50,9 +59,23 @@ void wireless_host_init() {
     // Set payload size
     bus_spi_write(PIN_SPI_CS_NRF24, NRF24_REG_W | NRF24_REG_RX_PW_P0, 32);
     uint8_t payload_size = bus_spi_read_one(PIN_SPI_CS_NRF24, NRF24_REG_RX_PW_P0);
-    printf("RF: config=%i\n", config_get);
+    // Set frequency.
+    bus_spi_write(PIN_SPI_CS_NRF24, NRF24_REG_W | NRF24_REG_CHANNEL, 48);
+    uint8_t channel = bus_spi_read_one(PIN_SPI_CS_NRF24, NRF24_REG_CHANNEL);
+    // Confirm.
+    printf("RF: config=0b%08i\n", bin(config_get));
     printf("RF: payload_size=%i\n", payload_size);
-}
+    printf("RF: channel=24%02i\n", channel);
+    // gpio_init(BAT_STAT_1);
+    // gpio_init(BAT_STAT_2);
+    // gpio_set_dir(BAT_STAT_1, GPIO_IN);
+    // gpio_set_dir(BAT_STAT_2, GPIO_IN);
+    // gpio_pull_up(BAT_STAT_1);
+    // gpio_pull_up(BAT_STAT_2);
+    // printf("%i %i", BAT_STAT_1, BAT_STAT_2);
+    gpio_init(2);
+    gpio_set_dir(2, GPIO_IN);
+    }
 
 void wireless_device_task() {
     led_task();
@@ -93,7 +116,14 @@ void wireless_host_task() {
         uint32_t now = time_us_32() / 1000;
         uint32_t elapsed = now - last;
         last = now;
-        printf("%lu ", elapsed);
+
+        info("%lu ", elapsed);
+        static uint8_t i = 0;
+        i++;
+        if (i > 40) {
+            i = 0;
+            info("\n");
+        }
 
         // Latency.
         // uint64_t now = get_system_clock();
