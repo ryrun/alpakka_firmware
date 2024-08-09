@@ -18,6 +18,7 @@
 #include "logging.h"
 #include "version.h"
 #include "common.h"
+#include "pin.h"
 
 static DeviceMode device_mode = WIRED;
 static uint64_t system_clock = 0;
@@ -120,6 +121,15 @@ void loop_host_init() {
     bus_init();
     hid_init();
     wireless_host_init();
+
+    // BATTERY TEST
+    // gpio_init(BAT_STAT_1);
+    // gpio_init(BAT_STAT_2);
+    // gpio_pull_up(BAT_STAT_1);
+    // gpio_pull_up(BAT_STAT_2);
+    // gpio_set_dir(BAT_STAT_1, GPIO_IN);
+    // gpio_set_dir(BAT_STAT_2, GPIO_IN);
+
     loop_cycle();
 }
 
@@ -158,6 +168,19 @@ void loop_host_task() {
         webusb_flush();
     }
     uart_listen();
+
+    // BATTERY TEST
+    // static uint16_t i = 0;
+    // i++;
+    // if (i == 2000) {
+    //     i = 0;
+    //     bool stat1 =  gpio_get(BAT_STAT_1);
+    //     bool stat2 =  gpio_get(BAT_STAT_2);
+    //     if (!stat1 & !stat2) printf("Error\n");
+    //     if (!stat1 & stat2) printf("Low battery / Charging\n");
+    //     if (stat1 & !stat2) printf("Charge complete\n");
+    //     if (stat1 & stat2) printf("Shutdown\n");
+    // }
 }
 
 void loop_cycle() {

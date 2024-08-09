@@ -66,15 +66,6 @@ void wireless_host_init() {
     printf("RF: config=0b%08i\n", bin(config_get));
     printf("RF: payload_size=%i\n", payload_size);
     printf("RF: channel=24%02i\n", channel);
-    // gpio_init(BAT_STAT_1);
-    // gpio_init(BAT_STAT_2);
-    // gpio_set_dir(BAT_STAT_1, GPIO_IN);
-    // gpio_set_dir(BAT_STAT_2, GPIO_IN);
-    // gpio_pull_up(BAT_STAT_1);
-    // gpio_pull_up(BAT_STAT_2);
-    // printf("%i %i", BAT_STAT_1, BAT_STAT_2);
-    gpio_init(2);
-    gpio_set_dir(2, GPIO_IN);
     }
 
 void wireless_device_task() {
