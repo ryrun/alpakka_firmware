@@ -31,19 +31,24 @@ void touch_update_threshold() {
 }
 
 uint32_t touch_get_elapsed() {
-    uint32_t time_low;
-    time_low = time_us_32();
-    gpio_put(PIN_TOUCH_OUT, true);
+    uint32_t time_start = time_us_32();
     bool timedout = false;
+    // Make sure it is down.
+    gpio_put(PIN_TOUCH_OUT, false);
+    while(gpio_get(PIN_TOUCH_IN) != false) {}
+    // Request up and measure.
+    gpio_put(PIN_TOUCH_OUT, true);
     while(gpio_get(PIN_TOUCH_IN) == false) {
-        if ((time_us_32() - time_low) > timeout) {
+        if ((time_us_32() - time_start) > timeout) {
             timedout = true;
             break;
         }
     };
-    uint32_t elapsed = timedout ? 0 : time_us_32() - time_low;
-    if (loglevel >= 1 && timedout) info("T");
-    gpio_put(PIN_TOUCH_OUT, false); // Send low (so is ready for next cycle).
+    // Request down for next cycle.
+    gpio_put(PIN_TOUCH_OUT, false);
+    // Calculate elapsed.
+    uint32_t elapsed = time_us_32() - time_start;
+    if (timedout) elapsed = timeout;
     return elapsed;
 }
 
@@ -73,40 +78,42 @@ float touch_get_dynamic_threshold(uint8_t elapsed) {
 }
 
 bool touch_status() {
+    static bool report_last = false;
+    static uint64_t last_change = 0;
+    static uint32_t elapsed_last = 0;
+    // Measure and smooth.
     uint32_t elapsed = touch_get_elapsed();
+    uint32_t smoothed = (elapsed + elapsed_last) / 2;
+    elapsed_last = elapsed;
     // Determine threshold.
-    if (elapsed != 0) {
-        threshold = (
-            sens_from_config > 0 ?
-            sens_from_config :
-            touch_get_dynamic_threshold(elapsed)
-        );
-    } else {
-        elapsed = threshold + 1;  // Using threshold from previous cycle.
-    }
+    threshold = (
+        sens_from_config > 0 ?
+        sens_from_config :
+        touch_get_dynamic_threshold(smoothed)
+    );
+    // Determine if the surface is considered touched.
+    bool report = smoothed >= threshold;
     // Debug.
-    if (loglevel >= 2) {
+    if (1 || loglevel >= 2) {  //////
         static uint16_t x = 0;
         x++;
         if (!(x % DEBUG_TOUCH_ELAPSED_FREQ)) {
-            info("%i %.2f\n", elapsed, threshold);
+            info("%i (T=%.0f)\n", smoothed, threshold);
         }
     }
-    // Determine if the surface is considered touched and report.
-    static bool touched = false;
-    static uint8_t hits = 0;
-    bool over = elapsed >= threshold;
-    if (over != touched) {
-        // Only report change on repeated hits.
-        hits++;
-        if (hits >= CFG_TOUCH_SMOOTH) {
-            touched = over;
-            if (loglevel >= 1) info("Touch status %i\n", touched);
+    // Debounce and report.
+    if (report != report_last) {
+        uint64_t now = time_us_64();
+        if ((now - last_change) > (CFG_TOUCH_DEBOUNCE * 1000)) {
+            last_change = now;
+            report_last = report;
+            // TEST MORE DEBUG.
+            if (report)  info("%i (T=%.0f) TOUCH\n", smoothed, threshold);
+            if (!report) info("%i (T=%.0f) FREE\n", smoothed, threshold);
+            // Report.
+            return report;
         }
-    } else {
-        hits = 0;
     }
-    return touched;
 }
 
 void touch_log_baseline() {
