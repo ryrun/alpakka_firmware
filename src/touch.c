@@ -14,6 +14,7 @@ uint8_t loglevel = 0;
 uint8_t sens_from_config = 0;
 uint8_t dynamic_min = 0;
 uint8_t timeout = 0;
+uint8_t samples = 0;
 float threshold = 0;
 
 void touch_update_threshold() {
@@ -30,7 +31,7 @@ void touch_update_threshold() {
     }
 }
 
-uint32_t touch_get_elapsed() {
+uint8_t touch_get_elapsed() {
     uint32_t time_start = time_us_32();
     bool timedout = false;
     // Make sure it is down.
@@ -50,6 +51,16 @@ uint32_t touch_get_elapsed() {
     uint32_t elapsed = time_us_32() - time_start;
     if (timedout) elapsed = timeout;
     return elapsed;
+}
+
+uint8_t touch_get_elapsed_multisample() {
+    uint16_t total = 0;
+    samples = 0;
+    while (total < timeout) {
+        samples++;
+        total += touch_get_elapsed();
+    }
+    return total / samples;
 }
 
 float touch_get_dynamic_threshold(uint8_t elapsed) {
@@ -80,11 +91,10 @@ float touch_get_dynamic_threshold(uint8_t elapsed) {
 bool touch_status() {
     static bool report_last = false;
     static uint64_t last_change = 0;
-    static uint32_t elapsed_last = 0;
+    static uint8_t elapsed_last = 0;
     // Measure and smooth.
-    uint32_t elapsed = touch_get_elapsed();
-    uint32_t smoothed = (elapsed + elapsed_last) / 2;
-    elapsed_last = elapsed;
+    uint8_t elapsed = touch_get_elapsed_multisample();
+    uint8_t smoothed = (elapsed + elapsed_last) / 2;
     // Determine threshold.
     threshold = (
         sens_from_config > 0 ?
@@ -98,7 +108,7 @@ bool touch_status() {
         static uint16_t x = 0;
         x++;
         if (!(x % DEBUG_TOUCH_ELAPSED_FREQ)) {
-            info("%i (T=%.0f)\n", smoothed, threshold);
+            info("%i (%i %i)  T=%.0f M=%i\n", smoothed, elapsed, elapsed_last, threshold, samples);
         }
     }
     // Debounce and report.
@@ -108,12 +118,15 @@ bool touch_status() {
             last_change = now;
             report_last = report;
             // TEST MORE DEBUG.
-            if (report)  info("%i (T=%.0f) TOUCH\n", smoothed, threshold);
-            if (!report) info("%i (T=%.0f) FREE\n", smoothed, threshold);
+            info("%i (%i %i)  T=%.0f M=%i ", smoothed, elapsed, elapsed_last, threshold, samples);
+            if (report)  info("TOUCH\n");
+            if (!report) info("LIFT\n");
             // Report.
+            elapsed_last = elapsed;
             return report;
         }
     }
+    elapsed_last = elapsed;
 }
 
 void touch_log_baseline() {
