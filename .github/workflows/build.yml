@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Import dependency vars
         run: |
@@ -25,7 +25,7 @@ jobs:
 
       - name: Dependencies from cache
         id: cache-deps
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: deps/
           # Unique identifier by concatenation.
@@ -38,8 +38,10 @@ jobs:
       - name: Build
         run: |
           make
+          VERSION=$(echo ${GITHUB_REF} | sed 's|refs/tags/||; s/[.-]/_/g')
+          mv build/alpakka.uf2 alpakka_${VERSION}.uf2
           ls -l
-          shasum build/alpakka.uf2
+          shasum alpakka_${VERSION}.uf2
           echo -e "\
           =================================
           This firmware build was automated
@@ -52,17 +54,17 @@ jobs:
           ${GITHUB_SHA}
 
           Checksum:
-          \$ shasum alpakka.uf2
-          $(cat build/alpakka.uf2 | shasum | head -c 40)
+          \$ shasum alpakka_${VERSION}.uf2
+          $(cat alpakka_${VERSION}.uf2 | shasum | head -c 40)
 
           Job:
           ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
           " > metadata.txt
 
       - name: Upload build
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: alpakka_firmware_artifacts
           path: |
-            build/alpakka.uf2
+            alpakka_${VERSION}.uf2
             metadata.txt
