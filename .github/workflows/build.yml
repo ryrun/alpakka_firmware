@@ -29,16 +29,17 @@ jobs:
         with:
           path: deps/
           # Unique identifier by concatenation.
-          key: ${{ env.SDK_URL }}_${{ env.SDK_TAG }}_${{ env.ARM_FILENAME_LINUX_X86_64 }}
+          key: pico-sdk_${{ env.SDK_TAG }}_${{ env.ARM_FILENAME_LINUX_X86_64 }}
 
       - name: Dependencies from internet
-        if: ${{ steps.cache-deps.outputs.cache-hit != 'true' }}
+        if: steps.cache-deps.outputs.cache-hit != 'true'
         run: make install
 
       - name: Build
         run: |
           make
           VERSION=$(echo ${GITHUB_REF} | sed 's|refs/tags/||; s/[.-]/_/g')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
           mv build/alpakka.uf2 alpakka_${VERSION}.uf2
           ls -l
           shasum alpakka_${VERSION}.uf2
@@ -61,10 +62,10 @@ jobs:
           ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
           " > metadata.txt
 
-      - name: Upload build
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: alpakka_firmware_artifacts
+          name: alpakka_artifacts
           path: |
-            alpakka_${VERSION}.uf2
+            alpakka_${{env.VERSION}}.uf2
             metadata.txt
