@@ -38,8 +38,9 @@ jobs:
       - name: Build
         run: |
           make
-          VERSION=$(echo ${GITHUB_REF} | sed 's|refs/tags/||; s/[.-]/_/g')
+          VERSION=$(echo ${GITHUB_REF} | sed 's|refs/tags/||; s|refs/heads/||; s|[.-]|_|g')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$VERSION"
           mv build/alpakka.uf2 alpakka_${VERSION}.uf2
           ls -l
           shasum alpakka_${VERSION}.uf2
