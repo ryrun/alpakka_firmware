@@ -94,6 +94,10 @@ void wireless_device_task() {
 
 void wireless_host_task() {
     led_task();
+
+    static uint16_t tier0 = 0;
+    static uint16_t tier1 = 0;
+
     while(true) {
         uint8_t status = bus_spi_read_one(PIN_SPI_CS_NRF24, NRF24_REG_STATUS);
         if (status & 0b10) break;  // No payloads pending in pipe 0.
@@ -108,13 +112,16 @@ void wireless_host_task() {
         uint32_t elapsed = now - last;
         last = now;
 
-        info("%lu ", elapsed);
-        static uint8_t i = 0;
-        i++;
-        if (i > 40) {
-            i = 0;
-            info("\n");
-        }
+        if (elapsed <= 8) tier0++;
+        else if (elapsed <= 16) tier1++;
+
+        // info("%lu ", elapsed);
+        // static uint8_t i = 0;
+        // i++;
+        // if (i > 40) {
+        //     i = 0;
+        //     info("\n");
+        // }
 
         // Latency.
         // uint64_t now = get_system_clock();
@@ -130,5 +137,22 @@ void wireless_host_task() {
         //     latency_sum = 0;
         //     i=0;
         // }
+
+    }
+    static uint64_t last_print = 0;
+    if (time_us_64() - last_print > 100000) {
+        last_print = time_us_64();
+        // float x = 100.0/63;
+        while(tier0>0) {
+            info("#");
+            tier0 -= 1;
+        }
+        while(tier1>0) {
+            info("+");
+            tier1 -= 1;
+        }
+        info("\n");
+        tier0 = 0;
+        tier1 = 0;
     }
 }
