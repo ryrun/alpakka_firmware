@@ -44,9 +44,17 @@ void wireless_device_init() {
     // Set frequency.
     bus_spi_write(PIN_SPI_CS_NRF24, NRF24_REG_W | NRF24_REG_CHANNEL, 48);
     uint8_t channel = bus_spi_read_one(PIN_SPI_CS_NRF24, NRF24_REG_CHANNEL);
+    // Set retransmission.
+    bus_spi_write(PIN_SPI_CS_NRF24, NRF24_REG_W | NRF24_REG_RETRANSMISSION, 0b00000000);
+    uint8_t retransmission = bus_spi_read_one(PIN_SPI_CS_NRF24, NRF24_REG_RETRANSMISSION);
+    // Set auto-acknowledge.
+    bus_spi_write(PIN_SPI_CS_NRF24, NRF24_REG_W | NRF24_REG_ACK, 0b00000000);
+    uint8_t ack = bus_spi_read_one(PIN_SPI_CS_NRF24, NRF24_REG_ACK);
     // Confirm.
     printf("RF: config=0b%08i\n", bin(config_get));
     printf("RF: channel=24%02i\n", channel);
+    printf("RF: retransmission=0b%08i\n", bin(retransmission));
+    printf("RF: ack=0b%08i\n", bin(ack));
 }
 
 void wireless_host_init() {
@@ -62,11 +70,19 @@ void wireless_host_init() {
     // Set frequency.
     bus_spi_write(PIN_SPI_CS_NRF24, NRF24_REG_W | NRF24_REG_CHANNEL, 48);
     uint8_t channel = bus_spi_read_one(PIN_SPI_CS_NRF24, NRF24_REG_CHANNEL);
+    // Set retransmission.
+    bus_spi_write(PIN_SPI_CS_NRF24, NRF24_REG_W | NRF24_REG_RETRANSMISSION, 0b00000000);
+    uint8_t retransmission = bus_spi_read_one(PIN_SPI_CS_NRF24, NRF24_REG_RETRANSMISSION);
+    // Set auto-acknowledge.
+    bus_spi_write(PIN_SPI_CS_NRF24, NRF24_REG_W | NRF24_REG_ACK, 0b00000000);
+    uint8_t ack = bus_spi_read_one(PIN_SPI_CS_NRF24, NRF24_REG_ACK);
     // Confirm.
     printf("RF: config=0b%08i\n", bin(config_get));
     printf("RF: payload_size=%i\n", payload_size);
     printf("RF: channel=24%02i\n", channel);
-    }
+    printf("RF: retransmission=0b%08i\n", bin(retransmission));
+    printf("RF: ack=0b%08i\n", bin(ack));
+}
 
 void wireless_device_task() {
     led_task();
