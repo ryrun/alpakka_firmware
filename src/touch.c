@@ -10,9 +10,9 @@
 #include "common.h"
 #include "logging.h"
 
-uint8_t loglevel = 0;
 uint8_t sens_from_config = 0;
 float dynamic_min = 0;
+float dynamic_min_start = 0;
 float timeout = 0;
 float threshold = 0;
 uint8_t samples = 0;
@@ -24,10 +24,12 @@ void touch_update_threshold() {
          // PCB gen 0.
         timeout = CFG_GEN0_TOUCH_TIMEOUT;
         dynamic_min = CFG_GEN0_TOUCH_DYNAMIC_MIN;
+        dynamic_min_start = CFG_GEN0_TOUCH_DYNAMIC_MIN;
     } else {
         // PCB gen 1+.
         timeout = CFG_GEN1_TOUCH_TIMEOUT;
         dynamic_min = CFG_GEN1_TOUCH_DYNAMIC_MIN;
+        dynamic_min_start = CFG_GEN1_TOUCH_DYNAMIC_MIN;
     }
 }
 
@@ -73,7 +75,7 @@ float touch_get_elapsed_multisample() {
     return total / samples;
 }
 
-float touch_get_dynamic_threshold(uint8_t elapsed) {
+float touch_get_dynamic_threshold(float elapsed) {
     static float peak = 0;
     static uint8_t elapsed_prev = 0;
     static uint16_t ticks = 0;
@@ -82,7 +84,7 @@ float touch_get_dynamic_threshold(uint8_t elapsed) {
     // A periodic but slow decrease of the peak, to avoid ever-growing peaks
     // in long gaming sessions. The hyperbolic function makes it so the
     // decrease is faster the more it deviates from the minimum.
-    if (!(ticks % CFG_TOUCH_DYNAMIC_PUSHDOWN_FREQ)) {
+    if (!(ticks % CFG_TOUCH_DYNAMIC_PUSHDOWN_FREQ)) {  // TODO: Should be based on timestamps.
         peak = max(dynamic_min, peak * CFG_TOUCH_DYNAMIC_PUSHDOWN_FACTOR);
     }
     // Push up:
@@ -91,9 +93,23 @@ float touch_get_dynamic_threshold(uint8_t elapsed) {
     if (elapsed > peak && elapsed_prev > peak) {
         peak = min(elapsed, elapsed_prev);
     }
+    // Calculate.
+    float new_threshold = max(dynamic_min, peak * CFG_TOUCH_DYNAMIC_PEAK_RATIO);
+    // Adjust dynamic min.
+    // If the sensor is considered non-touched...
+    if (elapsed < new_threshold) {
+        float dynamic_min_candidate = smooth(dynamic_min, elapsed * 2, CFG_TOUCH_DYNAMIC_MIN_AVG_SAMPLES);
+        // If the dynamic min is decreasing, allow it.
+        if (dynamic_min_candidate < dynamic_min) {
+            dynamic_min = dynamic_min_candidate;
+        // If the dynamic min is increasing, never grow bigger than the dynamic start value.
+        } else if (dynamic_min_candidate < dynamic_min_start) {
+            dynamic_min = dynamic_min_candidate;
+        }
+    }
     // Return.
     elapsed_prev = elapsed;
-    return max(dynamic_min, peak * CFG_TOUCH_DYNAMIC_PEAK_RATIO);
+    return new_threshold;
 }
 
 bool touch_status() {
@@ -111,15 +127,12 @@ bool touch_status() {
     );
     // Determine if the surface is considered touched.
     bool report = smoothed >= threshold;
-    // Dynamic minimum.
-    if (report) dynamic_min = threshold;
-    else dynamic_min = smooth(dynamic_min, elapsed * 2, CFG_TOUCH_DYNAMIC_MIN_AVG_SAMPLES);
-    // Debug.
-    if (1 || loglevel >= 2) {  //////
+    // Periodic debug log.
+    if (logging_has_mask(LOG_TOUCH_SENS)) {
         static uint16_t x = 0;
         x++;
         if (!(x % DEBUG_TOUCH_ELAPSED_FREQ)) {
-            info("%.1f (%.1f %.1f)  M%i T%.1f \n", smoothed, elapsed, elapsed_last, samples, threshold);
+            info("%.1f M%i D%.1f T%.1f \n", smoothed, samples, dynamic_min, threshold);
         }
     }
     // Debounce and report.
@@ -128,10 +141,12 @@ bool touch_status() {
         if ((now - report_changed) > (CFG_TOUCH_DEBOUNCE * 1000)) {
             report_changed = now;
             report_last = report;
-            // TEST MORE DEBUG.
-            info("%.1f (%.1f %.1f)  M%i T%.1f ", smoothed, elapsed, elapsed_last, samples, threshold);
-            if (report)  info(" TOUCH\n");
-            if (!report) info(" LIFT\n");
+            // On-event debug log.
+            if (logging_has_mask(LOG_TOUCH_SENS)) {
+                info("%.1f M%i D%.1f T%.1f ", smoothed, samples, dynamic_min, threshold);
+                if (report) info(" TOUCH\n");
+                else info(" LIFT\n");
+            }
             // Report.
             elapsed_last = elapsed;
             return report;
