@@ -11,11 +11,10 @@
 #include "logging.h"
 
 uint8_t sens_from_config = 0;
-float dynamic_min = 0;
-float dynamic_min_start = 0;
 float timeout = 0;
-float threshold = 0;
-uint8_t samples = 0;
+float threshold_ratio = 0;
+float low = 10;
+uint64_t disengaged_last = 0;
 
 void touch_update_threshold() {
     uint8_t preset = config_get_touch_sens_preset();
@@ -23,13 +22,11 @@ void touch_update_threshold() {
     if (config_get_pcb_gen() == 0) {
          // PCB gen 0.
         timeout = CFG_GEN0_TOUCH_TIMEOUT;
-        dynamic_min = CFG_GEN0_TOUCH_DYNAMIC_MIN;
-        dynamic_min_start = CFG_GEN0_TOUCH_DYNAMIC_MIN;
+        threshold_ratio = CFG_TOUCH_DYNAMIC_RATIO_GEN0;
     } else {
         // PCB gen 1+.
         timeout = CFG_GEN1_TOUCH_TIMEOUT;
-        dynamic_min = CFG_GEN1_TOUCH_DYNAMIC_MIN;
-        dynamic_min_start = CFG_GEN1_TOUCH_DYNAMIC_MIN;
+        threshold_ratio = CFG_TOUCH_DYNAMIC_RATIO_GEN1;
     }
 }
 
@@ -65,7 +62,7 @@ uint8_t touch_get_elapsed() {
 float touch_get_elapsed_multisample() {
     float total = 0;
     float expected_next = 0;
-    samples = 0;
+    uint8_t samples = 0;
     while (expected_next < timeout) {
         uint8_t elapsed = touch_get_elapsed();
         total += elapsed;
@@ -76,40 +73,11 @@ float touch_get_elapsed_multisample() {
 }
 
 float touch_get_dynamic_threshold(float elapsed) {
-    static float peak = 0;
-    static uint8_t elapsed_prev = 0;
-    static uint16_t ticks = 0;
-    ticks++;
-    // Push down:
-    // A periodic but slow decrease of the peak, to avoid ever-growing peaks
-    // in long gaming sessions. The hyperbolic function makes it so the
-    // decrease is faster the more it deviates from the minimum.
-    if (!(ticks % CFG_TOUCH_DYNAMIC_PUSHDOWN_FREQ)) {  // TODO: Should be based on timestamps.
-        peak = max(dynamic_min, peak * CFG_TOUCH_DYNAMIC_PUSHDOWN_FACTOR);
+    float mid = low * threshold_ratio;
+    if (elapsed < mid && (time_us_64() - disengaged_last > 1000000)) {
+        low = smooth(low, elapsed, CFG_TOUCH_DYNAMIC_SMOOTH);
     }
-    // Push up:
-    // Raise the peak as soon as the current peak has been exceeded twice.
-    // (Twice to avoid fluke peaks).
-    if (elapsed > peak && elapsed_prev > peak) {
-        peak = min(elapsed, elapsed_prev);
-    }
-    // Calculate.
-    float new_threshold = max(dynamic_min, peak * CFG_TOUCH_DYNAMIC_PEAK_RATIO);
-    // Adjust dynamic min.
-    // If the sensor is considered non-touched...
-    if (elapsed < new_threshold) {
-        float dynamic_min_candidate = smooth(dynamic_min, elapsed * 2, CFG_TOUCH_DYNAMIC_MIN_AVG_SAMPLES);
-        // If the dynamic min is decreasing, allow it.
-        if (dynamic_min_candidate < dynamic_min) {
-            dynamic_min = dynamic_min_candidate;
-        // If the dynamic min is increasing, never grow bigger than the dynamic start value.
-        } else if (dynamic_min_candidate < dynamic_min_start) {
-            dynamic_min = dynamic_min_candidate;
-        }
-    }
-    // Return.
-    elapsed_prev = elapsed;
-    return new_threshold;
+    return mid;
 }
 
 bool touch_status() {
@@ -120,7 +88,7 @@ bool touch_status() {
     float elapsed = touch_get_elapsed_multisample();
     float smoothed = (elapsed + elapsed_last) / 2;
     // Determine threshold.
-    threshold = (
+    float threshold = (
         sens_from_config > 0 ?
         sens_from_config :
         touch_get_dynamic_threshold(smoothed)
@@ -132,7 +100,7 @@ bool touch_status() {
         static uint16_t x = 0;
         x++;
         if (!(x % DEBUG_TOUCH_ELAPSED_FREQ)) {
-            info("%.1f M%i D%.1f T%.1f \n", smoothed, samples, dynamic_min, threshold);
+            info("%.1f / %.1f  L%.1f\n", smoothed, threshold, low);
         }
     }
     // Debounce and report.
@@ -141,9 +109,12 @@ bool touch_status() {
         if ((now - report_changed) > (CFG_TOUCH_DEBOUNCE * 1000)) {
             report_changed = now;
             report_last = report;
+            if (!report) {
+                disengaged_last = time_us_64();
+            }
             // On-event debug log.
             if (logging_has_mask(LOG_TOUCH_SENS)) {
-                info("%.1f M%i D%.1f T%.1f ", smoothed, samples, dynamic_min, threshold);
+                info("%.1f / %.1f  L%.1f ", smoothed, threshold, low);
                 if (report) info(" TOUCH\n");
                 else info(" LIFT\n");
             }
