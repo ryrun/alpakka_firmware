@@ -419,6 +419,25 @@ void hid_report_wireless() {
     }
 }
 
+void hid_report_dongle(uint8_t report_id, uint8_t* payload) {
+    tud_task();
+    if (tud_ready()) {
+        if (report_id == REPORT_KEYBOARD) {
+            if (tud_hid_ready()) {
+                tud_hid_report(REPORT_KEYBOARD, payload, sizeof(KeyboardReport));
+            }
+        }
+        if (report_id == REPORT_MOUSE) {
+            if (tud_hid_ready()) {
+                tud_hid_report(REPORT_MOUSE, payload, sizeof(MouseReport));
+            }
+        }
+        else if (report_id == REPORT_XINPUT) {
+            xinput_send_report((XInputReport*)payload);
+        }
+    }
+}
+
 bool hid_report() {
     static uint8_t priority_mouse = 0;
     static uint8_t priority_gamepad = 0;

@@ -14,7 +14,7 @@ void logging_set_onloop(bool value);
 bool logging_get_onloop();
 
 void logging_set_level(LogLevel level);
-bool logging_get_level();
+LogLevel logging_get_level();
 
 void logging_init();
 void info(char *msg, ...);

@@ -347,4 +347,4 @@ typedef struct __packed _MetaReport {
 } MetaReport;
 
 
-void hid_report_mouse_direct(MouseReport report); // DELETE
+void hid_report_dongle(uint8_t report_id, uint8_t* payload);

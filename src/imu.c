@@ -33,12 +33,12 @@ double offset_accel_1_y;
 double offset_accel_1_z;
 
 void imu_init_single(uint8_t cs, uint8_t gyro_conf) {
-    uint8_t id = bus_spi_read_one(cs, IMU_WHO_AM_I);
+    uint8_t id = bus_spi_read_one(cs, IMU_READ | IMU_WHO_AM_I);
     bus_spi_write(cs, IMU_CTRL1_XL, IMU_CTRL1_XL_2G);
     bus_spi_write(cs, IMU_CTRL8_XL, IMU_CTRL8_XL_LP);
     bus_spi_write(cs, IMU_CTRL2_G, gyro_conf);
-    uint8_t xl = bus_spi_read_one(cs, IMU_CTRL1_XL);
-    uint8_t g = bus_spi_read_one(cs, IMU_CTRL2_G);
+    uint8_t xl = bus_spi_read_one(cs, IMU_READ | IMU_CTRL1_XL);
+    uint8_t g = bus_spi_read_one(cs, IMU_READ | IMU_CTRL2_G);
     info("  IMU cs=%i id=0x%02x xl=0b%08i g=0b%08i\n", cs, id, bin(xl), bin(g));
     if (id == 0x00) {
         warn("Gyro was not able to initialize\n");
@@ -67,7 +67,7 @@ void imu_init() {
 
 Vector imu_read_gyro_bits(uint8_t cs) {
     uint8_t buf[6];
-    bus_spi_read(cs, IMU_OUTX_L_G, buf, 6);
+    bus_spi_read(cs, IMU_READ | IMU_OUTX_L_G, buf, 6);
     int16_t y =  (((int8_t)buf[1] << 8) + (int8_t)buf[0]);
     int16_t z =  (((int8_t)buf[3] << 8) + (int8_t)buf[2]);
     int16_t x = -(((int8_t)buf[5] << 8) + (int8_t)buf[4]);
@@ -83,7 +83,7 @@ Vector imu_read_gyro_bits(uint8_t cs) {
 
 Vector imu_read_accel_bits(uint8_t cs) {
     uint8_t buf[6];
-    bus_spi_read(cs, IMU_OUTX_L_XL, buf, 6);
+    bus_spi_read(cs, IMU_READ | IMU_OUTX_L_XL, buf, 6);
     int16_t x =  (((int8_t)buf[1] << 8) + (int8_t)buf[0]);
     int16_t y =  (((int8_t)buf[3] << 8) + (int8_t)buf[2]);
     int16_t z =  (((int8_t)buf[5] << 8) + (int8_t)buf[4]);

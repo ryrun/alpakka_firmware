@@ -68,42 +68,42 @@ static void dongle_title() {
     info("Firmware version: %s\n", VERSION);
 }
 
-// static void set_wired() {
-//     return;
-//     info("LOOP: Wired\n");
-//     if (device_mode != WIRED) config_reboot();
-//     device_mode = WIRED;
-// }
+static void set_wired() {
+    info("LOOP: Wired\n");
+    if (device_mode != WIRED) config_reboot();
+    device_mode = WIRED;
+}
 
-// static void set_wireless() {
-//     return;
-//     info("LOOP: Wireless\n");
-//     if (device_mode != WIRELESS) multicore_launch_core1(wireless_device_init);
-//     device_mode = WIRELESS;
-// }
+static void set_wireless() {
+    info("LOOP: Wireless\n");
+    device_mode = WIRELESS;
+}
 
 void loop_device_init() {
     led_init();
     stdio_uart_init();
     stdio_init_all();
-    logging_set_level(LOG_INFO);
+    logging_set_level(LOG_DEBUG);
     logging_init();
     device_title();
     config_init();
     config_init_profiles();
-    // tusb_init();
-    // bool usb = usb_wait_for_init(USB_WAIT_FOR_INIT_MS);
+    tusb_init();
+    bool usb = usb_wait_for_init(USB_WAIT_FOR_INIT_MS);
     // wait_for_system_clock();
     bus_init();
     hid_init();
-    // thumbstick_init();
-    // touch_init();
-    // rotary_init();
+    thumbstick_init();
+    touch_init();
+    rotary_init();
     profile_init();
-    // imu_init();
-    // if (0 && usb) set_wired();
-    // else set_wireless();
-    wireless_device_init();
+    imu_init();
+    if (usb) {
+        set_wired();
+    } else {
+        set_wireless();
+        wireless_init(false);
+    }
     loop_cycle();
 }
 
@@ -120,7 +120,7 @@ void loop_host_init() {
     // wait_for_system_clock();
     bus_init();
     hid_init();
-    wireless_host_init();
+    wireless_init(true);
 
     // BATTERY TEST
     // gpio_init(BAT_STAT_1);
@@ -136,37 +136,37 @@ void loop_host_init() {
 void loop_device_task() {
     // Write flash if needed.
     config_sync();
-    // // Gather values for input sources.
-    // profile_report_active();
+    // Gather values for input sources.
+    profile_report_active();
     // hid_report_wireless();
-    wireless_device_task();
     // Report to the correct channel.
-    // if (device_mode == WIRED) {
-    //     // Report to USB.
-    //     bool reported = hid_report();
-    //     // Switch to wireless if USB is disconnected.
-    //     if (!reported) set_wireless();
-    // }
-    // if (device_mode == WIRELESS) {
-    //     // Report to wireless.
-    //     hid_report_wireless();
-    //     // Switch to wired if USB is connected (check once per second).
-    //     static uint16_t i = 0;
-    //     i++;
-    //     if ((!(i % CFG_TICK_FREQUENCY)) && usb_is_connected()) set_wired();
-    // }
+    if (device_mode == WIRED) {
+        // Report to USB.
+        bool reported = hid_report();
+        // Switch to wireless if USB is disconnected.
+        if (!reported) set_wireless();
+    }
+    if (device_mode == WIRELESS) {
+        // Report to wireless.
+        hid_report_wireless();
+        // Switch to wired if USB is connected (check once per second).
+        static uint16_t i = 0;
+        i++;
+        if ((!(i % CFG_TICK_FREQUENCY)) && usb_is_connected()) set_wired();
+    }
     // Listen to UART commands.
     uart_listen();
 }
 
 void loop_host_task() {
     wireless_host_task();
-    // hid_report...
+
     tud_task();
     if (tud_ready()) {
         webusb_read();
         webusb_flush();
     }
+
     uart_listen();
 
     // BATTERY TEST
@@ -217,6 +217,6 @@ void loop_cycle() {
         }
         // Idling control.
         if (unused > 0) sleep_us((uint32_t)unused);
-        // else info("+");
+        else info("+");
     }
 }

@@ -52,8 +52,8 @@ void thumbstick_calibrate() {
     float y = 0;
     for(uint32_t i=0; i<CFG_CALIBRATION_SAMPLES_THUMBSTICK; i++) {
         if (!(i % CFG_CALIBRATION_BLINK_FREQ)) led_show_cycle_step();
-        x += thumbstick_adc(1, 0.0);
-        y += thumbstick_adc(0, 0.0);
+        x += thumbstick_adc(2, 0.0);  // TODO FIX INDEX
+        y += thumbstick_adc(3, 0.0);  // TODO FIX INDEX
     }
     x /= CFG_CALIBRATION_SAMPLES_THUMBSTICK;
     y /= CFG_CALIBRATION_SAMPLES_THUMBSTICK;
@@ -274,8 +274,8 @@ void Thumbstick__report(Thumbstick *self) {
     // Do not report if not calibrated.
     if (offset_x == 0 && offset_y == 0) return;
     // Get values from ADC.
-    float x = thumbstick_adc(1, offset_x);
-    float y = thumbstick_adc(0, offset_y);
+    float x = thumbstick_adc(2, offset_x);  // TODO FIX INDEX
+    float y = thumbstick_adc(3, offset_y);  // TODO FIX INDEX
     // Get correct deadzone.
     float deadzone = self->deadzone_override ? self->deadzone : config_deadzone;
     // Calculate trigonometry.

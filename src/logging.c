@@ -20,7 +20,7 @@ void logging_set_level(LogLevel level) {
     logging_level = level;
 }
 
-bool logging_get_level() {
+LogLevel logging_get_level() {
     return logging_level;
 }
 

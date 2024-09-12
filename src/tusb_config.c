@@ -45,10 +45,10 @@ uint8_t descriptor_configuration_xinput[] = {
 uint8_t const *tud_descriptor_device_cb() {
     debug_uart("USB: tud_descriptor_device_cb\n");
     static tusb_desc_device_t descriptor_device = {DESCRIPTOR_DEVICE};
-    #ifdef DEVICE_ALPAKKA_V1
-        descriptor_device.idVendor = USB_TEST_VENDOR;
-        descriptor_device.idProduct = USB_TEST_PRODUCT;
-    #else
+    // #ifdef DEVICE_ALPAKKA_V1
+    //     descriptor_device.idVendor = USB_TEST_VENDOR;
+    //     descriptor_device.idProduct = USB_TEST_PRODUCT;
+    // #else
     if (config_get_protocol() == PROTOCOL_XINPUT_WIN) {
         descriptor_device.idVendor = USB_WIN_VENDOR;
         descriptor_device.idProduct = USB_WIN_PRODUCT;
@@ -61,7 +61,7 @@ uint8_t const *tud_descriptor_device_cb() {
         descriptor_device.idVendor = USB_GENERIC_VENDOR;
         descriptor_device.idProduct = USB_GENERIC_PRODUCT;
     }
-    #endif
+    // #endif
     return (uint8_t const *) &descriptor_device;
 }
 

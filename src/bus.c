@@ -18,12 +18,12 @@ uint16_t io_cache_1;
 
 int8_t bus_i2c_acknowledge(uint8_t device) {
     uint8_t buf = 0;
-    return i2c_read_blocking(i2c1, device, &buf, 1, false);
+    return i2c_read_blocking(I2C_CHANNEL, device, &buf, 1, false);
 }
 
 void bus_i2c_read(uint8_t device, uint8_t reg, uint8_t *buf, uint8_t len) {
-    i2c_write_blocking(i2c1, device, &reg, 1, true);
-    i2c_read_blocking(i2c1, device, buf, len, false);
+    i2c_write_blocking(I2C_CHANNEL, device, &reg, 1, true);
+    i2c_read_blocking(I2C_CHANNEL, device, buf, len, false);
 }
 
 uint8_t bus_i2c_read_one(uint8_t device, uint8_t reg) {
@@ -40,7 +40,7 @@ uint16_t bus_i2c_read_two(uint8_t device, uint8_t reg) {
 
 void bus_i2c_write(uint8_t device, uint8_t reg, uint8_t value) {
     uint8_t data[] = {reg, value};
-    i2c_write_blocking(i2c1, device, data, 2, false);
+    i2c_write_blocking(I2C_CHANNEL, device, data, 2, false);
 }
 
 Tristate bus_i2c_io_tristate(uint8_t index) {
@@ -55,15 +55,16 @@ Tristate bus_i2c_io_tristate(uint8_t index) {
 
 void bus_i2c_io_pcb_gen_determine() {
     printf("Bus: I2C determine PCB gen\n");
-    #ifdef DEVICE_ALPAKKA_V0
+    #if defined DEVICE_DONGLE
+        config_set_pcb_gen(0);
+    #elif defined DEVICE_ALPAKKA_V0
         bus_i2c_write(I2C_IO_0, I2C_IO_REG_POLARITY+1, 0b00000000);
         bus_i2c_write(I2C_IO_0, I2C_IO_REG_PULL+1,     0b11111111);
         Tristate value_0 = bus_i2c_io_tristate(PIN_PCBGEN_0 - PIN_GROUP_IO_0);
         // NOTE: Use a ternary mask if versions go over 3.
         // See https://github.com/inputlabs/alpakka_pcb/blob/main/generations.md
         config_set_pcb_gen(value_0);
-    #endif
-    #ifdef DEVICE_ALPAKKA_V1
+    #elif defined DEVICE_ALPAKKA_V1
         config_set_pcb_gen(1);
     #endif
 }
@@ -113,7 +114,7 @@ uint8_t bus_spi_read_one(uint8_t cs, uint8_t reg) {
 
 void bus_i2c_init() {
     info("INIT: I2C bus\n");
-    i2c_init(i2c1, I2C_FREQ);
+    i2c_init(I2C_CHANNEL, I2C_FREQ);
     gpio_set_function(PIN_I2C_SDA, GPIO_FUNC_I2C);
     gpio_set_function(PIN_I2C_SCL, GPIO_FUNC_I2C);
     gpio_pull_up(PIN_I2C_SDA);
@@ -166,6 +167,6 @@ void bus_spi_init() {
 
 void bus_init() {
     bus_i2c_init();
-    // bus_i2c_io_init();
+    bus_i2c_io_init();
     bus_spi_init();
 }
