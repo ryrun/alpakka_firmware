@@ -256,7 +256,7 @@ Gyro Gyro_ (
     gyro.engage = engage;
     if (engage != PIN_NONE && engage != PIN_TOUCH_IN) {
         Actions none = {0,};
-        gyro.engage_button = Button_(engage, NORMAL, none, none);
+        gyro.engage_button = Button_(engage, NORMAL, none, none, none);
     }
     memset(gyro.actions_x_pos, 0, ACTIONS_LEN);
     memset(gyro.actions_y_pos, 0, ACTIONS_LEN);

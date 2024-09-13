@@ -122,7 +122,7 @@ void config_profile_default_desktop(CtrlProfile *profile){
         .actions={KEY_4},
     };
     profile->sections[SECTION_DHAT_PUSH].button = (CtrlButton){
-        .mode=HOLD_EXCLUSIVE,
+        .mode=HOLD,
         .actions={KEY_5},
         .actions_secondary={KEY_0},
     };

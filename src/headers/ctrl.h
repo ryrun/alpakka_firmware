@@ -20,12 +20,13 @@ typedef enum Ctrl_msg_type_enum {
     CONFIG_GET,
     CONFIG_SET,
     CONFIG_SHARE,
-    PROFILE_GET,
-    PROFILE_SET,
-    PROFILE_SHARE,
+    SECTION_GET,
+    SECTION_SET,
+    SECTION_SHARE,
     STATUS_GET,
     STATUS_SET,
     STATUS_SHARE,
+    PROFILE_OVERWRITE,
 } Ctrl_msg_type;
 
 typedef enum Ctrl_cfg_type_enum {
@@ -92,7 +93,7 @@ typedef enum CtrlSectionType_enum {
     SECTION_MACRO_4,
 } CtrlSectionType;
 
-typedef struct Ctrl_struct {
+typedef struct _Ctrl {
     uint8_t protocol_version;
     uint8_t device_id;
     Ctrl_msg_type message_type;
@@ -100,7 +101,7 @@ typedef struct Ctrl_struct {
     uint8_t payload[CTRL_MAX_PAYLOAD_SIZE];
 } Ctrl;
 
-typedef struct __attribute__((packed)) {
+typedef struct __packed _CtrlProfileMeta {
     // Must be packed (58 bytes).
     char name[24];
     uint8_t control_byte;
@@ -110,19 +111,19 @@ typedef struct __attribute__((packed)) {
     uint8_t _padding[30];
 } CtrlProfileMeta;
 
-typedef struct __attribute__((packed)) {
+typedef struct __packed _CtrlButton {
     // Must be packed (58 bytes).
     uint8_t mode;
-    uint8_t reserved;
     uint8_t actions[4];
     uint8_t actions_secondary[4];
-    uint8_t actions_reserved[16];
-    uint8_t chords[4];
+    uint8_t actions_terciary[4];
     uint8_t hint[14];
     uint8_t hint_secondary[14];
+    uint8_t hint_terciary[14];
+    uint8_t _padding[3];
 } CtrlButton;
 
-typedef struct __attribute__((packed)) {
+typedef struct __packed _CtrlRotary {
     // Must be packed (58 bytes).
     uint8_t actions_0[4];
     uint8_t actions_1[4];
@@ -136,7 +137,7 @@ typedef struct __attribute__((packed)) {
     uint8_t hint_4[6];
 } CtrlRotary;
 
-typedef struct __attribute__((packed)) {
+typedef struct __packed _CtrlThumbstick {
     // Must be packed (58 bytes).
     uint8_t mode;
     uint8_t distance_mode;
@@ -147,38 +148,38 @@ typedef struct __attribute__((packed)) {
     uint8_t _padding[52];
 } CtrlThumbstick;
 
-typedef struct __attribute__((packed)) {
+typedef struct __packed _CtrlGlyph {
     uint8_t actions[4];
     uint8_t glyph;
 } CtrlGlyph;
 
-typedef struct __attribute__((packed)) {
+typedef struct __packed _CtrlGlyphs {
     // Must be packed (58 bytes).
     CtrlGlyph glyphs[11];
     uint8_t padding[3];
 } CtrlGlyphs;
 
-typedef struct CtrlDaisyGroup_struct {
+typedef struct __packed _CtrlDaisyGroup {
     uint8_t actions_a[4];
     uint8_t actions_b[4];
     uint8_t actions_x[4];
     uint8_t actions_y[4];
 } CtrlDaisyGroup;
 
-typedef struct CtrlDaisy_struct {
+typedef struct __packed _CtrlDaisy {
     // Must be packed (58 bytes).
     CtrlDaisyGroup groups[2];
     uint8_t _padding[26];
 } CtrlDaisy;
 
-typedef struct CtrlGyro_struct {
+typedef struct __packed _CtrlGyro {
     // Must be packed (58 bytes).
     uint8_t mode;
     uint8_t engage;
     uint8_t _padding[56];
 } CtrlGyro;
 
-typedef struct CtrlGyroAxis_struct {
+typedef struct __packed _CtrlGyroAxis {
     // Must be packed (58 bytes).
     uint8_t actions_neg[4];
     uint8_t actions_pos[4];
@@ -189,13 +190,13 @@ typedef struct CtrlGyroAxis_struct {
     uint8_t _padding[20];
 } CtrlGyroAxis;
 
-typedef struct CtrlMacro_struct {
+typedef struct __packed _CtrlMacro {
     // Must be packed (58 bytes).
     uint8_t macro[2][28];
     uint8_t _padding[2];
 } CtrlMacro;
 
-typedef union CtrlSection_union {
+typedef union _CtrlSection {
     CtrlProfileMeta meta;
     CtrlButton button;
     CtrlRotary rotary;
@@ -207,7 +208,7 @@ typedef union CtrlSection_union {
     CtrlMacro macro;
 } CtrlSection;
 
-typedef struct CtrlProfile_struct {
+typedef struct _CtrlProfile {
     CtrlSection sections[64];
 } CtrlProfile;
 
@@ -215,4 +216,4 @@ Ctrl ctrl_empty();
 Ctrl ctrl_log(uint8_t* offset_ptr, uint8_t len);
 Ctrl ctrl_status_share();
 Ctrl ctrl_config_share(uint8_t index);
-Ctrl ctrl_profile_share(uint8_t profile_index, uint8_t section_index);
+Ctrl ctrl_section_share(uint8_t profile_index, uint8_t section_index);

@@ -84,10 +84,10 @@ void loop_device_init() {
     stdio_uart_init();
     stdio_init_all();
     logging_set_level(LOG_DEBUG);
+    logging_set_mask(LOG_BASIC);
     logging_init();
     device_title();
     config_init();
-    config_init_profiles();
     tusb_init();
     bool usb = usb_wait_for_init(USB_WAIT_FOR_INIT_MS);
     // wait_for_system_clock();
@@ -112,6 +112,7 @@ void loop_host_init() {
     stdio_uart_init();
     stdio_init_all();
     logging_set_level(LOG_INFO);
+    logging_set_mask(LOG_BASIC);
     logging_init();
     dongle_title();
     config_init();

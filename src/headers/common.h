@@ -28,6 +28,7 @@
 uint32_t bin(uint8_t k);
 uint32_t bin16(uint16_t k);
 uint8_t random8();
+void print_array(uint8_t *array, uint8_t len);
 
 // Ramp function that results in "deadzone" in the lower part of the range.
 // (Not suited for negative K values).

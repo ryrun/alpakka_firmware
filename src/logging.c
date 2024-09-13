@@ -11,6 +11,7 @@
 #include "common.h"
 
 LogLevel logging_level = LOG_INFO;
+LogMask logging_mask = LOG_BASIC;
 
 // Control if the logging logic should assume the execution is withint the
 // main loop or not.
@@ -22,6 +23,18 @@ void logging_set_level(LogLevel level) {
 
 LogLevel logging_get_level() {
     return logging_level;
+}
+
+void logging_set_mask(LogMask mask) {
+    logging_mask = mask;
+}
+
+bool logging_has_mask(LogMask mask) {
+    return logging_mask & mask;
+}
+
+bool logging_get_mask() {
+    return logging_mask;
 }
 
 void logging_set_onloop(bool value) {

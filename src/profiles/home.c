@@ -42,34 +42,38 @@ void config_profile_default_home(CtrlProfile *profile){
 
     // DPad.
     profile->sections[SECTION_DPAD_UP].button = (CtrlButton){
-        .mode=HOLD_OVERLAP,
+        .mode=HOLD|DOUBLE|IMMEDIATE,
         .actions={PROC_PROFILE_1},
         .actions_secondary={PROC_PROFILE_5},
+        .actions_terciary={PROC_PROFILE_9},
     };
     profile->sections[SECTION_DPAD_RIGHT].button = (CtrlButton){
-        .mode=HOLD_OVERLAP,
+        .mode=HOLD|DOUBLE|IMMEDIATE,
         .actions={PROC_PROFILE_2},
         .actions_secondary={PROC_PROFILE_6},
+        .actions_terciary={PROC_PROFILE_10},
     };
     profile->sections[SECTION_DPAD_DOWN].button = (CtrlButton){
-        .mode=HOLD_OVERLAP,
+        .mode=HOLD|DOUBLE|IMMEDIATE,
         .actions={PROC_PROFILE_3},
         .actions_secondary={PROC_PROFILE_7},
+        .actions_terciary={PROC_PROFILE_11},
     };
     profile->sections[SECTION_DPAD_LEFT].button = (CtrlButton){
-        .mode=HOLD_OVERLAP,
+        .mode=HOLD|DOUBLE|IMMEDIATE,
         .actions={PROC_PROFILE_4},
         .actions_secondary={PROC_PROFILE_8},
+        .actions_terciary={PROC_PROFILE_12},
     };
 
     // Select.
     profile->sections[SECTION_SELECT_1].button = (CtrlButton){
-        .mode=HOLD_EXCLUSIVE_LONG,
+        .mode=HOLD|LONG,
         .actions={KEY_F9},
         .actions_secondary={PROC_BOOTSEL},
     };
     profile->sections[SECTION_START_1].button = (CtrlButton){
-        .mode=HOLD_EXCLUSIVE_LONG,
+        .mode=HOLD|LONG,
         .actions={KEY_F10},
         .actions_secondary={KEY_CONTROL_LEFT, KEY_ALT_LEFT, KEY_DELETE},
     };
@@ -78,7 +82,7 @@ void config_profile_default_home(CtrlProfile *profile){
         .actions={KEY_F11},
     };
     profile->sections[SECTION_START_2].button = (CtrlButton){
-        .mode=HOLD_EXCLUSIVE_LONG,
+        .mode=HOLD|LONG,
         .actions={KEY_F12},
         .actions_secondary={PROC_CALIBRATE},
     };
@@ -110,22 +114,22 @@ void config_profile_default_home(CtrlProfile *profile){
 
     // DHat.
     profile->sections[SECTION_DHAT_LEFT].button = (CtrlButton){
-        .mode=HOLD_EXCLUSIVE_LONG,
+        .mode=HOLD|LONG,
         .actions={KEY_F1},
         .actions_secondary={PROC_TUNE_DEADZONE},
     };
     profile->sections[SECTION_DHAT_DOWN].button = (CtrlButton){
-        .mode=HOLD_EXCLUSIVE_LONG,
+        .mode=HOLD|LONG,
         .actions={KEY_F2},
         .actions_secondary={PROC_TUNE_MOUSE_SENS},
     };
     profile->sections[SECTION_DHAT_RIGHT].button = (CtrlButton){
-        .mode=HOLD_EXCLUSIVE_LONG,
+        .mode=HOLD|LONG,
         .actions={KEY_F3},
         .actions_secondary={PROC_TUNE_TOUCH_SENS},
     };
     profile->sections[SECTION_DHAT_UP].button = (CtrlButton){
-        .mode=HOLD_EXCLUSIVE_LONG,
+        .mode=HOLD|LONG,
         .actions={KEY_F4},
         .actions_secondary={PROC_TUNE_OS},
     };
@@ -166,27 +170,27 @@ void config_profile_default_home(CtrlProfile *profile){
         .overlap=-50,  // Ignore diagonals because quickchat.
     };
     profile->sections[SECTION_THUMBSTICK_LEFT].button = (CtrlButton){
-        .mode=HOLD_EXCLUSIVE,
+        .mode=HOLD,
         .actions={PROC_MACRO_1},
         .actions_secondary={PROC_MACRO_5},
     };
     profile->sections[SECTION_THUMBSTICK_RIGHT].button = (CtrlButton){
-        .mode=HOLD_EXCLUSIVE,
+        .mode=HOLD,
         .actions={PROC_MACRO_2},
         .actions_secondary={PROC_MACRO_6},
     };
     profile->sections[SECTION_THUMBSTICK_UP].button = (CtrlButton){
-        .mode=HOLD_EXCLUSIVE,
+        .mode=HOLD,
         .actions={PROC_MACRO_3},
         .actions_secondary={PROC_MACRO_7},
     };
     profile->sections[SECTION_THUMBSTICK_DOWN].button = (CtrlButton){
-        .mode=HOLD_EXCLUSIVE,
+        .mode=HOLD,
         .actions={PROC_MACRO_4},
         .actions_secondary={PROC_MACRO_8},
     };
     profile->sections[SECTION_THUMBSTICK_PUSH].button = (CtrlButton){
-        .mode=HOLD_EXCLUSIVE_LONG,
+        .mode=HOLD|LONG,
         .actions={KEY_SUPER_LEFT, KEY_CONTROL_LEFT, KEY_O},
         .hint="On-screen KB",
         .actions_secondary={PROC_THANKS},

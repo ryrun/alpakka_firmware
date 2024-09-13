@@ -10,103 +10,120 @@
 #include "common.h"
 #include "logging.h"
 
-uint8_t loglevel = 0;
 uint8_t sens_from_config = 0;
-uint8_t dynamic_min = 0;
-uint8_t timeout = 0;
-float threshold = 0;
+float threshold_ratio = 0;
+float low = 10;
+uint64_t disengaged_last = 0;
 
 void touch_update_threshold() {
     uint8_t preset = config_get_touch_sens_preset();
     sens_from_config = config_get_touch_sens_value(preset);
-    if (config_get_pcb_gen() == 0) {
-         // PCB gen 0.
-        timeout = CFG_GEN0_TOUCH_TIMEOUT;
-        dynamic_min = CFG_GEN0_TOUCH_DYNAMIC_MIN;
-    } else {
-        // PCB gen 1+.
-        timeout = CFG_GEN1_TOUCH_TIMEOUT;
-        dynamic_min = CFG_GEN1_TOUCH_DYNAMIC_MIN;
-    }
+    threshold_ratio = CFG_TOUCH_DYNAMIC_RATIO;
+    // if (config_get_pcb_gen() == 0) {
+    //      // PCB gen 0.
+    //     timeout = CFG_GEN0_TOUCH_TIMEOUT;
+    //     threshold_ratio = CFG_TOUCH_DYNAMIC_RATIO_GEN0;
+    // } else {
+    //     // PCB gen 1+.
+    //     timeout = CFG_GEN1_TOUCH_TIMEOUT;
+    //     threshold_ratio = CFG_TOUCH_DYNAMIC_RATIO_GEN1;
+    // }
 }
 
-uint32_t touch_get_elapsed() {
-    uint32_t time_low;
-    time_low = time_us_32();
-    gpio_put(PIN_TOUCH_OUT, true);
+uint8_t touch_get_elapsed() {
     bool timedout = false;
+    // Make sure it is down.
+    uint32_t timer_start = time_us_32();
+    gpio_put(PIN_TOUCH_OUT, false);
+    while(gpio_get(PIN_TOUCH_IN) != false) {
+        if ((time_us_32() - timer_start) > CFG_TOUCH_TIMEOUT) {
+            timedout = true;
+            break;
+        }
+    }
+    // Request up and measure.
+    uint32_t timer_settled = time_us_32();
+    gpio_put(PIN_TOUCH_OUT, true);
     while(gpio_get(PIN_TOUCH_IN) == false) {
-        if ((time_us_32() - time_low) > timeout) {
+        if ((time_us_32() - timer_start) > CFG_TOUCH_TIMEOUT) {
             timedout = true;
             break;
         }
     };
-    uint32_t elapsed = timedout ? 0 : time_us_32() - time_low;
-    if (loglevel >= 1 && timedout) info("T");
-    gpio_put(PIN_TOUCH_OUT, false); // Send low (so is ready for next cycle).
+    // Request down for next cycle.
+    gpio_put(PIN_TOUCH_OUT, false);
+    // Calculate elapsed (ignore settling time).
+    uint32_t elapsed;
+    if (!timedout) elapsed = time_us_32() - timer_settled;
+    else elapsed = CFG_TOUCH_TIMEOUT;
     return elapsed;
 }
 
-float touch_get_dynamic_threshold(uint8_t elapsed) {
-    static float peak = 0;
-    static uint8_t elapsed_prev = 0;
-    static uint16_t ticks = 0;
-    ticks++;
-    // Push down:
-    // A periodic but slow decrease of the peak, to avoid ever-growing peaks
-    // in long gaming sessions. The hyperbolic function makes it so the
-    // decrease is faster the more it deviates from the minimum.
-    if (!(ticks % CFG_TOUCH_DYNAMIC_PUSHDOWN_FREQ)) {
-        float x = dynamic_min / peak;
-        float factor = tanhf(x * CFG_TOUCH_DYNAMIC_PUSHDOWN_HYPERBOLIC);
-        peak = max(dynamic_min, peak * factor);
+float touch_get_elapsed_multisample() {
+    float total = 0;
+    float expected_next = 0;
+    uint8_t samples = 0;
+    while (expected_next < CFG_TOUCH_TIMEOUT) {
+        uint8_t elapsed = touch_get_elapsed();
+        total += elapsed;
+        expected_next = total + elapsed;
+        samples++;
     }
-    // Push up:
-    // Raise the peak as soon as the current peak has been exceeded twice.
-    // (Twice to avoid fluke peaks).
-    if (elapsed > peak && elapsed_prev > peak) {
-        peak = min(elapsed, elapsed_prev);
+    return total / samples;
+}
+
+float touch_get_dynamic_threshold(float elapsed) {
+    float mid = low * threshold_ratio;
+    if (elapsed < mid && (time_us_64() - disengaged_last > 1000000)) {
+        low = smooth(low, elapsed, CFG_TOUCH_DYNAMIC_SMOOTH);
     }
-    // Return.
-    elapsed_prev = elapsed;
-    return max(dynamic_min, peak * CFG_TOUCH_DYNAMIC_PEAK_RATIO);
+    return mid;
 }
 
 bool touch_status() {
-    uint32_t elapsed = touch_get_elapsed();
+    static bool report_last = false;
+    static uint64_t report_changed = 0;
+    static float elapsed_last = 0;
+    // Measure and smooth.
+    float elapsed = touch_get_elapsed_multisample();
+    float smoothed = (elapsed + elapsed_last) / 2;
     // Determine threshold.
-    if (elapsed != 0) {
-        threshold = (
-            sens_from_config > 0 ?
-            sens_from_config :
-            touch_get_dynamic_threshold(elapsed)
-        );
-    } else {
-        elapsed = threshold + 1;  // Using threshold from previous cycle.
-    }
-    // Debug.
-    if (loglevel >= 2) {
+    float threshold = (
+        sens_from_config > 0 ?
+        sens_from_config :
+        touch_get_dynamic_threshold(smoothed)
+    );
+    // Determine if the surface is considered touched.
+    bool report = smoothed >= threshold;
+    // Periodic debug log.
+    if (logging_has_mask(LOG_TOUCH_SENS)) {
         static uint16_t x = 0;
         x++;
         if (!(x % DEBUG_TOUCH_ELAPSED_FREQ)) {
-            info("%i %.2f\n", elapsed, threshold);
+            info("%.1f / %.1f  L%.1f\n", smoothed, threshold, low);
         }
     }
-    // Determine if the surface is considered touched and report.
-    static bool touched = false;
-    static uint8_t hits = 0;
-    bool over = elapsed >= threshold;
-    if (over != touched) {
-        // Only report change on repeated hits.
-        hits++;
-        if (hits >= CFG_TOUCH_SMOOTH) {
-            touched = over;
-            if (loglevel >= 1) info("Touch status %i\n", touched);
+    // Debounce and report.
+    if (report != report_last) {
+        uint64_t now = time_us_64();
+        if ((now - report_changed) > (CFG_TOUCH_DEBOUNCE * 1000)) {
+            report_changed = now;
+            report_last = report;
+            if (!report) {
+                disengaged_last = time_us_64();
+            }
+            // On-event debug log.
+            if (logging_has_mask(LOG_TOUCH_SENS)) {
+                info("%.1f / %.1f  L%.1f ", smoothed, threshold, low);
+                if (report) info(" TOUCH\n");
+                else info(" LIFT\n");
+            }
+            // Report.
+            elapsed_last = elapsed;
+            return report;
         }
-    } else {
-        hits = 0;
     }
-    return touched;
+    elapsed_last = elapsed;
 }
 
 void touch_log_baseline() {
