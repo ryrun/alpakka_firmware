@@ -8,12 +8,10 @@
 #define CFG_GEN1_TOUCH_DYNAMIC_MIN 10 // Microseconds
 
 // The maximum elapsed time before the measurement is assumed infinite.
-#define CFG_GEN0_TOUCH_TIMEOUT 20  // Microseconds.
-#define CFG_GEN1_TOUCH_TIMEOUT 100  // Microseconds.
+#define CFG_TOUCH_TIMEOUT 100  // Microseconds.
 
 // Dynamic threshold algorithm tuning.
-#define CFG_TOUCH_DYNAMIC_RATIO_GEN0 2.0
-#define CFG_TOUCH_DYNAMIC_RATIO_GEN1 2.0
+#define CFG_TOUCH_DYNAMIC_RATIO 2.0
 #define CFG_TOUCH_DYNAMIC_SMOOTH 250
 
 #define CFG_TOUCH_DYNAMIC_PEAK_RATIO 0.7

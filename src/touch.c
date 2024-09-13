@@ -11,7 +11,6 @@
 #include "logging.h"
 
 uint8_t sens_from_config = 0;
-float timeout = 0;
 float threshold_ratio = 0;
 float low = 10;
 uint64_t disengaged_last = 0;
@@ -19,15 +18,16 @@ uint64_t disengaged_last = 0;
 void touch_update_threshold() {
     uint8_t preset = config_get_touch_sens_preset();
     sens_from_config = config_get_touch_sens_value(preset);
-    if (config_get_pcb_gen() == 0) {
-         // PCB gen 0.
-        timeout = CFG_GEN0_TOUCH_TIMEOUT;
-        threshold_ratio = CFG_TOUCH_DYNAMIC_RATIO_GEN0;
-    } else {
-        // PCB gen 1+.
-        timeout = CFG_GEN1_TOUCH_TIMEOUT;
-        threshold_ratio = CFG_TOUCH_DYNAMIC_RATIO_GEN1;
-    }
+    threshold_ratio = CFG_TOUCH_DYNAMIC_RATIO;
+    // if (config_get_pcb_gen() == 0) {
+    //      // PCB gen 0.
+    //     timeout = CFG_GEN0_TOUCH_TIMEOUT;
+    //     threshold_ratio = CFG_TOUCH_DYNAMIC_RATIO_GEN0;
+    // } else {
+    //     // PCB gen 1+.
+    //     timeout = CFG_GEN1_TOUCH_TIMEOUT;
+    //     threshold_ratio = CFG_TOUCH_DYNAMIC_RATIO_GEN1;
+    // }
 }
 
 uint8_t touch_get_elapsed() {
@@ -36,7 +36,7 @@ uint8_t touch_get_elapsed() {
     uint32_t timer_start = time_us_32();
     gpio_put(PIN_TOUCH_OUT, false);
     while(gpio_get(PIN_TOUCH_IN) != false) {
-        if ((time_us_32() - timer_start) > timeout) {
+        if ((time_us_32() - timer_start) > CFG_TOUCH_TIMEOUT) {
             timedout = true;
             break;
         }
@@ -45,7 +45,7 @@ uint8_t touch_get_elapsed() {
     uint32_t timer_settled = time_us_32();
     gpio_put(PIN_TOUCH_OUT, true);
     while(gpio_get(PIN_TOUCH_IN) == false) {
-        if ((time_us_32() - timer_start) > timeout) {
+        if ((time_us_32() - timer_start) > CFG_TOUCH_TIMEOUT) {
             timedout = true;
             break;
         }
@@ -55,7 +55,7 @@ uint8_t touch_get_elapsed() {
     // Calculate elapsed (ignore settling time).
     uint32_t elapsed;
     if (!timedout) elapsed = time_us_32() - timer_settled;
-    else elapsed = timeout;
+    else elapsed = CFG_TOUCH_TIMEOUT;
     return elapsed;
 }
 
@@ -63,7 +63,7 @@ float touch_get_elapsed_multisample() {
     float total = 0;
     float expected_next = 0;
     uint8_t samples = 0;
-    while (expected_next < timeout) {
+    while (expected_next < CFG_TOUCH_TIMEOUT) {
         uint8_t elapsed = touch_get_elapsed();
         total += elapsed;
         expected_next = total + elapsed;
