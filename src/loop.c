@@ -79,12 +79,45 @@ static void set_wireless() {
     device_mode = WIRELESS;
 }
 
+static void battery_init() {
+    gpio_init(BAT_STAT_1);
+    gpio_init(BAT_STAT_2);
+    gpio_pull_up(BAT_STAT_1);
+    gpio_pull_up(BAT_STAT_2);
+    gpio_set_dir(BAT_STAT_1, GPIO_IN);
+    gpio_set_dir(BAT_STAT_2, GPIO_IN);
+}
+
+static void board_led() {
+    static uint8_t i = 0;
+    static bool blink = false;
+    i++;
+    if (i == 100) {
+        i = 0;
+        bool stat1 = gpio_get(BAT_STAT_1);
+        bool stat2 = gpio_get(BAT_STAT_2);
+        info("%i %i\n", stat1, stat2);
+        if (!stat1 && stat2) {
+            if (device_mode == WIRED) {
+                gpio_put(PIN_LED_BOARD, true);
+            }
+            if (device_mode == WIRELESS) {
+                blink = !blink;
+                gpio_put(PIN_LED_BOARD, blink);
+            }
+
+        } else {
+            gpio_put(PIN_LED_BOARD, false);
+        }
+    }
+}
+
 void loop_device_init() {
     led_init();
     stdio_uart_init();
     stdio_init_all();
-    logging_set_level(LOG_DEBUG);
-    logging_set_mask(LOG_BASIC);
+    logging_set_level(LOG_INFO);
+    logging_set_mask(LOG_BASIC + LOG_TOUCH_SENS);
     logging_init();
     device_title();
     config_init();
@@ -98,6 +131,7 @@ void loop_device_init() {
     rotary_init();
     profile_init();
     imu_init();
+    battery_init();
     if (usb) {
         set_wired();
     } else {
@@ -122,15 +156,6 @@ void loop_host_init() {
     bus_init();
     hid_init();
     wireless_init(true);
-
-    // BATTERY TEST
-    // gpio_init(BAT_STAT_1);
-    // gpio_init(BAT_STAT_2);
-    // gpio_pull_up(BAT_STAT_1);
-    // gpio_pull_up(BAT_STAT_2);
-    // gpio_set_dir(BAT_STAT_1, GPIO_IN);
-    // gpio_set_dir(BAT_STAT_2, GPIO_IN);
-
     loop_cycle();
 }
 
@@ -157,6 +182,8 @@ void loop_device_task() {
     }
     // Listen to UART commands.
     uart_listen();
+    // Update state of board LED.
+    board_led();
 }
 
 void loop_host_task() {
