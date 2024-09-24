@@ -21,11 +21,11 @@ void logging_set_onloop(bool value);
 bool logging_get_onloop();
 
 void logging_set_level(LogLevel level);
-bool logging_get_level();
+LogLevel logging_get_level();
 
 void logging_set_mask(LogMask mask);
 bool logging_has_mask(LogMask mask);
-bool logging_get_mask();
+LogMask logging_get_mask();
 
 void logging_init();
 void info(char *msg, ...);
