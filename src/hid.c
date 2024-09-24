@@ -20,7 +20,7 @@ bool synced_gamepad = false;
 uint16_t alarms = 0;
 alarm_pool_t *alarm_pool;
 
-uint8_t state_matrix[256] = {0,};
+int8_t state_matrix[256] = {0,};
 int16_t mouse_x = 0;
 int16_t mouse_y = 0;
 double gamepad_lx = 0;
@@ -30,8 +30,9 @@ double gamepad_ry = 0;
 double gamepad_lz = 0;
 double gamepad_rz = 0;
 
-void hid_matrix_reset() {
+void hid_matrix_reset(uint8_t exclude) {
     for(uint8_t i=0; i<255; i++) {
+        if (i == exclude) continue;  // Exclude action that must be retained after profile changes.
         state_matrix[i] = 0;
     }
     synced_keyboard = false;
@@ -105,7 +106,7 @@ void hid_release(uint8_t key) {
     else if (key == MOUSE_SCROLL_DOWN) return;
     else if (key >= PROC_INDEX) hid_procedure_release(key);
     else {
-        state_matrix[key] -= 1;
+        state_matrix[key] = max(0, state_matrix[key] - 1);  // Guard values do not go negative.
         if (key >= GAMEPAD_INDEX) synced_gamepad = false;
         else if (key >= MOUSE_INDEX) synced_mouse = false;
         else synced_keyboard = false;
