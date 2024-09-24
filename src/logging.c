@@ -33,7 +33,7 @@ bool logging_has_mask(LogMask mask) {
     return logging_mask & mask;
 }
 
-bool logging_get_mask() {
+LogMask logging_get_mask() {
     return logging_mask;
 }
 

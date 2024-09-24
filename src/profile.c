@@ -21,6 +21,7 @@ uint8_t profile_active_index = -1;
 bool profile_led_lock = false;  // Extern.
 bool profile_pending_reboot = false;  // Extern.
 bool pending_reset = false;
+uint8_t pending_reset_exclude;
 bool home_is_active = false;
 bool home_gamepad_is_active = false;
 bool enabled_all = true;
@@ -259,13 +260,19 @@ void profile_update_leds() {
     }
 }
 
-void profile_report_active() {
-    if (profile_pending_reboot && !home_is_active) config_reboot();
+// Check if profile has been requested to be reset (usually after profile change).
+void profile_check_reset() {
     if (pending_reset) {
-        hid_matrix_reset();
+        hid_matrix_reset(pending_reset_exclude);
         profile_reset_all();
         pending_reset = false;
+        pending_reset_exclude = 0;
     }
+}
+
+void profile_report_active() {
+    if (profile_pending_reboot && !home_is_active) config_reboot();
+    profile_check_reset();
     Profile* profile = profile_get_active(false);
     profile->report(profile);
 }
@@ -287,10 +294,12 @@ void profile_set_home_gamepad(bool state) {
     if (state) {
         led_static_mask(LED_NONE);
         led_set_mode(LED_MODE_ENGAGE);
+        home_is_active = false;  // Force normal home profile off.
     } else {
         profile_update_leds();
     }
     pending_reset = true;
+    pending_reset_exclude = GAMEPAD_HOME;  // Do not reset held gamepad home.
 }
 
 void profile_set_active(uint8_t index) {
