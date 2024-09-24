@@ -11,7 +11,7 @@
 #define CFG_TOUCH_TIMEOUT 100  // Microseconds.
 
 // Dynamic threshold algorithm tuning.
-#define CFG_TOUCH_DYNAMIC_RATIO 2.0
+#define CFG_TOUCH_DYNAMIC_RATIO 1.5
 #define CFG_TOUCH_DYNAMIC_SMOOTH 250
 
 #define CFG_TOUCH_DYNAMIC_PEAK_RATIO 0.7
@@ -23,7 +23,7 @@
 #define CFG_TOUCH_DEBOUNCE 200  // Milliseconds
 
 // Debug.
-#define DEBUG_TOUCH_ELAPSED_FREQ 100  // Ticks.
+#define DEBUG_TOUCH_ELAPSED_FREQ 250  // Ticks.
 
 void touch_init();
 void touch_update_threshold();

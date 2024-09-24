@@ -100,7 +100,7 @@ bool touch_status() {
         static uint16_t x = 0;
         x++;
         if (!(x % DEBUG_TOUCH_ELAPSED_FREQ)) {
-            info("%.1f / %.1f  L%.1f\n", smoothed, threshold, low);
+            info("%.1f / %.1f\n", smoothed, threshold);
         }
     }
     // Debounce and report.
@@ -114,7 +114,7 @@ bool touch_status() {
             }
             // On-event debug log.
             if (logging_has_mask(LOG_TOUCH_SENS)) {
-                info("%.1f / %.1f  L%.1f ", smoothed, threshold, low);
+                info("%.1f / %.1f", smoothed, threshold);
                 if (report) info(" TOUCH\n");
                 else info(" LIFT\n");
             }
