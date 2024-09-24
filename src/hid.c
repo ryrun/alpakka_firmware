@@ -11,7 +11,7 @@
 #include "common.h"
 #include "webusb.h"
 #include "logging.h"
-#include "thanks.c"
+#include "thanks.h"
 
 bool hid_allow_communication = true;  // Extern.
 bool synced_keyboard = false;
