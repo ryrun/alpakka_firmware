@@ -11,23 +11,21 @@
 #include "logging.h"
 
 uint8_t sens_from_config = 0;
-float threshold_ratio = 0;
-float low = 10;
 uint64_t disengaged_last = 0;
+float threshold_ratio = 0;
+float baseline = 0;
 
 void touch_update_threshold() {
     uint8_t preset = config_get_touch_sens_preset();
     sens_from_config = config_get_touch_sens_value(preset);
-    threshold_ratio = CFG_TOUCH_DYNAMIC_RATIO;
-    // if (config_get_pcb_gen() == 0) {
-    //      // PCB gen 0.
-    //     timeout = CFG_GEN0_TOUCH_TIMEOUT;
-    //     threshold_ratio = CFG_TOUCH_DYNAMIC_RATIO_GEN0;
-    // } else {
-    //     // PCB gen 1+.
-    //     timeout = CFG_GEN1_TOUCH_TIMEOUT;
-    //     threshold_ratio = CFG_TOUCH_DYNAMIC_RATIO_GEN1;
-    // }
+    threshold_ratio = CFG_TOUCH_AUTO_RATIO;
+    if (config_get_pcb_gen() == 0) {
+         // PCB gen 0.
+        baseline = CFG_GEN0_TOUCH_AUTO_START;
+    } else {
+        // PCB gen 1+.
+        baseline = CFG_GEN1_TOUCH_AUTO_START;
+    }
 }
 
 uint8_t touch_get_elapsed() {
@@ -72,12 +70,18 @@ float touch_get_elapsed_multisample() {
     return total / samples;
 }
 
-float touch_get_dynamic_threshold(float elapsed) {
-    float mid = low * threshold_ratio;
-    if (elapsed < mid && (time_us_64() - disengaged_last > 1000000)) {
-        low = smooth(low, elapsed, CFG_TOUCH_DYNAMIC_SMOOTH);
+float touch_get_auto_threshold(float elapsed) {
+    // Calculate threshold based on current baseline and factor.
+    float threshold = baseline * threshold_ratio;
+    // Update baseline (with smoothing) if the surface is considered disengaged,
+    // and if the engage debounding period is over.
+    bool engaged = elapsed > threshold;
+    bool debounce = (time_us_64() - disengaged_last) < (CFG_TOUCH_DEBOUNCE * 1000);
+    if (!engaged && !debounce) {
+        baseline = smooth(baseline, elapsed, CFG_TOUCH_AUTO_SMOOTH);
     }
-    return mid;
+    // Return.
+    return threshold;
 }
 
 bool touch_status() {
@@ -91,7 +95,7 @@ bool touch_status() {
     float threshold = (
         sens_from_config > 0 ?
         sens_from_config :
-        touch_get_dynamic_threshold(smoothed)
+        touch_get_auto_threshold(smoothed)
     );
     // Determine if the surface is considered touched.
     bool report = smoothed >= threshold;
@@ -126,7 +130,7 @@ bool touch_status() {
     elapsed_last = elapsed;
 }
 
-void touch_log_baseline() {
+void touch_log_probe() {
     uint8_t t0 = touch_get_elapsed();
     sleep_ms(CFG_TICK_INTERVAL);
     uint8_t t1 = touch_get_elapsed();
@@ -145,5 +149,5 @@ void touch_init() {
     gpio_set_dir(PIN_TOUCH_IN, GPIO_IN);
     gpio_set_pulls(PIN_TOUCH_IN, false, false);
     touch_update_threshold();
-    touch_log_baseline();
+    touch_log_probe();
 }

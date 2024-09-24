@@ -3,21 +3,16 @@
 
 #pragma once
 
-// The starting baseline threshold value when using dynamic.
-#define CFG_GEN0_TOUCH_DYNAMIC_MIN 2  // Microseconds
-#define CFG_GEN1_TOUCH_DYNAMIC_MIN 10 // Microseconds
-
 // The maximum elapsed time before the measurement is assumed infinite.
 #define CFG_TOUCH_TIMEOUT 100  // Microseconds.
 
-// Dynamic threshold algorithm tuning.
-#define CFG_TOUCH_DYNAMIC_RATIO 1.5
-#define CFG_TOUCH_DYNAMIC_SMOOTH 250
+// The starting baseline threshold value when using dynamic.
+#define CFG_GEN0_TOUCH_AUTO_START 2  // Microseconds
+#define CFG_GEN1_TOUCH_AUTO_START 10 // Microseconds
 
-#define CFG_TOUCH_DYNAMIC_PEAK_RATIO 0.7
-#define CFG_TOUCH_DYNAMIC_PUSHDOWN_FACTOR 0.5
-#define CFG_TOUCH_DYNAMIC_PUSHDOWN_FREQ 250  // Ticks.
-#define CFG_TOUCH_DYNAMIC_MIN_AVG_SAMPLES 100
+// Dynamic threshold algorithm tuning.
+#define CFG_TOUCH_AUTO_RATIO 1.5  // Should be configurable?
+#define CFG_TOUCH_AUTO_SMOOTH 250
 
 // Debounce.
 #define CFG_TOUCH_DEBOUNCE 200  // Milliseconds
