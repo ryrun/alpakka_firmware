@@ -16,12 +16,12 @@
 #include "logging.h"
 #include "common.h"
 
-Profile profiles[16];
+Profile profiles[PROFILE_SLOTS];
 uint8_t profile_active_index = -1;
 bool profile_led_lock = false;  // Extern.
 bool profile_pending_reboot = false;  // Extern.
 bool pending_reset = false;
-uint8_t pending_reset_exclude;
+uint8_t pending_reset_keep;
 bool home_is_active = false;
 bool home_gamepad_is_active = false;
 bool enabled_all = true;
@@ -263,10 +263,10 @@ void profile_update_leds() {
 // Check if profile has been requested to be reset (usually after profile change).
 void profile_check_reset() {
     if (pending_reset) {
-        hid_matrix_reset(pending_reset_exclude);
+        hid_matrix_reset(pending_reset_keep);
         profile_reset_all();
         pending_reset = false;
-        pending_reset_exclude = 0;
+        pending_reset_keep = 0;
     }
 }
 
@@ -299,7 +299,7 @@ void profile_set_home_gamepad(bool state) {
         profile_update_leds();
     }
     pending_reset = true;
-    pending_reset_exclude = GAMEPAD_HOME;  // Do not reset held gamepad home.
+    pending_reset_keep = GAMEPAD_HOME;  // Do not reset held gamepad home.
 }
 
 void profile_set_active(uint8_t index) {
