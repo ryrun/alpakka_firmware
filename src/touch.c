@@ -2,8 +2,8 @@
 // Copyright (C) 2022, Input Labs Oy.
 
 /*
-The touch logic determines if the touch surface in the controller is considered
-engaged (being touched) or disengaged (not being touched).
+The touch logic determines if the touch surface is considered engaged (being
+touched) or disengaged (not being touched).
 
 The external interface and main function for this feature is "touch_status()",
 which returns either true or false (engaged or not) and it is usually called
@@ -13,28 +13,29 @@ To determine if the surface is touched, the circuit arrangement is composed by
 three main elements:
 - A GPIO used as pull up or pull down, driving the circuit.
 - A GPIO used as input, reading the if the circuit is up (3.3v) or down (GND).
-- A monopole capacitor consisting in the trace, the touch plate, and potentially
-  the body of the user, so the parasitic capacitance can be measured.
+- A "monopole capacitor" consisting in the trace, the touch surface, and
+  optionally the body of the user, so the total parasitic capacitance can be
+  measured.
 
-The system measure how long it takes for the circuit to change state, so how
+The system measures how long it takes for the circuit to change state, so how
 many microseconds passed from the moment the first GPIO was set as pull up/down
-to the moment it was confirmed the circuit was effectively driven up/down.
+to the moment it was confirmed by the other GPIO the circuit was effectively
+driven up/down.
 
 The more parasitic capacitance the circuit has, the slower this process is,
 therefore when the user touch the surface, their whole body capacitance makes
-the measurement to increase significantly, and can be determined as touched.
+the measurement result to increase significantly, and can be determined as
+touched.
 
 The surface is considered touched if the measurement (in microseconds) is bigger
-than the defined threshold (also in microseconds).
-
-If the measurement reaches the defined timeout, the surface is also considered
-touched.
+than the defined threshold (also in microseconds). If the measurement reaches
+the defined timeout, the surface is also considered touched.
 
 There are 2 modes of operation:
 - Fixed: The threshold is a fixed number of microseconds defined by
   the controller configuration (touch sensitivity preset).
-- Dynamic (automatic): The threshold changes dynamically based on the
-  measurements from the system, with a relatively simple logic / algorithm.
+- Dynamic (automatic): The threshold changes dynamically based on recursive
+  self-assessment of the system, with a relatively simple logic / algorithm.
 */
 
 #include <stdio.h>
@@ -50,19 +51,20 @@ uint8_t sens_from_config = 0;
 float threshold_ratio = 0;
 float baseline = 0;
 
+// Load/update fixed threshold from config.
 void touch_update_threshold() {
     uint8_t preset = config_get_touch_sens_preset();
     sens_from_config = config_get_touch_sens_value(preset);
     threshold_ratio = TOUCH_AUTO_RATIO;
-    if (config_get_pcb_gen() == 0) {
-         // PCB gen 0.
-        baseline = TOUCH_AUTO_START_GEN0;
-    } else {
-        // PCB gen 1+.
-        baseline = TOUCH_AUTO_START_GEN1;
-    }
+    // Reset to initial baseline.
+    baseline = (
+        config_get_pcb_gen() == 0 ?
+        TOUCH_AUTO_START_GEN0 :
+        TOUCH_AUTO_START_GEN1
+    );
 }
 
+// Perform the time measurement (charge / discharge).
 uint8_t touch_get_elapsed() {
     bool timedout = false;
     // Make sure it is settled.
@@ -74,7 +76,7 @@ uint8_t touch_get_elapsed() {
             break;
         }
     }
-    // Request up and measure.
+    // Request change and measure.
     uint32_t timer_settled = time_us_32();
     gpio_put(PIN_TOUCH_OUT, !TOUCH_SETTLED_STATE);
     while(gpio_get(PIN_TOUCH_IN) == TOUCH_SETTLED_STATE) {
@@ -106,6 +108,7 @@ float touch_get_elapsed_multisample() {
     return total / samples;
 }
 
+// Calculate dynamic threshold.
 float touch_get_auto_threshold(float elapsed) {
     // Calculate threshold based on current baseline and factor.
     float threshold = baseline * threshold_ratio;
@@ -118,6 +121,7 @@ float touch_get_auto_threshold(float elapsed) {
     return threshold;
 }
 
+// Determine if the surface is touched or not.
 bool touch_status() {
     static bool engaged_prev = false;
     static float elapsed_prev = 0;
@@ -154,6 +158,7 @@ bool touch_status() {
     return engaged;
 }
 
+// Probe timings and show them in the startup log.
 void touch_log_probe() {
     uint8_t t0 = touch_get_elapsed();
     sleep_ms(CFG_TICK_INTERVAL);
