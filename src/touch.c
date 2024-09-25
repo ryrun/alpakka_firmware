@@ -1,6 +1,42 @@
 // SPDX-License-Identifier: GPL-2.0-only
 // Copyright (C) 2022, Input Labs Oy.
 
+/*
+The touch logic determines if the touch surface in the controller is considered
+engaged (being touched) or disengaged (not being touched).
+
+The external interface and main function for this feature is "touch_status()",
+which returns either true or false (engaged or not) and it is usually called
+from the profile(s) layer.
+
+To determine if the surface is touched, the circuit arrangement is composed by
+three main elements:
+- A GPIO used as pull up or pull down, driving the circuit.
+- A GPIO used as input, reading the if the circuit is up (3.3v) or down (GND).
+- A monopole capacitor consisting in the trace, the touch plate, and potentially
+  the body of the user, so the parasitic capacitance can be measured.
+
+The system measure how long it takes for the circuit to change state, so how
+many microseconds passed from the moment the first GPIO was set as pull up/down
+to the moment it was confirmed the circuit was effectively driven up/down.
+
+The more parasitic capacitance the circuit has, the slower this process is,
+therefore when the user touch the surface, their whole body capacitance makes
+the measurement to increase significantly, and can be determined as touched.
+
+The surface is considered touched if the measurement (in microseconds) is bigger
+than the defined threshold (also in microseconds).
+
+If the measurement reaches the defined timeout, the surface is also considered
+touched.
+
+There are 2 modes of operation:
+- Fixed: The threshold is a fixed number of microseconds defined by
+  the controller configuration (touch sensitivity preset).
+- Dynamic (automatic): The threshold changes dynamically based on the
+  measurements from the system, with a relatively simple logic / algorithm.
+*/
+
 #include <stdio.h>
 #include <math.h>
 #include <pico/stdlib.h>
@@ -29,7 +65,7 @@ void touch_update_threshold() {
 
 uint8_t touch_get_elapsed() {
     bool timedout = false;
-    // Make sure it is down.
+    // Make sure it is settled.
     uint32_t timer_start = time_us_32();
     gpio_put(PIN_TOUCH_OUT, TOUCH_SETTLED_STATE);
     while(gpio_get(PIN_TOUCH_IN) != TOUCH_SETTLED_STATE) {
@@ -47,7 +83,7 @@ uint8_t touch_get_elapsed() {
             break;
         }
     };
-    // Request down for next cycle.
+    // Request settle for next cycle.
     gpio_put(PIN_TOUCH_OUT, TOUCH_SETTLED_STATE);
     // Calculate elapsed (ignore settling time).
     uint32_t elapsed;
@@ -56,6 +92,7 @@ uint8_t touch_get_elapsed() {
     return elapsed;
 }
 
+// Take as many samples as possible within the available time (timeout).
 float touch_get_elapsed_multisample() {
     float total = 0;
     float expected_next = 0;
