@@ -18,9 +18,10 @@ interfaces (USB keyboard, USB mouse, gamepad...), and sends the report if
 required.
 
 The state matrix is a representation of all the actions that could be sent
-(output) and internal operations (procedures). It keep track of how many
-references to these actions are active. As a simplification: Button presses
-increase the counter by one, and button releases decrease the counter by one.
+(output) and internal operations (procedures) requested by the user. It keep
+track of how many references to these actions are active.
+As a simplification: Button presses increase the counter by one, and button
+releases decrease the counter by one.
 
 To avoid orphan references, the state matrix is usually re-initialized (reset)
 to zeros when the user changes the active profile, otherwise the disabled
@@ -59,7 +60,7 @@ double gamepad_rz = 0;
 
 void hid_matrix_reset(uint8_t keep) {
     for(uint8_t action=0; action<255; action++) {
-        if (action == keep) continue;
+        if (action == keep) continue;  // Optionally do not reset specific actions.
         state_matrix[action] = 0;
     }
     synced_keyboard = false;
