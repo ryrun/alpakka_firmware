@@ -1,6 +1,43 @@
 // SPDX-License-Identifier: GPL-2.0-only
 // Copyright (C) 2022, Input Labs Oy.
 
+/*
+The touch logic determines if the touch surface is considered engaged (being
+touched) or disengaged (not being touched).
+
+The external interface and main function for this feature is "touch_status()",
+which returns either true or false (engaged or not) and it is usually called
+from the profile(s) layer.
+
+To determine if the surface is touched, the circuit arrangement is composed by
+three main elements:
+- A GPIO used as pull up or pull down, driving the circuit.
+- A GPIO used as input, reading the if the circuit is up (3.3v) or down (GND).
+- A "monopole capacitor" consisting in the trace, the touch surface, and
+  optionally the body of the user, so the total parasitic capacitance can be
+  measured.
+
+The system measures how long it takes for the circuit to change state, so how
+many microseconds passed from the moment the first GPIO was set as pull up/down
+to the moment it was confirmed by the other GPIO the circuit was effectively
+driven up/down.
+
+The more parasitic capacitance the circuit has, the slower this process is,
+therefore when the user touch the surface, their whole body capacitance makes
+the measurement result to increase significantly, and can be determined as
+touched.
+
+The surface is considered touched if the measurement (in microseconds) is bigger
+than the defined threshold (also in microseconds). If the measurement reaches
+the defined timeout, the surface is also considered touched.
+
+There are 2 modes of operation:
+- Fixed: The threshold is a fixed number of microseconds defined by
+  the controller configuration (touch sensitivity preset).
+- Dynamic (automatic): The threshold changes dynamically based on recursive
+  self-assessment of the system, with a relatively simple logic / algorithm.
+*/
+
 #include <stdio.h>
 #include <math.h>
 #include <pico/stdlib.h>
@@ -10,106 +47,131 @@
 #include "common.h"
 #include "logging.h"
 
-uint8_t loglevel = 0;
 uint8_t sens_from_config = 0;
-uint8_t dynamic_min = 0;
-uint8_t timeout = 0;
-float threshold = 0;
+float threshold_ratio = 0;
+float baseline = 0;
 
+// Load/update fixed threshold from config.
 void touch_update_threshold() {
     uint8_t preset = config_get_touch_sens_preset();
     sens_from_config = config_get_touch_sens_value(preset);
-    if (config_get_pcb_gen() == 0) {
-         // PCB gen 0.
-        timeout = CFG_GEN0_TOUCH_TIMEOUT;
-        dynamic_min = CFG_GEN0_TOUCH_DYNAMIC_MIN;
-    } else {
-        // PCB gen 1+.
-        timeout = CFG_GEN1_TOUCH_TIMEOUT;
-        dynamic_min = CFG_GEN1_TOUCH_DYNAMIC_MIN;
-    }
+    threshold_ratio = TOUCH_AUTO_RATIO;
+    // Reset to initial baseline.
+    baseline = (
+        config_get_pcb_gen() == 0 ?
+        TOUCH_AUTO_START_GEN0 :
+        TOUCH_AUTO_START_GEN1
+    );
 }
 
-uint32_t touch_get_elapsed() {
-    uint32_t time_low;
-    time_low = time_us_32();
-    gpio_put(PIN_TOUCH_OUT, true);
+// Perform the time measurement (charge / discharge).
+uint8_t touch_get_elapsed() {
     bool timedout = false;
-    while(gpio_get(PIN_TOUCH_IN) == false) {
-        if ((time_us_32() - time_low) > timeout) {
+    // Make sure it is settled.
+    uint32_t timer_start = time_us_32();
+    gpio_put(PIN_TOUCH_OUT, TOUCH_SETTLED_STATE);
+    while(gpio_get(PIN_TOUCH_IN) != TOUCH_SETTLED_STATE) {
+        if ((time_us_32() - timer_start) > TOUCH_TIMEOUT) {
+            timedout = true;
+            break;
+        }
+    }
+    // Request change and measure.
+    uint32_t timer_settled = time_us_32();
+    gpio_put(PIN_TOUCH_OUT, !TOUCH_SETTLED_STATE);
+    while(gpio_get(PIN_TOUCH_IN) == TOUCH_SETTLED_STATE) {
+        if ((time_us_32() - timer_start) > TOUCH_TIMEOUT) {
             timedout = true;
             break;
         }
     };
-    uint32_t elapsed = timedout ? 0 : time_us_32() - time_low;
-    if (loglevel >= 1 && timedout) info("T");
-    gpio_put(PIN_TOUCH_OUT, false); // Send low (so is ready for next cycle).
+    // Request settle for next cycle.
+    gpio_put(PIN_TOUCH_OUT, TOUCH_SETTLED_STATE);
+    // Calculate elapsed (ignore settling time).
+    uint32_t elapsed;
+    if (!timedout) elapsed = time_us_32() - timer_settled;
+    else elapsed = TOUCH_TIMEOUT;
     return elapsed;
 }
 
-float touch_get_dynamic_threshold(uint8_t elapsed) {
-    static float peak = 0;
-    static uint8_t elapsed_prev = 0;
-    static uint16_t ticks = 0;
-    ticks++;
-    // Push down:
-    // A periodic but slow decrease of the peak, to avoid ever-growing peaks
-    // in long gaming sessions. The hyperbolic function makes it so the
-    // decrease is faster the more it deviates from the minimum.
-    if (!(ticks % CFG_TOUCH_DYNAMIC_PUSHDOWN_FREQ)) {
-        float x = dynamic_min / peak;
-        float factor = tanhf(x * CFG_TOUCH_DYNAMIC_PUSHDOWN_HYPERBOLIC);
-        peak = max(dynamic_min, peak * factor);
+// Take as many samples as possible within the available time (timeout).
+float touch_get_elapsed_multisample() {
+    float total = 0;
+    float expected_next = 0;
+    uint8_t samples = 0;
+    while (expected_next < TOUCH_TIMEOUT) {
+        uint8_t elapsed = touch_get_elapsed();
+        total += elapsed;
+        expected_next = total + elapsed;
+        samples++;
     }
-    // Push up:
-    // Raise the peak as soon as the current peak has been exceeded twice.
-    // (Twice to avoid fluke peaks).
-    if (elapsed > peak && elapsed_prev > peak) {
-        peak = min(elapsed, elapsed_prev);
+    return total / samples;
+}
+
+// Calculate dynamic threshold.
+float touch_get_auto_threshold(float elapsed) {
+    // Calculate threshold based on current baseline and factor.
+    float threshold = baseline * threshold_ratio;
+    // Update baseline (with smoothing) if the surface is considered disengaged.
+    bool engaged = elapsed >= threshold;
+    if (!engaged) {
+        baseline = smooth(baseline, elapsed, TOUCH_AUTO_SMOOTH);
     }
     // Return.
-    elapsed_prev = elapsed;
-    return max(dynamic_min, peak * CFG_TOUCH_DYNAMIC_PEAK_RATIO);
+    return threshold;
 }
 
+// Determine if the surface is touched or not.
 bool touch_status() {
-    uint32_t elapsed = touch_get_elapsed();
+    static bool engaged_prev = false;
+    static uint32_t disengaged_last_ts = 0;
+    static float elapsed_prev = 0;
+    // Measure and smooth.
+    float elapsed = touch_get_elapsed_multisample();
+    float smoothed = (elapsed + elapsed_prev) / 2;
+    elapsed_prev = elapsed;
     // Determine threshold.
-    if (elapsed != 0) {
-        threshold = (
-            sens_from_config > 0 ?
-            sens_from_config :
-            touch_get_dynamic_threshold(elapsed)
-        );
-    } else {
-        elapsed = threshold + 1;  // Using threshold from previous cycle.
-    }
-    // Debug.
-    if (loglevel >= 2) {
-        static uint16_t x = 0;
-        x++;
-        if (!(x % DEBUG_TOUCH_ELAPSED_FREQ)) {
-            info("%i %.2f\n", elapsed, threshold);
+    float threshold = (
+        sens_from_config > 0 ?
+        sens_from_config :
+        touch_get_auto_threshold(smoothed)
+    );
+    // Determine if the surface is considered engaged.
+    bool engaged = smoothed >= threshold;
+    // Periodic debug log.
+    if (logging_has_mask(LOG_TOUCH_SENS)) {
+        static uint32_t log_last_ts = 0;
+        if (time_us_32() > (log_last_ts + (TOUCH_DEBUG_FREQ * 1000))) {
+            log_last_ts = time_us_32();
+            info("%.1f / %.1f\n", smoothed, threshold);
         }
     }
-    // Determine if the surface is considered touched and report.
-    static bool touched = false;
-    static uint8_t hits = 0;
-    bool over = elapsed >= threshold;
-    if (over != touched) {
-        // Only report change on repeated hits.
-        hits++;
-        if (hits >= CFG_TOUCH_SMOOTH) {
-            touched = over;
-            if (loglevel >= 1) info("Touch status %i\n", touched);
+    // Debounce check (prioritize stay up to avoid microcuts).
+    bool from_engaged_to_disengaged = !engaged && engaged_prev;
+    if (from_engaged_to_disengaged) {
+        bool debounce = (time_us_32() - disengaged_last_ts) < (TOUCH_DEBOUNCE * 1000);
+        if (debounce) {
+            return engaged_prev;
         }
-    } else {
-        hits = 0;
     }
-    return touched;
+    if (!engaged) {
+        disengaged_last_ts = time_us_32();
+    }
+    // Debug log triggered by state change.
+    if (engaged != engaged_prev) {
+        if (logging_has_mask(LOG_TOUCH_SENS)) {
+            info("%.1f / %.1f", smoothed, threshold);
+            if (engaged) info(" TOUCH\n");
+            else info(" LIFT\n");
+        }
+    }
+    // Report.
+    engaged_prev = engaged;
+    return engaged;
 }
 
-void touch_log_baseline() {
+// Probe timings and show them in the startup log.
+void touch_log_probe() {
     uint8_t t0 = touch_get_elapsed();
     sleep_ms(CFG_TICK_INTERVAL);
     uint8_t t1 = touch_get_elapsed();
@@ -128,5 +190,5 @@ void touch_init() {
     gpio_set_dir(PIN_TOUCH_IN, GPIO_IN);
     gpio_set_pulls(PIN_TOUCH_IN, false, false);
     touch_update_threshold();
-    touch_log_baseline();
+    touch_log_probe();
 }
