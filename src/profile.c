@@ -16,11 +16,12 @@
 #include "logging.h"
 #include "common.h"
 
-Profile profiles[16];
+Profile profiles[PROFILE_SLOTS];
 uint8_t profile_active_index = -1;
 bool profile_led_lock = false;  // Extern.
 bool profile_pending_reboot = false;  // Extern.
 bool pending_reset = false;
+uint8_t pending_reset_keep;  // Action that must be kept between resets.
 bool home_is_active = false;
 bool home_gamepad_is_active = false;
 bool enabled_all = true;
@@ -218,7 +219,7 @@ Profile Profile_ () {
 // ============================================================================
 // Independent functions.
 
-void profile_reset_all() {
+void profile_reset_all_profiles() {
     config_tune_set_mode(0);
     for(uint8_t i=0; i<PROFILE_SLOTS; i++) {
         profiles[i].reset(&profiles[i]);
@@ -259,13 +260,19 @@ void profile_update_leds() {
     }
 }
 
+void profile_reset_all() {
+    // Reset HID state matrix. Optionally keep certain actions.
+    hid_matrix_reset(pending_reset_keep);
+    // Reset all profiles runtimes.
+    profile_reset_all_profiles();
+    // Reset flags.
+    pending_reset = false;
+    pending_reset_keep = 0;
+}
+
 void profile_report_active() {
     if (profile_pending_reboot && !home_is_active) config_reboot();
-    if (pending_reset) {
-        hid_matrix_reset();
-        profile_reset_all();
-        pending_reset = false;
-    }
+    if (pending_reset) profile_reset_all();
     Profile* profile = profile_get_active(false);
     profile->report(profile);
 }
@@ -291,6 +298,7 @@ void profile_set_home_gamepad(bool state) {
         profile_update_leds();
     }
     pending_reset = true;
+    pending_reset_keep = GAMEPAD_HOME;  // Do not reset held gamepad home.
 }
 
 void profile_set_active(uint8_t index) {
