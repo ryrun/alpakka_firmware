@@ -124,10 +124,12 @@ float touch_get_auto_threshold(float elapsed) {
 // Determine if the surface is touched or not.
 bool touch_status() {
     static bool engaged_prev = false;
+    static uint32_t disengaged_last_ts = 0;
     static float elapsed_prev = 0;
     // Measure and smooth.
     float elapsed = touch_get_elapsed_multisample();
     float smoothed = (elapsed + elapsed_prev) / 2;
+    elapsed_prev = elapsed;
     // Determine threshold.
     float threshold = (
         sens_from_config > 0 ?
@@ -144,6 +146,17 @@ bool touch_status() {
             info("%.1f / %.1f\n", smoothed, threshold);
         }
     }
+    // Debounce check (prioritize stay up to avoid microcuts).
+    bool from_engaged_to_disengaged = !engaged && engaged_prev;
+    if (from_engaged_to_disengaged) {
+        bool debounce = (time_us_32() - disengaged_last_ts) < (TOUCH_DEBOUNCE * 1000);
+        if (debounce) {
+            return engaged_prev;
+        }
+    }
+    if (!engaged) {
+        disengaged_last_ts = time_us_32();
+    }
     // Debug log triggered by state change.
     if (engaged != engaged_prev) {
         if (logging_has_mask(LOG_TOUCH_SENS)) {
@@ -153,7 +166,6 @@ bool touch_status() {
         }
     }
     // Report.
-    elapsed_prev = elapsed;
     engaged_prev = engaged;
     return engaged;
 }
