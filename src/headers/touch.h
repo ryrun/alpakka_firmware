@@ -17,7 +17,9 @@
 #define TOUCH_AUTO_START_GEN1 10 // Microseconds.
 
 // Dynamic threshold algorithm tuning.
-#define TOUCH_AUTO_RATIO 1.5  // Should be configurable?
+#define TOUCH_AUTO_RATIO_PRESET1 2.0
+#define TOUCH_AUTO_RATIO_PRESET2 1.5
+#define TOUCH_AUTO_RATIO_PRESET3 1.25
 #define TOUCH_AUTO_SMOOTH  (CFG_TICK_FREQUENCY)  // 1 second.
 
 // Debounce.

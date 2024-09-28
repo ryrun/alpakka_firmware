@@ -47,7 +47,7 @@ There are 2 modes of operation:
 #include "common.h"
 #include "logging.h"
 
-uint8_t sens_from_config = 0;
+int8_t sens_from_config = 0;
 float threshold_ratio = 0;
 float baseline = 0;
 
@@ -55,7 +55,9 @@ float baseline = 0;
 void touch_update_threshold() {
     uint8_t preset = config_get_touch_sens_preset();
     sens_from_config = config_get_touch_sens_value(preset);
-    threshold_ratio = TOUCH_AUTO_RATIO;
+    if (sens_from_config == -1) threshold_ratio = TOUCH_AUTO_RATIO_PRESET1;
+    if (sens_from_config == -2) threshold_ratio = TOUCH_AUTO_RATIO_PRESET2;
+    if (sens_from_config == -3) threshold_ratio = TOUCH_AUTO_RATIO_PRESET3;
     // Reset to initial baseline.
     baseline = (
         config_get_pcb_gen() == 0 ?
@@ -133,7 +135,7 @@ bool touch_status() {
     // Determine threshold.
     float threshold = (
         sens_from_config > 0 ?
-        sens_from_config :
+        sens_from_config / 10.0 :
         touch_get_auto_threshold(smoothed)
     );
     // Determine if the surface is considered engaged.

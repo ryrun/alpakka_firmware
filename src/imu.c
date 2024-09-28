@@ -144,14 +144,20 @@ Vector imu_calibrate_single(uint8_t cs, bool mode, double* x, double* y, double*
     double tx = 0;
     double ty = 0;
     double tz = 0;
+    // Determine number of samples.
+    uint32_t samples;
+    if (mode==1) {
+        samples = CFG_CALIBRATION_SAMPLES_ACCEL;
+    } else {
+        samples = CFG_CALIBRATION_SAMPLES_GYRO;
+        Config *config = config_read();
+        if (config->long_calibration) {
+            samples *= CFG_CALIBRATION_LONG_FACTOR;
+        }
+    }
+    // Sampling.
     uint32_t i = 0;
-    uint32_t samples = (
-        mode ?
-        CFG_CALIBRATION_SAMPLES_ACCEL :
-        CFG_CALIBRATION_SAMPLES_GYRO
-    );
     while(i < samples) {
-        if (!(i % CFG_CALIBRATION_BLINK_FREQ)) led_show_cycle_step();
         Vector sample = mode ? imu_read_accel_bits(cs) : imu_read_gyro_bits(cs);
         tx += sample.x;
         ty += sample.y;
