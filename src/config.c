@@ -419,7 +419,7 @@ void config_set_protocol(uint8_t preset) {
 
 void config_set_touch_sens_preset(uint8_t preset, bool notify_webusb) {
     config_cache.sens_touch = preset;
-    touch_update_threshold();
+    touch_load_from_config();
     if (notify_webusb) webusb_set_pending_config_share(SENS_TOUCH);
     info("Config: Touch sensitivity preset %i\n", preset);
 }
@@ -494,12 +494,14 @@ void config_set_swap_gyros(bool value) {
     info("Config: swap_gyros=%i\n", value);
     config_cache.swap_gyros = value;
     config_cache_synced = false;
+    imu_init();
 }
 
 void config_set_touch_invert_polarity(bool value) {
     info("Config: touch_invert_polarity=%i\n", value);
     config_cache.touch_invert_polarity = value;
     config_cache_synced = false;
+    touch_load_from_config();
 }
 
 
