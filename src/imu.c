@@ -170,12 +170,12 @@ Vector imu_calibrate_single(uint8_t cs, bool mode, double* x, double* y, double*
 
 void imu_load_calibration() {
     Config *config = config_read();
-    offset_gyro_0_x = config->offset_gyro_0_x;
-    offset_gyro_0_y = config->offset_gyro_0_y;
-    offset_gyro_0_z = config->offset_gyro_0_z;
-    offset_gyro_1_x = config->offset_gyro_1_x;
-    offset_gyro_1_y = config->offset_gyro_1_y;
-    offset_gyro_1_z = config->offset_gyro_1_z;
+    offset_gyro_0_x = config->offset_gyro_0_x - (config->offset_gyro_user_x * GYRO_USER_OFFSET_FACTOR);
+    offset_gyro_0_y = config->offset_gyro_0_y - (config->offset_gyro_user_y * GYRO_USER_OFFSET_FACTOR);
+    offset_gyro_0_z = config->offset_gyro_0_z - (config->offset_gyro_user_z * GYRO_USER_OFFSET_FACTOR);
+    offset_gyro_1_x = config->offset_gyro_1_x - (config->offset_gyro_user_x * GYRO_USER_OFFSET_FACTOR);
+    offset_gyro_1_y = config->offset_gyro_1_y - (config->offset_gyro_user_y * GYRO_USER_OFFSET_FACTOR);
+    offset_gyro_1_z = config->offset_gyro_1_z - (config->offset_gyro_user_z * GYRO_USER_OFFSET_FACTOR);
     offset_accel_0_x = config->offset_accel_0_x;
     offset_accel_0_y = config->offset_accel_0_y;
     offset_accel_0_z = config->offset_accel_0_z;
@@ -200,6 +200,7 @@ void imu_reset_calibration() {
 }
 
 void imu_calibrate() {
+    config_set_gyro_user_offset(0, 0, 0);
     imu_reset_calibration();
     imu_calibrate_single(PIN_SPI_CS0, 0, &offset_gyro_0_x, &offset_gyro_0_y, &offset_gyro_0_z);
     imu_calibrate_single(PIN_SPI_CS1, 0, &offset_gyro_1_x, &offset_gyro_1_y, &offset_gyro_1_z);

@@ -79,6 +79,9 @@ typedef struct __packed _Config {
     double offset_accel_1_x;
     double offset_accel_1_y;
     double offset_accel_1_z;
+    int8_t offset_gyro_user_x;
+    int8_t offset_gyro_user_y;
+    int8_t offset_gyro_user_z;
     uint8_t log_level;
     uint8_t log_mask;
     bool long_calibration;
@@ -132,6 +135,7 @@ void config_set_log_mask(LogMask log_mask);
 void config_set_long_calibration(bool value);
 void config_set_swap_gyros(bool value);
 void config_set_touch_invert_polarity(bool value);
+void config_set_gyro_user_offset(int8_t x, int8_t y, int8_t z);
 
 // Profiles.
 uint8_t config_get_profile();

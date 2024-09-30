@@ -21,6 +21,8 @@
 #define IMU_OUTY_L_XL 0x30  // Accelerometer read Y address.
 #define IMU_OUTZ_L_XL 0x2A  // Accelerometer read Z address.
 
+#define GYRO_USER_OFFSET_FACTOR 1.5
+
 void imu_init();
 Vector imu_read_gyro();
 Vector imu_read_accel();

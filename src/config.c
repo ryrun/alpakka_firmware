@@ -504,6 +504,16 @@ void config_set_touch_invert_polarity(bool value) {
     touch_load_from_config();
 }
 
+void config_set_gyro_user_offset(int8_t x, int8_t y, int8_t z) {
+    float f = 0.01;
+    info("Config: offset_gyro_user x=%.2f y=%.2f z=%.2f\n", x*f, y*f, z*f);
+    config_cache.offset_gyro_user_x = x;
+    config_cache.offset_gyro_user_y = y;
+    config_cache.offset_gyro_user_z = z;
+    config_cache_synced = false;
+    imu_load_calibration();
+}
+
 void config_set_problem_calibration(bool state) {
     problem_calibration = state;
     led_show();

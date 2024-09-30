@@ -38,6 +38,7 @@ typedef enum Ctrl_cfg_type_enum {
     LONG_CALIBRATION,
     SWAP_GYROS,
     TOUCH_INVERT_POLARITY,
+    GYRO_USER_OFFSET,
 } Ctrl_cfg_type;
 
 typedef enum CtrlSectionType_enum {
