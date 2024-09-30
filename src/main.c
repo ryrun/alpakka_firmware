@@ -38,8 +38,6 @@ void main_init() {
     // Init stdio and logging.
     stdio_uart_init();
     stdio_init_all();
-    logging_set_level(LOG_INFO);
-    logging_set_mask(LOG_BASIC);
     logging_init();
     // Load config.
     title();
