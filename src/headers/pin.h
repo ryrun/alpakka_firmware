@@ -19,6 +19,8 @@
     #define PIN_TOUCH_IN 7
     #define PIN_ROTARY_A 9
     #define PIN_ROTARY_B 8
+    #define PIN_THUMBSTICK_LX 27
+    #define PIN_THUMBSTICK_LY 26
     #define PIN_I2C_SDA 14
     #define PIN_I2C_SCL 15
     #define PIN_SPI_CK 10
@@ -26,8 +28,6 @@
     #define PIN_SPI_RX 12
     #define PIN_SPI_CS0 18
     #define PIN_SPI_CS1 19
-    #define PIN_THUMBSTICK_LX 27
-    #define PIN_THUMBSTICK_LY 26
     #define I2C_CHANNEL i2c1
     #define SPI_CHANNEL spi1
 #endif
@@ -39,24 +39,27 @@
     #define PIN_LED_RIGHT 8
     #define PIN_LED_DOWN 7
     #define PIN_LED_LEFT 6
-    #define PIN_HOME 23
+    #define PIN_HOME 24
     #define PIN_TOUCH_IN 12
     #define PIN_TOUCH_OUT 13
     #define PIN_ROTARY_A 10
     #define PIN_ROTARY_B 11
-    #define PIN_I2C_SDA 20
-    #define PIN_I2C_SCL 21
+    #define PIN_THUMBSTICK_LX 28
+    #define PIN_THUMBSTICK_LY 29
+    #define PIN_I2C_SDA 22
+    #define PIN_I2C_SCL 23
     #define PIN_SPI_TX 19
     #define PIN_SPI_RX 16
     #define PIN_SPI_CK 18
     #define PIN_SPI_CS0 5
     #define PIN_SPI_CS1 4
-    #define PIN_SPI_CS_NRF24 17
-    #define PIN_THUMBSTICK_LX 28
-    #define PIN_THUMBSTICK_LY 29
-    #define BAT_STAT_1 15
-    #define BAT_STAT_2 14
-    #define I2C_CHANNEL i2c0
+    #define PIN_UART1_TX 20
+    #define PIN_UART1_RX 21
+    #define PIN_ESP_ENABLE 25
+    #define PIN_ESP_BOOT 17
+    #define PIN_BATT_STAT_1 15
+    #define PIN_BATT_STAT_2 14
+    #define I2C_CHANNEL i2c1
     #define SPI_CHANNEL spi0
 #endif
 

@@ -80,12 +80,12 @@ static void set_wireless() {
 }
 
 static void battery_init() {
-    gpio_init(BAT_STAT_1);
-    gpio_init(BAT_STAT_2);
-    gpio_pull_up(BAT_STAT_1);
-    gpio_pull_up(BAT_STAT_2);
-    gpio_set_dir(BAT_STAT_1, GPIO_IN);
-    gpio_set_dir(BAT_STAT_2, GPIO_IN);
+    gpio_init(PIN_BATT_STAT_1);
+    gpio_init(PIN_BATT_STAT_2);
+    gpio_pull_up(PIN_BATT_STAT_1);
+    gpio_pull_up(PIN_BATT_STAT_2);
+    gpio_set_dir(PIN_BATT_STAT_1, GPIO_IN);
+    gpio_set_dir(PIN_BATT_STAT_2, GPIO_IN);
 }
 
 static void board_led() {
@@ -94,8 +94,8 @@ static void board_led() {
     i++;
     if (i == 100) {
         i = 0;
-        bool stat1 = gpio_get(BAT_STAT_1);
-        bool stat2 = gpio_get(BAT_STAT_2);
+        bool stat1 = gpio_get(PIN_BATT_STAT_1);
+        bool stat2 = gpio_get(PIN_BATT_STAT_2);
         info("%i %i\n", stat1, stat2);
         if (!stat1 && stat2) {
             if (device_mode == WIRED) {
@@ -116,8 +116,6 @@ void loop_device_init() {
     led_init();
     stdio_uart_init();
     stdio_init_all();
-    logging_set_level(LOG_INFO);
-    logging_set_mask(LOG_BASIC + LOG_TOUCH_SENS);
     logging_init();
     device_title();
     config_init();
@@ -145,8 +143,6 @@ void loop_host_init() {
     led_init();
     stdio_uart_init();
     stdio_init_all();
-    logging_set_level(LOG_INFO);
-    logging_set_mask(LOG_BASIC);
     logging_init();
     dongle_title();
     config_init();
@@ -196,19 +192,6 @@ void loop_host_task() {
     }
 
     uart_listen();
-
-    // BATTERY TEST
-    // static uint16_t i = 0;
-    // i++;
-    // if (i == 2000) {
-    //     i = 0;
-    //     bool stat1 =  gpio_get(BAT_STAT_1);
-    //     bool stat2 =  gpio_get(BAT_STAT_2);
-    //     if (!stat1 & !stat2) printf("Error\n");
-    //     if (!stat1 & stat2) printf("Low battery / Charging\n");
-    //     if (stat1 & !stat2) printf("Charge complete\n");
-    //     if (stat1 & stat2) printf("Shutdown\n");
-    // }
 }
 
 void loop_cycle() {

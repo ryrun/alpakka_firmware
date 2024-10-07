@@ -157,12 +157,6 @@ void bus_spi_init() {
     gpio_set_dir(PIN_SPI_CS1, GPIO_OUT);
     gpio_put(PIN_SPI_CS0, true);
     gpio_put(PIN_SPI_CS1, true);
-    // Radio.
-    #if defined(DEVICE_ALPAKKA_V1) || defined(DEVICE_DONGLE)
-        gpio_init(PIN_SPI_CS_NRF24);
-        gpio_set_dir(PIN_SPI_CS_NRF24, GPIO_OUT);
-        gpio_put(PIN_SPI_CS_NRF24, true);
-    #endif
 }
 
 void bus_init() {

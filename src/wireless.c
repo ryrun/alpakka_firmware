@@ -24,56 +24,83 @@ static void led_task() {
     }
 }
 
+static void boot_task() {
+    static uint32_t i = 0;
+    static bool state;
+    i++;
+    if (i==1000) {
+        i = 0;
+        state = !state;
+        gpio_put(PIN_ESP_ENABLE, state);
+    }
+}
+
 void wireless_send(uint8_t report_id, void *packet, uint8_t len) {
     uint8_t payload[32] = {0,};
     payload[0] = report_id;
     memcpy(&payload[1], packet, len);
-    bus_spi_write_32(PIN_SPI_CS_NRF24, NRF24_REG_WRITE | NRF24_REG_STATUS, 0);
-    bus_spi_write_32(PIN_SPI_CS_NRF24, NRF24_W_TX_PAYLOAD, payload);
+    // bus_spi_write_32(PIN_SPI_CS_NRF24, NRF24_REG_WRITE | NRF24_REG_STATUS, 0);
+    // bus_spi_write_32(PIN_SPI_CS_NRF24, NRF24_W_TX_PAYLOAD, payload);
 }
 
-uint8_t wireless_nrf24_config(uint8_t address, uint8_t value) {
-    bus_spi_write(PIN_SPI_CS_NRF24, NRF24_REG_WRITE | address, value);
-    uint8_t value_onchip = bus_spi_read_one(PIN_SPI_CS_NRF24, address);
-    if (value_onchip != value) error("RF: NRF24 configuration mismatch\n");
-    return value_onchip;
-}
+// uint8_t wireless_nrf24_config(uint8_t address, uint8_t value) {
+//     bus_spi_write(PIN_SPI_CS_NRF24, NRF24_REG_WRITE | address, value);
+//     uint8_t value_onchip = bus_spi_read_one(PIN_SPI_CS_NRF24, address);
+//     if (value_onchip != value) error("RF: NRF24 configuration mismatch\n");
+//     return value_onchip;
+// }
 
 void wireless_init(bool host) {
     if (host) info("INIT: RF host\n");
     else info("INIT: RF device\n");
-    uint8_t config = wireless_nrf24_config(
-        NRF24_REG_CONFIG,
-        host ? NRF24_CONFIG_HOST : NRF24_CONFIG_DEVICE
-    );
-    uint8_t rf_setup = wireless_nrf24_config(NRF24_REG_RFSETUP, NRF24_RFSETUP);
-    uint8_t channel = wireless_nrf24_config(NRF24_REG_CHANNEL, NRF24_CHANNEL);
-    uint8_t ack = wireless_nrf24_config(NRF24_REG_ACK, NRF24_ACK);
-    uint8_t retransmission = wireless_nrf24_config(NRF24_REG_RETRY, NRF24_RETRY);
-    uint8_t payload_size = wireless_nrf24_config(NRF24_REG_RX_PW_P0, NRF24_PAYLOAD_SIZE);
-    info("RF: config=0b%08i\n", bin(config));
-    info("RF: rf_setup=0b%08i\n", bin(rf_setup));
-    info("RF: channel=24%02i\n", channel);
-    info("RF: ack=0b%08i\n", bin(ack));
-    info("RF: retransmission=0b%08i\n", bin(retransmission));
-    info("RF: payload_size=%i\n", payload_size);
+    // uint8_t config = wireless_nrf24_config(
+    //     NRF24_REG_CONFIG,
+    //     host ? NRF24_CONFIG_HOST : NRF24_CONFIG_DEVICE
+    // );
+    // uint8_t rf_setup = wireless_nrf24_config(NRF24_REG_RFSETUP, NRF24_RFSETUP);
+    // uint8_t channel = wireless_nrf24_config(NRF24_REG_CHANNEL, NRF24_CHANNEL);
+    // uint8_t ack = wireless_nrf24_config(NRF24_REG_ACK, NRF24_ACK);
+    // uint8_t retransmission = wireless_nrf24_config(NRF24_REG_RETRY, NRF24_RETRY);
+    // uint8_t payload_size = wireless_nrf24_config(NRF24_REG_RX_PW_P0, NRF24_PAYLOAD_SIZE);
+    // info("RF: config=0b%08i\n", bin(config));
+    // info("RF: rf_setup=0b%08i\n", bin(rf_setup));
+    // info("RF: channel=24%02i\n", channel);
+    // info("RF: ack=0b%08i\n", bin(ack));
+    // info("RF: retransmission=0b%08i\n", bin(retransmission));
+    // info("RF: payload_size=%i\n", payload_size);
+
+    // ESP enable.
+    #if defined(DEVICE_ALPAKKA_V1) || defined(DEVICE_DONGLE)
+        info("RF: ESP boot sequence\n");
+        // gpio_init(PIN_UART1_TX);
+        // gpio_init(PIN_UART1_RX);
+
+        gpio_init(PIN_ESP_BOOT);
+        gpio_set_dir(PIN_ESP_BOOT, GPIO_OUT);
+        gpio_put(PIN_ESP_BOOT, false);
+
+        gpio_init(PIN_ESP_ENABLE);
+        gpio_set_dir(PIN_ESP_ENABLE, GPIO_OUT);
+        gpio_put(PIN_ESP_ENABLE, false);
+    #endif
 }
 
 void wireless_device_task() {
     led_task();
 
-    static uint8_t index = 0;
-    index++;
+    // static uint8_t index = 0;
+    // index++;
 
-    bus_spi_write_32(PIN_SPI_CS_NRF24, NRF24_REG_WRITE | NRF24_REG_STATUS, 0);
+    // bus_spi_write_32(PIN_SPI_CS_NRF24, NRF24_REG_WRITE | NRF24_REG_STATUS, 0);
 
     // uint8_t payload[32] = {0,};
     // uint64_t timestamp = get_system_clock();
     // memcpy(payload, &timestamp, 8);
 
-    uint8_t payload[32] = {index};
+    // uint8_t payload[32] = {index};
+    // bus_spi_write_32(PIN_SPI_CS_NRF24, NRF24_W_TX_PAYLOAD, payload);
 
-    bus_spi_write_32(PIN_SPI_CS_NRF24, NRF24_W_TX_PAYLOAD, payload);
+
     // printf("%i %i %i %i\n", payload[0], payload[1], payload[2], payload[3]);
 
     // uint8_t status = bus_spi_read_one(PIN_SPI_CS_NRF24, NRF24_REG_STATUS);
@@ -86,23 +113,19 @@ void wireless_device_task() {
 void wireless_host_task() {
     led_task();
 
-    // static uint16_t tier0 = 0;
-    // static uint16_t tier1 = 0;
-    // static uint16_t tier2 = 0;
-    // static uint16_t tier3 = 0;
+    boot_task();
 
 
-    // bool received = false;
-    while(true) {
-        uint8_t status = bus_spi_read_one(PIN_SPI_CS_NRF24, NRF24_REG_STATUS);
-        if (status & 0b10) break;  // No payloads pending in pipe 0.
+    while(0) {
+        // uint8_t status = bus_spi_read_one(PIN_SPI_CS_NRF24, NRF24_REG_STATUS);
+        // if (status & 0b10) break;  // No payloads pending in pipe 0.
         // received = true;
 
-        uint8_t payload[32] = {0,};
-        bus_spi_read(PIN_SPI_CS_NRF24, NRF24_R_RX_PAYLOAD, payload, 32);
+        // uint8_t payload[32] = {0,};
+        // bus_spi_read(PIN_SPI_CS_NRF24, NRF24_R_RX_PAYLOAD, payload, 32);
         // printf("%i %i %i %i\n", payload[0], payload[1], payload[2], payload[3]);
 
-        hid_report_dongle(payload[0], &payload[1]);
+        // hid_report_dongle(payload[0], &payload[1]);
 
         // Jitter.
         // static uint32_t last = 0;
