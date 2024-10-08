@@ -23,6 +23,7 @@ add_executable(${PROJECT}
 
 target_link_libraries(${PROJECT}
     pico_stdlib
+    pico_rand
     pico_multicore
     pico_time
     pico_unique_id
