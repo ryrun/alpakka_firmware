@@ -75,5 +75,6 @@ typedef enum _NRF24_retry {
 void wireless_init(bool host);
 void wireless_device_task();
 void wireless_host_task();
+void wireless_esp_flash();
 
 void wireless_send(uint8_t report_id, void *packet, uint8_t len);

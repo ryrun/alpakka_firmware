@@ -96,7 +96,7 @@ static void board_led() {
         i = 0;
         bool stat1 = gpio_get(PIN_BATT_STAT_1);
         bool stat2 = gpio_get(PIN_BATT_STAT_2);
-        info("%i %i\n", stat1, stat2);
+        // info("%i %i\n", stat1, stat2);
         if (!stat1 && stat2) {
             if (device_mode == WIRED) {
                 gpio_put(PIN_LED_BOARD, true);

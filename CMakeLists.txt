@@ -14,7 +14,7 @@ else()
 endif()
 
 set(PROJECT alpakka)
-set(PICO_BOARD pico_w)
+set(PICO_BOARD pico)
 
 project(${PROJECT} C CXX ASM)
 pico_sdk_init()
@@ -37,7 +37,10 @@ else()
     message(FATAL_ERROR "Target device not defined")
 endif()
 
-target_link_libraries(${PROJECT}
+set(PORT PI_PICO)
+add_subdirectory("deps/esp-serial-flasher" ${CMAKE_BINARY_DIR}/flasher)
+
+target_link_libraries(${PROJECT} PRIVATE
     pico_stdlib
     pico_time
     pico_unique_id
@@ -52,11 +55,13 @@ target_link_libraries(${PROJECT}
     hardware_sync
     hardware_timer
     tinyusb_device
+    flasher  # ESP serial flasher.
 )
 
 target_include_directories(${PROJECT} PUBLIC
     src
     src/headers
+    deps
 )
 
 target_sources(${PROJECT} PUBLIC
@@ -96,6 +101,7 @@ target_sources(${PROJECT} PUBLIC
     src/webusb.c
     src/wireless.c
     src/xinput.c
+    deps/esp-serial-flasher/examples/common/example_common.c
 )
 
 pico_enable_stdio_uart(${PROJECT} 1)

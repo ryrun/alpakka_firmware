@@ -42,8 +42,8 @@
     #define PIN_HOME 24
     #define PIN_TOUCH_IN 12
     #define PIN_TOUCH_OUT 13
-    #define PIN_ROTARY_A 10
-    #define PIN_ROTARY_B 11
+    #define PIN_ROTARY_A 11
+    #define PIN_ROTARY_B 10
     #define PIN_THUMBSTICK_LX 28
     #define PIN_THUMBSTICK_LY 29
     #define PIN_I2C_SDA 22

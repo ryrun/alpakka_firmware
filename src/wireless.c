@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <pico/time.h>
+#include <hardware/uart.h>
 #include "wireless.h"
 #include "pin.h"
 #include "led.h"
@@ -12,6 +13,20 @@
 #include "loop.h"
 #include "logging.h"
 #include "common.h"
+
+// ESP serial flasher
+#include <esp-serial-flasher/include/esp_loader.h>
+#include <esp-serial-flasher/port/pi_pico_port.h>
+#include <esp-serial-flasher/examples/common/example_common.h>
+// #include "../../esp_llama/build/llama.bin.c"
+#include "../../esp_llama/build/llama_empty.bin.c"
+#define ESP_BOOTLOADER_ADDR 0x0
+#define ESP_PARTITION_ADDR 0x8000
+#define ESP_FW_ADDR 0x10000
+#define ESP_BOOTLOADER_BAUD 74880
+#define ESP_FLASHER_BAUD 115200
+#define ESP_FLASHER_BAUD_MAX 115200 * 2
+
 
 static void led_task() {
     static uint8_t i = 0;
@@ -31,7 +46,88 @@ static void boot_task() {
     if (i==1000) {
         i = 0;
         state = !state;
+        info("RF: ESP enable %i\n", state);
         gpio_put(PIN_ESP_ENABLE, state);
+    }
+}
+
+static void esp_init() {
+    info("RF: ESP init\n");
+    // Boot pin.
+    info("RF: ESP boot=false\n");
+    gpio_init(PIN_ESP_BOOT);
+    gpio_set_dir(PIN_ESP_BOOT, GPIO_OUT);
+    gpio_put(PIN_ESP_BOOT, false);
+    // Power enable pin.
+    info("RF: ESP enable=false\n");
+    gpio_init(PIN_ESP_ENABLE);
+    gpio_set_dir(PIN_ESP_ENABLE, GPIO_OUT);
+    gpio_put(PIN_ESP_ENABLE, false);
+    // Secondary UART.
+    info("RF: UART1 init (%i)\n", ESP_BOOTLOADER_BAUD);
+    uart_init(uart1, ESP_BOOTLOADER_BAUD);
+    gpio_set_function(PIN_UART1_TX, GPIO_FUNC_UART);
+    gpio_set_function(PIN_UART1_RX, GPIO_FUNC_UART);
+}
+
+static void esp_enable(bool state) {
+    gpio_put(PIN_ESP_ENABLE, state);
+}
+
+static void esp_boot(bool state) {
+    gpio_put(PIN_ESP_BOOT, state);
+}
+
+static void esp_restart_bootmode() {
+    esp_enable(false);
+    esp_boot(false);
+    sleep_ms(100);
+    esp_enable(true);
+}
+
+static void esp_restart_normal() {
+    esp_enable(false);
+    esp_boot(true);
+    sleep_ms(100);
+    esp_enable(true);
+}
+
+void wireless_esp_flash() {
+    printf("RF: ESP flash start\n");
+    uart_set_baudrate(uart1, ESP_FLASHER_BAUD);
+    const loader_pi_pico_config_t config = {
+        .uart_inst = uart1,
+        .baudrate = ESP_FLASHER_BAUD,
+        .uart_tx_pin_num = PIN_UART1_TX,
+        .uart_rx_pin_num = PIN_UART1_RX,
+        .reset_trigger_pin_num = PIN_ESP_ENABLE,
+        .boot_pin_num = PIN_ESP_BOOT,
+    };
+    loader_port_pi_pico_init(&config);
+    uint32_t connect = connect_to_target_with_stub(ESP_FLASHER_BAUD, ESP_FLASHER_BAUD_MAX);
+    if (connect != ESP_LOADER_SUCCESS) {
+        error("RF: ESP flasher cannot connect (error=%li)\n", connect);
+        return;
+    }
+    // flash_binary(ESP_BOOTLOADER, sizeof(ESP_BOOTLOADER), ESP_BOOTLOADER_ADDR);
+    // flash_binary(ESP_PARTITION, sizeof(ESP_PARTITION), ESP_PARTITION_ADDR);
+    flash_binary(ESP_FIRMWARE, sizeof(ESP_FIRMWARE), ESP_FW_ADDR);
+    esp_restart_normal();
+    // loader_port_pi_pico_deinit();
+    printf("RF: ESP flash done\n");
+}
+
+static void esp_flash_task() {
+    static bool mode = false;
+    static uint8_t i = 0;
+    i++;
+    if (i==0) return;
+    bool button = gpio_get(PIN_SPI_CS0);
+    if (!button) {
+        // esp_flash();
+        if (mode) esp_restart_normal();
+        else esp_restart_bootmode();
+        mode = !mode;
     }
 }
 
@@ -53,36 +149,7 @@ void wireless_send(uint8_t report_id, void *packet, uint8_t len) {
 void wireless_init(bool host) {
     if (host) info("INIT: RF host\n");
     else info("INIT: RF device\n");
-    // uint8_t config = wireless_nrf24_config(
-    //     NRF24_REG_CONFIG,
-    //     host ? NRF24_CONFIG_HOST : NRF24_CONFIG_DEVICE
-    // );
-    // uint8_t rf_setup = wireless_nrf24_config(NRF24_REG_RFSETUP, NRF24_RFSETUP);
-    // uint8_t channel = wireless_nrf24_config(NRF24_REG_CHANNEL, NRF24_CHANNEL);
-    // uint8_t ack = wireless_nrf24_config(NRF24_REG_ACK, NRF24_ACK);
-    // uint8_t retransmission = wireless_nrf24_config(NRF24_REG_RETRY, NRF24_RETRY);
-    // uint8_t payload_size = wireless_nrf24_config(NRF24_REG_RX_PW_P0, NRF24_PAYLOAD_SIZE);
-    // info("RF: config=0b%08i\n", bin(config));
-    // info("RF: rf_setup=0b%08i\n", bin(rf_setup));
-    // info("RF: channel=24%02i\n", channel);
-    // info("RF: ack=0b%08i\n", bin(ack));
-    // info("RF: retransmission=0b%08i\n", bin(retransmission));
-    // info("RF: payload_size=%i\n", payload_size);
-
-    // ESP enable.
-    #if defined(DEVICE_ALPAKKA_V1) || defined(DEVICE_DONGLE)
-        info("RF: ESP boot sequence\n");
-        // gpio_init(PIN_UART1_TX);
-        // gpio_init(PIN_UART1_RX);
-
-        gpio_init(PIN_ESP_BOOT);
-        gpio_set_dir(PIN_ESP_BOOT, GPIO_OUT);
-        gpio_put(PIN_ESP_BOOT, false);
-
-        gpio_init(PIN_ESP_ENABLE);
-        gpio_set_dir(PIN_ESP_ENABLE, GPIO_OUT);
-        gpio_put(PIN_ESP_ENABLE, false);
-    #endif
+    esp_init();
 }
 
 void wireless_device_task() {
@@ -112,85 +179,22 @@ void wireless_device_task() {
 
 void wireless_host_task() {
     led_task();
+    esp_flash_task();
+    // boot_task();
+    // return; ///////////////
 
-    boot_task();
 
+    while(uart_is_readable(uart1)) {
+        static uint8_t index = 0;
+        static bool char_mode = false;
 
-    while(0) {
-        // uint8_t status = bus_spi_read_one(PIN_SPI_CS_NRF24, NRF24_REG_STATUS);
-        // if (status & 0b10) break;  // No payloads pending in pipe 0.
-        // received = true;
+        char c = uart_getc(uart1);
+        printf("%c", c);
 
-        // uint8_t payload[32] = {0,};
-        // bus_spi_read(PIN_SPI_CS_NRF24, NRF24_R_RX_PAYLOAD, payload, 32);
-        // printf("%i %i %i %i\n", payload[0], payload[1], payload[2], payload[3]);
-
-        // hid_report_dongle(payload[0], &payload[1]);
-
-        // Jitter.
-        // static uint32_t last = 0;
-        // uint32_t now = time_us_32() / 1000;
-        // uint32_t elapsed = now - last;
-        // last = now;
-
-        // if (elapsed <= 6) tier0++;
-        // else if (elapsed <= 12) tier1++;
-        // else if (elapsed <= 24) tier2++;
-
-        // static uint8_t i = 0;
-        // static uint8_t j = 0;
-        // i++;
-        // j++;
-        // if (elapsed > 7) {
-        //     info("%lu ", elapsed);
-        // }
-        // if (i > 100) {
-        //     i = 0;
-        //     if (j % 5) info(".\n");
-        //     else info("..\n");
-        // }
-
-        // Latency.
-        // uint64_t now = get_system_clock();
-        // uint64_t timestamp;
-        // memcpy(&timestamp, payload, 8);
-        // uint64_t latency = now - timestamp;
-        // static double latency_sum = 0;
-        // static uint16_t i = 0;
-        // latency_sum += latency;
-        // i++;
-        // if (i == 500) {
-        //     printf("latency_avg=%f ms\n", latency_sum/500);
-        //     latency_sum = 0;
-        //     i=0;
-        // }
+        // if      (c == 'H') printf("\n%c", c);
+        // else if (c == 'I') printf("%c", c);
+        // else if (c == 'D') printf("%c", c);
+        // else if (c == ':') printf("%c", c);
+        // else if (c > 0) printf(" %i", c);
     }
-    // if (!received) tier3++;
-
-    // static uint64_t last_print = 0;
-    // if (time_us_64() - last_print > 100000) {
-    //     last_print = time_us_64();
-    //     // float x = 100.0/63;
-    //     while(tier0>0) {
-    //         info("#");
-    //         tier0 -= 1;
-    //     }
-    //     while(tier1>0) {
-    //         info("=");
-    //         tier1 -= 1;
-    //     }
-    //     while(tier2>0) {
-    //         info("-");
-    //         tier2 -= 1;
-    //     }
-    //     while(tier3>0) {
-    //         info(".");
-    //         tier3 -= 1;
-    //     }
-    //     info("\n");
-    //     tier0 = 0;
-    //     tier1 = 0;
-    //     tier2 = 0;
-    //     tier3 = 0;
-    // }
 }

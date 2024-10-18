@@ -8,6 +8,7 @@
 #include "config.h"
 #include "self_test.h"
 #include "logging.h"
+#include "wireless.h"
 
 void uart_listen_do(bool limited) {
     char input = getchar_timeout_us(0);
@@ -43,6 +44,10 @@ void uart_listen_do(bool limited) {
     if (input == 'T') {
         info("UART: Self-test\n");
         self_test();
+    }
+    if (input == 'E') {
+        info("UART: ESP flash\n");
+        wireless_esp_flash();
     }
 }
 

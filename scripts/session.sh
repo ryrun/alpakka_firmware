@@ -3,6 +3,8 @@
 
 clear
 
+BAUD=115200
+
 ADAPTERS=`ls -1 /dev/ | grep -e "usb" -e "USB"`
 if [ ! $ADAPTER ]; then
     echo "\nUsage:"
@@ -17,7 +19,7 @@ if [ ! $SESSION ]; then
     SESSION=alpakka
 fi
 
-CAPTION=" ${SESSION} @ /dev/${ADAPTER}    [Press 'Q' to quit]"
+CAPTION=" $SESSION @ /dev/$ADAPTER ($BAUD)   [Press 'Q' to quit]"
 sleep 0.5 && screen -S $SESSION -X bindkey q quit &
 sleep 1 && screen -S $SESSION -X caption always "$CAPTION" &
-screen -S $SESSION /dev/$ADAPTER 115200
+screen -S $SESSION /dev/$ADAPTER $BAUD

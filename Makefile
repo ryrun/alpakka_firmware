@@ -49,3 +49,6 @@ reset_profiles:
 
 test:
 	screen -S alpakka -X stuff T
+
+esp:
+	screen -S alpakka -X stuff E

@@ -5,6 +5,10 @@
 SDK_URL=https://github.com/raspberrypi/pico-sdk.git
 SDK_TAG=1.5.1
 
+# ESP serial flasher
+ESPSF_URL=https://github.com/espressif/esp-serial-flasher
+ESPSF_TAG=v1.6.2
+
 # ARM toolchain.
 # WEBSITE: https://developer.arm.com/downloads/-/gnu-rm
 ARM_URL_COMMON=https://developer.arm.com/-/media/Files/downloads/gnu/12.3.rel1/binrel
@@ -34,21 +38,32 @@ else
     exit 1
 fi
 
+# ARM toolchain.
 echo 'Downloading ARM toolchain...'
 echo $ARM_URL
 curl --progress-bar -L -o $ARM_TAR $ARM_URL
-
 echo 'Extracting ARM toolchain...'
 mkdir $ARM_DIR
 tar -xf $ARM_TAR --directory $ARM_DIR --strip-components 1
 rm $ARM_TAR
 
+# Pico SDK.
 echo "Downloading Pico C SDK..."
 git clone $SDK_URL
 cd pico-sdk
 git checkout --quiet $SDK_TAG
-
 echo "Configuring Pico C SDK..."
 git submodule update --init
+cd ..
 
+# ESP serial flasher.
+echo "Downloading ESP Serial Flasher..."
+git clone $ESPSF_URL
+cd esp-serial-flasher
+git checkout --quiet $ESPSF_TAG
+echo "Configuring ESP Serial Flasher..."
+git submodule update --init
+cd ..
+
+# Done.
 echo "Dependencies installed"
