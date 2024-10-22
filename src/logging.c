@@ -70,6 +70,7 @@ void info(char *msg, ...) {
     va_list va;
     va_start(va, 0);
     write(msg, va);
+    va_end(va);
 }
 
 void warn(char *msg, ...) {
@@ -78,6 +79,7 @@ void warn(char *msg, ...) {
     char warn[256] = {0,};
     sprintf(warn, "WARNING: %s", msg);
     write(warn, va);
+    va_end(va);
 }
 
 void error(char *msg, ...) {
@@ -86,6 +88,7 @@ void error(char *msg, ...) {
     char error[256] = {0,};
     sprintf(error, "ERROR: %s", msg);
     write(error, va);
+    va_end(va);
 }
 
 void debug(char *msg, ...) {
@@ -93,6 +96,7 @@ void debug(char *msg, ...) {
     va_list va;
     va_start(va, 0);
     write(msg, va);
+    va_end(va);
 }
 
 void debug_uart(char *msg, ...) {
@@ -100,4 +104,5 @@ void debug_uart(char *msg, ...) {
     va_list va;
     va_start(va, 0);
     vprintf(msg, va);  // UART only.
+    va_end(va);
 }
