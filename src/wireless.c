@@ -26,6 +26,7 @@
 #define ESP_BOOTLOADER_BAUD 74880
 #define ESP_FLASHER_BAUD 115200
 #define ESP_FLASHER_BAUD_MAX 115200 * 2
+#define ESP_RESTART_SETTLE 100  // Milliseconds.
 
 
 static void led_task() {
@@ -78,17 +79,10 @@ static void esp_boot(bool state) {
     gpio_put(PIN_ESP_BOOT, state);
 }
 
-static void esp_restart_bootmode() {
+static void esp_restart(bool bootmode) {
     esp_enable(false);
-    esp_boot(false);
-    sleep_ms(100);
-    esp_enable(true);
-}
-
-static void esp_restart_normal() {
-    esp_enable(false);
-    esp_boot(true);
-    sleep_ms(100);
+    esp_boot(!bootmode);
+    sleep_ms(ESP_RESTART_SETTLE);
     esp_enable(true);
 }
 
@@ -102,6 +96,7 @@ void wireless_esp_flash() {
         .uart_rx_pin_num = PIN_UART1_RX,
         .reset_trigger_pin_num = PIN_ESP_ENABLE,
         .boot_pin_num = PIN_ESP_BOOT,
+        .dont_initialize_peripheral = true,
     };
     loader_port_pi_pico_init(&config);
     uint32_t connect = connect_to_target_with_stub(ESP_FLASHER_BAUD, ESP_FLASHER_BAUD_MAX);
@@ -112,22 +107,20 @@ void wireless_esp_flash() {
     // flash_binary(ESP_BOOTLOADER, sizeof(ESP_BOOTLOADER), ESP_BOOTLOADER_ADDR);
     // flash_binary(ESP_PARTITION, sizeof(ESP_PARTITION), ESP_PARTITION_ADDR);
     flash_binary(ESP_FIRMWARE, sizeof(ESP_FIRMWARE), ESP_FW_ADDR);
-    esp_restart_normal();
+    esp_restart(false);
     // loader_port_pi_pico_deinit();
     printf("RF: ESP flash done\n");
 }
 
 static void esp_flash_task() {
-    static bool mode = false;
+    static bool bootmode = true;
     static uint8_t i = 0;
     i++;
     if (i==0) return;
     bool button = gpio_get(PIN_SPI_CS0);
     if (!button) {
-        // esp_flash();
-        if (mode) esp_restart_normal();
-        else esp_restart_bootmode();
-        mode = !mode;
+        esp_restart(bootmode);
+        bootmode = !bootmode;
     }
 }
 
