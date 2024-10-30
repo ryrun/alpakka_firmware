@@ -13,21 +13,15 @@
 #include "loop.h"
 #include "logging.h"
 #include "common.h"
+#include "config.h"
 
 // ESP serial flasher
 #include <esp-serial-flasher/include/esp_loader.h>
 #include <esp-serial-flasher/port/pi_pico_port.h>
 #include <esp-serial-flasher/examples/common/example_common.h>
-// #include "../../esp_llama/build/llama.bin.c"
-#include "../../esp_llama/build/llama_empty.bin.c"
-#define ESP_BOOTLOADER_ADDR 0x0
-#define ESP_PARTITION_ADDR 0x8000
-#define ESP_FW_ADDR 0x10000
-#define ESP_BOOTLOADER_BAUD 74880
-#define ESP_FLASHER_BAUD 115200
-#define ESP_FLASHER_BAUD_MAX 115200 * 2
-#define ESP_RESTART_SETTLE 100  // Milliseconds.
 
+#include "../../esp_llama/build/llama.bin.c"
+// #include "../../esp_llama/build/llama_empty.bin.c"  // Empty version for faster development.
 
 static void led_task() {
     static uint8_t i = 0;
@@ -40,30 +34,20 @@ static void led_task() {
     }
 }
 
-static void boot_task() {
-    static uint32_t i = 0;
-    static bool state;
-    i++;
-    if (i==1000) {
-        i = 0;
-        state = !state;
-        info("RF: ESP enable %i\n", state);
-        gpio_put(PIN_ESP_ENABLE, state);
-    }
-}
-
 static void esp_init() {
     info("RF: ESP init\n");
     // Boot pin.
-    info("RF: ESP boot=false\n");
+    bool boot = false;
+    info("RF: ESP boot=%i\n", boot);
     gpio_init(PIN_ESP_BOOT);
     gpio_set_dir(PIN_ESP_BOOT, GPIO_OUT);
-    gpio_put(PIN_ESP_BOOT, false);
+    gpio_put(PIN_ESP_BOOT, boot);
     // Power enable pin.
-    info("RF: ESP enable=false\n");
+    bool enable = false;
+    info("RF: ESP enable=%i\n", enable);
     gpio_init(PIN_ESP_ENABLE);
     gpio_set_dir(PIN_ESP_ENABLE, GPIO_OUT);
-    gpio_put(PIN_ESP_ENABLE, false);
+    gpio_put(PIN_ESP_ENABLE, enable);
     // Secondary UART.
     info("RF: UART1 init (%i)\n", ESP_BOOTLOADER_BAUD);
     uart_init(uart1, ESP_BOOTLOADER_BAUD);
@@ -104,24 +88,12 @@ void wireless_esp_flash() {
         error("RF: ESP flasher cannot connect (error=%li)\n", connect);
         return;
     }
-    // flash_binary(ESP_BOOTLOADER, sizeof(ESP_BOOTLOADER), ESP_BOOTLOADER_ADDR);
-    // flash_binary(ESP_PARTITION, sizeof(ESP_PARTITION), ESP_PARTITION_ADDR);
+    flash_binary(ESP_BOOTLOADER, sizeof(ESP_BOOTLOADER), ESP_BOOTLOADER_ADDR);
+    flash_binary(ESP_PARTITION, sizeof(ESP_PARTITION), ESP_PARTITION_ADDR);
     flash_binary(ESP_FIRMWARE, sizeof(ESP_FIRMWARE), ESP_FW_ADDR);
-    esp_restart(false);
     // loader_port_pi_pico_deinit();
     printf("RF: ESP flash done\n");
-}
-
-static void esp_flash_task() {
-    static bool bootmode = true;
-    static uint8_t i = 0;
-    i++;
-    if (i==0) return;
-    bool button = gpio_get(PIN_SPI_CS0);
-    if (!button) {
-        esp_restart(bootmode);
-        bootmode = !bootmode;
-    }
+    config_reboot();
 }
 
 void wireless_send(uint8_t report_id, void *packet, uint8_t len) {
@@ -172,11 +144,6 @@ void wireless_device_task() {
 
 void wireless_host_task() {
     led_task();
-    esp_flash_task();
-    // boot_task();
-    // return; ///////////////
-
-
     while(uart_is_readable(uart1)) {
         static uint8_t index = 0;
         static bool char_mode = false;

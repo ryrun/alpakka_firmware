@@ -63,6 +63,7 @@ cd esp-serial-flasher
 git checkout --quiet $ESPSF_TAG
 echo "Configuring ESP Serial Flasher..."
 git submodule update --init
+python3 ../../scripts/esp_flasher_patch.py
 cd ..
 
 # Done.
