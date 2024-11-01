@@ -52,18 +52,10 @@ void wait_for_system_clock() {
     }
 }
 
-static void device_title() {
+static void title(char *label) {
     info("╔====================╗\n");
     info("║ Input Labs Oy.     ║\n");
-    info("║ Alpakka controller ║\n");
-    info("╚====================╝\n");
-    info("Firmware version: %s\n", VERSION);
-}
-
-static void dongle_title() {
-    info("╔====================╗\n");
-    info("║ Input Labs Oy.     ║\n");
-    info("║ Wireless dongle    ║\n");
+    info("║ %s ║\n"         , label);
     info("╚====================╝\n");
     info("Firmware version: %s\n", VERSION);
 }
@@ -76,6 +68,7 @@ static void set_wired() {
 
 static void set_wireless() {
     info("LOOP: Wireless\n");
+    wireless_set_uart_data_mode(true);
     device_mode = WIRELESS;
 }
 
@@ -112,12 +105,12 @@ static void board_led() {
     }
 }
 
-void loop_device_init() {
+void loop_controller_init() {
     led_init();
     stdio_uart_init();
     stdio_init_all();
     logging_init();
-    device_title();
+    title(LABEL_CONTROLLER);
     config_init();
     tusb_init();
     bool usb = usb_wait_for_init(USB_WAIT_FOR_INIT_MS);
@@ -127,24 +120,24 @@ void loop_device_init() {
     thumbstick_init();
     touch_init();
     rotary_init();
-    profile_init();
     imu_init();
+    profile_init();
     battery_init();
+    wireless_init(false);
     if (usb) {
         set_wired();
     } else {
         set_wireless();
-        wireless_init(false);
     }
     loop_cycle();
 }
 
-void loop_host_init() {
+void loop_dongle_init() {
     led_init();
     stdio_uart_init();
     stdio_init_all();
     logging_init();
-    dongle_title();
+    title(LABEL_DONGLE);
     config_init();
     tusb_init();
     usb_wait_for_init(-1);  // Negative number = no timeout.
@@ -155,22 +148,20 @@ void loop_host_init() {
     loop_cycle();
 }
 
-void loop_device_task() {
+void loop_controller_task() {
     // Write flash if needed.
     config_sync();
     // Gather values for input sources.
     profile_report_active();
-    // hid_report_wireless();
     // Report to the correct channel.
     if (device_mode == WIRED) {
         // Report to USB.
-        bool reported = hid_report();
+        bool reported = hid_report_wired();
         // Switch to wireless if USB is disconnected.
         if (!reported) set_wireless();
     }
     if (device_mode == WIRELESS) {
-        // Report to wireless.
-        hid_report_wireless();
+        wireless_controller_task();
         // Switch to wired if USB is connected (check once per second).
         static uint16_t i = 0;
         i++;
@@ -182,15 +173,13 @@ void loop_device_task() {
     board_led();
 }
 
-void loop_host_task() {
-    wireless_host_task();
-
+void loop_dongle_task() {
+    wireless_dongle_task();
     tud_task();
     if (tud_ready()) {
         webusb_read();
         webusb_flush();
     }
-
     uart_listen();
 }
 
@@ -203,14 +192,11 @@ void loop_cycle() {
         // Start timer.
         uint32_t start = time_us_32();
         // Task.
-        #ifdef DEVICE_ALPAKKA_V0
-            loop_device_task();
-        #endif
-        #ifdef DEVICE_ALPAKKA_V1
-            loop_device_task();
+        #if defined DEVICE_ALPAKKA_V0 || defined DEVICE_ALPAKKA_V1
+            loop_controller_task();
         #endif
         #ifdef DEVICE_DONGLE
-            loop_host_task();
+            loop_dongle_task();
         #endif
         // Calculate used time.
         uint32_t used = time_us_32() - start;
@@ -228,6 +214,9 @@ void loop_cycle() {
         }
         // Idling control.
         if (unused > 0) sleep_us((uint32_t)unused);
-        else info("+");
+        else {
+            info("+");
+            sleep_us(0);  // Allow IRQ to take over even if the controller is overwhelmed.
+        };
     }
 }

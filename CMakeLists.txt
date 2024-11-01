@@ -38,6 +38,7 @@ else()
 endif()
 
 set(PORT PI_PICO)
+set(MD5_ENABLED 1)
 add_subdirectory("deps/esp-serial-flasher" ${CMAKE_BINARY_DIR}/flasher)
 
 target_link_libraries(${PROJECT} PRIVATE

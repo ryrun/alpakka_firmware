@@ -78,8 +78,9 @@ void config_profile_default_home(CtrlProfile *profile){
         .actions_secondary={KEY_CONTROL_LEFT, KEY_ALT_LEFT, KEY_DELETE},
     };
     profile->sections[SECTION_SELECT_2].button = (CtrlButton){
-        .mode=NORMAL,
+        .mode=HOLD|LONG,
         .actions={KEY_F11},
+        .actions_secondary={PROC_SLEEP},
     };
     profile->sections[SECTION_START_2].button = (CtrlButton){
         .mode=HOLD|LONG,

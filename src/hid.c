@@ -44,9 +44,13 @@ during the profile change.
 #include "thanks.h"
 
 bool hid_allow_communication = true;  // Extern.
+
 bool synced_keyboard = false;
 bool synced_mouse = false;
 bool synced_gamepad = false;
+uint8_t priority_mouse = 0;
+uint8_t priority_gamepad = 0;
+
 uint16_t alarms = 0;
 alarm_pool_t *alarm_pool;
 
@@ -96,6 +100,7 @@ void hid_procedure_press(uint8_t procedure){
     if (procedure == PROC_BOOTSEL) config_bootsel();
     if (procedure == PROC_THANKS) hid_thanks();
     if (procedure == PROC_IGNORE_LED_WARNINGS) config_ignore_problems();
+    if (procedure == PROC_SLEEP) config_sleep();
     // Scrollwheel alternative modes. (Used for example in Racing profile).
     if (procedure == PROC_ROTARY_MODE_0) rotary_set_mode(0);
     if (procedure == PROC_ROTARY_MODE_1) rotary_set_mode(1);
@@ -289,7 +294,7 @@ void hid_gamepad_rz(double value) {
     synced_gamepad = false;
 }
 
-void hid_mouse_report(bool wired) {
+void hid_mouse_report(bool wireless) {
     // Create button bitmask.
     int8_t buttons = 0;
     for(int i=0; i<5; i++) {
@@ -304,11 +309,14 @@ void hid_mouse_report(bool wired) {
     state_matrix[MOUSE_SCROLL_UP] = 0;
     state_matrix[MOUSE_SCROLL_DOWN] = 0;
     // Send report.
-    if (wired) tud_hid_report(REPORT_MOUSE, &report, sizeof(report));
+    if (!wireless) tud_hid_report(REPORT_MOUSE, &report, sizeof(report));
     else wireless_send(REPORT_MOUSE, &report, sizeof(report));
+    // Sync state.
+    synced_mouse = true;
+    priority_mouse = 0;
 }
 
-void hid_keyboard_report(bool wired) {
+void hid_keyboard_report(bool wireless) {
     uint8_t keys[6] = {0};
     uint8_t keys_available = 6;
     for(int i=0; i<=115; i++) {
@@ -326,8 +334,11 @@ void hid_keyboard_report(bool wired) {
     }
     KeyboardReport report = {modifiers};
     memcpy(report.keycode, keys, 6);
-    if (wired) tud_hid_report(REPORT_KEYBOARD, &report, sizeof(report));
+    // Report.
+    if (!wireless) tud_hid_report(REPORT_KEYBOARD, &report, sizeof(report));
     else wireless_send(REPORT_KEYBOARD, &report, sizeof(report));
+    // Sync state.
+    synced_keyboard = true;
 }
 
 double hid_axis(
@@ -384,10 +395,14 @@ void hid_gamepad_report() {
         rz_report,
         buttons,
     };
-    tud_hid_report(REPORT_GAMEPAD, &report, sizeof(report));
+    // Report.
+    tud_hid_report(REPORT_GAMEPAD, &report, sizeof(report));  // TODO wireless.
+    // Sync state.
+    synced_gamepad = true;
+    priority_gamepad = 0;
 }
 
-void hid_xinput_report(bool wired) {
+void hid_xinput_report(bool wireless) {
     int8_t buttons_0 = 0;
     int8_t buttons_1 = 0;
     for(int i=0; i<8; i++) {
@@ -417,8 +432,11 @@ void hid_xinput_report(bool wired) {
         .ry          = -ry_report,
         .reserved    = {0, 0, 0, 0, 0, 0}
     };
-    if (wired) xinput_send_report(&report);
+    if (!wireless) xinput_send_report(&report);
     else wireless_send(REPORT_XINPUT, &report, sizeof(report));
+    // Sync state.
+    synced_gamepad = true;
+    priority_gamepad = 0;
 }
 
 void hid_gamepad_reset() {
@@ -430,24 +448,63 @@ void hid_gamepad_reset() {
     gamepad_rz = 0;
 }
 
-void hid_report_wireless() {
-    // if (synced_mouse && !synced_mouse_eot) {
-    //     hid_report_to_queue(REPORT_MOUSE_EOT, NULL, 0);
-    //     synced_mouse_eot = true;
-    // }
-    if (!synced_keyboard) {
-        hid_keyboard_report(false);
-        synced_keyboard = true;
-    }
-    if (!synced_mouse) {
-        hid_mouse_report(false);
-        synced_mouse = true;
-    }
-    if (!synced_gamepad) {
-        hid_xinput_report(false);  // TODO: Generic gamepad support.
+bool hid_report_wired() {
+    // Not all events are sent everytime, they are delivered based on their
+    // priority ratio and how long they have been queueing.
+    // For example thumbstick movement may be queued for some cycles if there
+    // is a lot of mouse data being sent.
+    if (!synced_mouse) priority_mouse += 1 * CFG_HID_REPORT_PRIORITY_RATIO;
+    if (!synced_gamepad) priority_gamepad += 1;
+    if (!hid_allow_communication) return true;
+    tud_task();
+    if (tud_ready()) {
+        if (tud_hid_ready()) {
+            webusb_read();
+            webusb_flush();
+            if (!synced_keyboard) {
+                hid_keyboard_report(false);
+            }
+            else if (!synced_mouse && (priority_mouse > priority_gamepad)) {
+                hid_mouse_report(false);
+            }
+            else if (!synced_gamepad && config_get_protocol() == PROTOCOL_GENERIC) {
+                hid_gamepad_report();
+            }
+        }
+        if (!synced_gamepad && config_get_protocol() != PROTOCOL_GENERIC) {
+            if (tud_suspended()) {
+                tud_remote_wakeup();
+            }
+            hid_xinput_report(false);
+        }
+        // Gamepad values being reset so potentially unsent values are not
+        // aggregated with the next cycle.
         hid_gamepad_reset();
-        synced_gamepad = true;
+        return true;
+    } else {
+        return false;
     }
+}
+
+bool hid_report_wireless() {
+    if (!synced_mouse) priority_mouse += 1 * CFG_HID_REPORT_PRIORITY_RATIO;
+    if (!synced_gamepad) priority_gamepad += 1;
+    if (!hid_allow_communication) return true;
+    // webusb_read();
+    // webusb_flush();
+    if (!synced_keyboard) {
+        hid_keyboard_report(true);
+    }
+    else if (!synced_mouse && (priority_mouse > priority_gamepad)) {
+        hid_mouse_report(true);
+    }
+    else if (!synced_gamepad) {
+        if (config_get_protocol() == PROTOCOL_GENERIC) hid_gamepad_report();
+        else hid_xinput_report(true);
+    }
+    // Gamepad values being reset so potentially unsent values are not
+    // aggregated with the next cycle.
+    hid_gamepad_reset();
 }
 
 void hid_report_dongle(uint8_t report_id, uint8_t* payload) {
@@ -463,56 +520,10 @@ void hid_report_dongle(uint8_t report_id, uint8_t* payload) {
                 tud_hid_report(REPORT_MOUSE, payload, sizeof(MouseReport));
             }
         }
+        // TODO: generic gamepad.
         else if (report_id == REPORT_XINPUT) {
             xinput_send_report((XInputReport*)payload);
         }
-    }
-}
-
-bool hid_report() {
-    static uint8_t priority_mouse = 0;
-    static uint8_t priority_gamepad = 0;
-
-    // Not all events are sent everytime, they are delivered based on their
-    // priority ratio and how long they have been queueing.
-    // For example thumbstick movement may be queued for some cycles if there
-    // is a lot of mouse data being sent.
-    if (!synced_mouse) priority_mouse += 1 * CFG_HID_REPORT_PRIORITY_RATIO;
-    if (!synced_gamepad) priority_gamepad += 1;
-    if (!hid_allow_communication) return true;
-    tud_task();
-    if (tud_ready()) {
-        if (tud_hid_ready()) {
-            webusb_read();
-            webusb_flush();
-            if (!synced_keyboard) {
-                hid_keyboard_report(true);
-                synced_keyboard = true;
-            }
-            else if (!synced_mouse && (priority_mouse > priority_gamepad)) {
-                hid_mouse_report(true);
-                synced_mouse = true;
-                priority_mouse = 0;
-            }
-            else if (!synced_gamepad && config_get_protocol() == PROTOCOL_GENERIC) {
-                hid_gamepad_report();
-                synced_gamepad = true;
-                priority_gamepad = 0;
-            }
-        }
-        if (!synced_gamepad && config_get_protocol() != PROTOCOL_GENERIC) {
-            if (tud_suspended()) {
-                tud_remote_wakeup();
-            }
-            hid_xinput_report(true);
-            priority_gamepad = 0;
-        }
-        // Gamepad values being reset so potentially unsent values are not
-        // aggregated with the next cycle.
-        hid_gamepad_reset();
-        return true;
-    } else {
-        return false;
     }
 }
 

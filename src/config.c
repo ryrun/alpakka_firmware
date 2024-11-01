@@ -8,9 +8,11 @@
 #include <hardware/watchdog.h>
 #include <pico/bootrom.h>
 #include <pico/unique_id.h>
+// #include <pico/sleep.h>
 #include "config.h"
 #include "nvm.h"
 #include "led.h"
+#include "pin.h"
 #include "hid.h"
 #include "imu.h"
 #include "thumbstick.h"
@@ -542,6 +544,10 @@ void config_alert_if_not_calibrated() {
         warn("Please run calibration\n");
         config_set_problem_calibration(true);
     }
+}
+
+void config_sleep() {
+    // sleep_goto_dormant_until_edge_high(PIN_HOME);
 }
 
 void config_profile_default(uint8_t indexTo, int8_t indexFrom) {

@@ -5,12 +5,12 @@
 
 int main() {
     #ifdef DEVICE_ALPAKKA_V0
-        loop_device_init();
+        loop_controller_init();
     #endif
     #ifdef DEVICE_ALPAKKA_V1
-        loop_device_init();
+        loop_controller_init();
     #endif
     #ifdef DEVICE_DONGLE
-        loop_host_init();
+        loop_dongle_init();
     #endif
 }

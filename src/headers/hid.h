@@ -262,6 +262,7 @@
 #define PROC_ROTARY_MODE_5  PROC_INDEX + 40
 
 #define PROC_IGNORE_LED_WARNINGS  PROC_INDEX + 41
+#define PROC_SLEEP  PROC_INDEX + 42
 
 void hid_init();
 void hid_thanks();
@@ -296,8 +297,8 @@ void hid_gamepad_lz(double value);
 void hid_gamepad_rz(double value);
 
 // Report.
-bool hid_report();
-void hid_report_wireless();
+bool hid_report_wired();
+bool hid_report_wireless();
 
 extern bool hid_allow_communication;
 

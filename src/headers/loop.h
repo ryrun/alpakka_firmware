@@ -4,6 +4,8 @@
 #pragma once
 #include <stdint.h>
 
+#define LABEL_CONTROLLER "Alpakka controller"
+#define LABEL_DONGLE     "Wireless dongle   "
 #define USB_WAIT_FOR_INIT_MS 1000
 
 typedef enum {
@@ -17,6 +19,6 @@ uint64_t get_system_clock();
 void set_system_clock(uint64_t time);
 
 DeviceMode loop_get_device_mode();
-void loop_device_init();
-void loop_host_init();
+void loop_controller_init();
+void loop_dongle_init();
 void loop_cycle();
