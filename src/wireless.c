@@ -76,7 +76,7 @@ void wireless_esp_flash() {
     flash_binary(ESP_FIRMWARE, sizeof(ESP_FIRMWARE), ESP_FW_ADDR);
     // loader_port_pi_pico_deinit();
     printf("RF: ESP flash done\n");
-    sleep_ms(100);
+    sleep_ms(1000);
     config_reboot();
 }
 
@@ -151,8 +151,12 @@ void wireless_init(bool dongle) {
 }
 
 void wireless_controller_task() {
-    if (!uart_data_mode) cross_logging();
+    // if (!uart_data_mode) cross_logging();
     hid_report_wireless();
+    while(!uart_rx_buffer_is_empty()) {
+        char c = uart_rx_buffer_get();
+        info("%c", c);  // Redirect to RP2040 uart log.
+    }
 }
 
 void wireless_dongle_task() {
@@ -175,6 +179,7 @@ void wireless_dongle_task() {
                     // printf("X\n");
                     // warn("RF: UART misaligned\n");
                     i = 0;
+                    info("%c", c);  // Redirect to RP2040 uart log.
                 }
             } else {
                 // Get payload.
