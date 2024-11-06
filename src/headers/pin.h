@@ -35,30 +35,30 @@
 // Custom board.
 #if defined(DEVICE_ALPAKKA_V1) || defined(DEVICE_DONGLE)
     #define PIN_LED_BOARD 3
-    #define PIN_LED_UP 9
-    #define PIN_LED_RIGHT 8
-    #define PIN_LED_DOWN 7
+    #define PIN_SPI_CS1 4
+    #define PIN_SPI_CS0 5
     #define PIN_LED_LEFT 6
-    #define PIN_HOME 24
+    #define PIN_LED_DOWN 7
+    #define PIN_LED_RIGHT 8
+    #define PIN_LED_UP 9
+    #define PIN_ROTARY_B 10
+    #define PIN_ROTARY_A 11
     #define PIN_TOUCH_IN 12
     #define PIN_TOUCH_OUT 13
-    #define PIN_ROTARY_A 11
-    #define PIN_ROTARY_B 10
-    #define PIN_THUMBSTICK_LX 28
-    #define PIN_THUMBSTICK_LY 29
-    #define PIN_I2C_SDA 22
-    #define PIN_I2C_SCL 23
-    #define PIN_SPI_TX 19
+    #define PIN_BATT_STAT_2 14
+    #define PIN_BATT_STAT_1 15
     #define PIN_SPI_RX 16
+    #define PIN_ESP_BOOT 17
     #define PIN_SPI_CK 18
-    #define PIN_SPI_CS0 5
-    #define PIN_SPI_CS1 4
+    #define PIN_SPI_TX 19
     #define PIN_UART1_TX 20
     #define PIN_UART1_RX 21
+    #define PIN_I2C_SDA 22
+    #define PIN_I2C_SCL 23
+    #define PIN_HOME 24
     #define PIN_ESP_ENABLE 25
-    #define PIN_ESP_BOOT 17
-    #define PIN_BATT_STAT_1 15
-    #define PIN_BATT_STAT_2 14
+    #define PIN_THUMBSTICK_LX 28
+    #define PIN_THUMBSTICK_LY 29
     #define I2C_CHANNEL i2c1
     #define SPI_CHANNEL spi0
 #endif
@@ -67,17 +67,17 @@
 #define PIN_GROUP_IO_0 100
 #define PIN_GROUP_IO_0_END 199
 #define PIN_SELECT_1 114
-#define PIN_SELECT_2 113
+#define PIN_SELECT_2 110
 #define PIN_DPAD_LEFT 104
 #define PIN_DPAD_RIGHT 101
 #define PIN_DPAD_UP 103
 #define PIN_DPAD_DOWN 100
 #define PIN_L1 102
 #define PIN_L2 115
-#define PIN_L3 112
-#define PIN_L4 109
+#define PIN_L3 109
+#define PIN_L4 108
 #define PIN_PCBGEN_0 111
-#define PIN_PCBGEN_1 110
+#define PIN_PCBGEN_1 113
 
 // IO EXPANSION 2.
 #define PIN_GROUP_IO_1 200
@@ -91,8 +91,8 @@
 #define PIN_DHAT_LEFT 203
 #define PIN_DHAT_RIGHT 205
 #define PIN_DHAT_UP 206
-#define PIN_DHAT_DOWN 202
-#define PIN_DHAT_PUSH 204
+#define PIN_DHAT_DOWN 204
+#define PIN_DHAT_PUSH 202
 #define PIN_R1 212
 #define PIN_R2 214
 #define PIN_R4 207
