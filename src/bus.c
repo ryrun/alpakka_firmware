@@ -55,7 +55,7 @@ Tristate bus_i2c_io_tristate(uint8_t index) {
 
 void bus_i2c_io_pcb_gen_determine() {
     printf("Bus: I2C determine PCB gen\n");
-    #if defined DEVICE_DONGLE
+    #if defined DEVICE_DONGLE || defined DEVICE_LLAMA
         config_set_pcb_gen(0);
     #elif defined DEVICE_ALPAKKA_V0
         bus_i2c_write(I2C_IO_0, I2C_IO_REG_POLARITY+1, 0b00000000);

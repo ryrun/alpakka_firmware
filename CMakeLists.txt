@@ -30,16 +30,14 @@ if(DEFINED DEVICE)
         target_compile_definitions(${PROJECT} PUBLIC DEVICE_ALPAKKA_V1=1)
     elseif(DEVICE MATCHES "dongle")
         target_compile_definitions(${PROJECT} PUBLIC DEVICE_DONGLE=1)
+    elseif(DEVICE MATCHES "llama")
+        target_compile_definitions(${PROJECT} PUBLIC DEVICE_LLAMA=1)
     else()
         message(FATAL_ERROR "Target device unknown")
     endif()
 else()
     message(FATAL_ERROR "Target device not defined")
 endif()
-
-set(PORT PI_PICO)
-set(MD5_ENABLED 1)
-add_subdirectory("deps/esp-serial-flasher" ${CMAKE_BINARY_DIR}/flasher)
 
 target_link_libraries(${PROJECT} PRIVATE
     pico_stdlib
@@ -56,7 +54,6 @@ target_link_libraries(${PROJECT} PRIVATE
     hardware_sync
     hardware_timer
     tinyusb_device
-    flasher  # ESP serial flasher.
 )
 
 target_include_directories(${PROJECT} PUBLIC
@@ -72,6 +69,7 @@ target_sources(${PROJECT} PUBLIC
     src/config.c
     src/ctrl.c
     src/dhat.c
+    src/esp.c
     src/glyph.c
     src/gyro.c
     src/hid.c
@@ -102,8 +100,15 @@ target_sources(${PROJECT} PUBLIC
     src/webusb.c
     src/wireless.c
     src/xinput.c
-    deps/esp-serial-flasher/examples/common/example_common.c
 )
+
+if(DEVICE MATCHES "llama")
+    set(PORT PI_PICO)
+    set(MD5_ENABLED 1)
+    add_subdirectory("deps/esp-serial-flasher" ${CMAKE_BINARY_DIR}/flasher)
+    target_link_libraries(${PROJECT} PRIVATE flasher)
+    target_sources(${PROJECT} PUBLIC deps/esp-serial-flasher/examples/common/example_common.c)
+endif()
 
 pico_enable_stdio_uart(${PROJECT} 1)
 pico_add_extra_outputs(${PROJECT})

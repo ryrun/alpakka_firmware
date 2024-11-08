@@ -9,31 +9,31 @@
 
 // Pico.
 #ifdef DEVICE_ALPAKKA_V0
-    #define PIN_LED_BOARD 25
     #define PIN_LED_UP 2
-    #define PIN_LED_RIGHT 5
-    #define PIN_LED_DOWN 4
     #define PIN_LED_LEFT 3
-    #define PIN_HOME 20
+    #define PIN_LED_DOWN 4
+    #define PIN_LED_RIGHT 5
     #define PIN_TOUCH_OUT 6
     #define PIN_TOUCH_IN 7
-    #define PIN_ROTARY_A 9
     #define PIN_ROTARY_B 8
-    #define PIN_THUMBSTICK_LX 27
-    #define PIN_THUMBSTICK_LY 26
-    #define PIN_I2C_SDA 14
-    #define PIN_I2C_SCL 15
+    #define PIN_ROTARY_A 9
     #define PIN_SPI_CK 10
     #define PIN_SPI_TX 11
     #define PIN_SPI_RX 12
+    #define PIN_I2C_SDA 14
+    #define PIN_I2C_SCL 15
     #define PIN_SPI_CS0 18
     #define PIN_SPI_CS1 19
+    #define PIN_HOME 20
+    #define PIN_LED_BOARD 25
+    #define PIN_THUMBSTICK_LY 26
+    #define PIN_THUMBSTICK_LX 27
     #define I2C_CHANNEL i2c1
     #define SPI_CHANNEL spi1
 #endif
 
 // Custom board.
-#if defined(DEVICE_ALPAKKA_V1) || defined(DEVICE_DONGLE)
+#if defined DEVICE_ALPAKKA_V1 || defined DEVICE_DONGLE || defined DEVICE_LLAMA
     #define PIN_LED_BOARD 3
     #define PIN_SPI_CS1 4
     #define PIN_SPI_CS0 5

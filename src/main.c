@@ -13,4 +13,7 @@ int main() {
     #ifdef DEVICE_DONGLE
         loop_dongle_init();
     #endif
+    #ifdef DEVICE_LLAMA
+        loop_llama_init();
+    #endif
 }

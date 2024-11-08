@@ -26,7 +26,7 @@
     #define CFG_TICK_FREQUENCY 250  // Hz.
 #elif defined DEVICE_ALPAKKA_V1
     #define CFG_TICK_FREQUENCY 250  // Hz.
-#elif defined DEVICE_DONGLE
+#elif defined DEVICE_DONGLE || defined DEVICE_LLAMA
     #define CFG_TICK_FREQUENCY 1000  // Hz.
 #endif
 
@@ -45,7 +45,7 @@
 
 #define CFG_GYRO_SENSITIVITY  pow(2, -9) * 1.45
 
-#if defined DEVICE_ALPAKKA_V0 || defined DEVICE_DONGLE
+#if defined DEVICE_ALPAKKA_V0 || defined DEVICE_DONGLE || defined DEVICE_LLAMA
     #define CFG_GYRO_SENSITIVITY_X  CFG_GYRO_SENSITIVITY * 1
     #define CFG_GYRO_SENSITIVITY_Y  CFG_GYRO_SENSITIVITY * 1
     #define CFG_GYRO_SENSITIVITY_Z  CFG_GYRO_SENSITIVITY * 1

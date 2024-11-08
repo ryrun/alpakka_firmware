@@ -8,6 +8,7 @@
 #include "loop.h"
 #include "config.h"
 #include "wireless.h"
+#include "esp.h"
 #include "led.h"
 #include "bus.h"
 #include "profile.h"
@@ -181,6 +182,13 @@ void loop_dongle_task() {
         webusb_flush();
     }
     uart_listen();
+}
+
+void loop_llama_init() {
+    stdio_uart_init();
+    stdio_init_all();
+    wireless_init(true);
+    esp_flash();
 }
 
 void loop_cycle() {
