@@ -42,6 +42,7 @@ during the profile change.
 #include "webusb.h"
 #include "logging.h"
 #include "thanks.h"
+#include "power.h"
 
 bool hid_allow_communication = true;  // Extern.
 
@@ -96,11 +97,11 @@ void hid_procedure_press(uint8_t procedure){
     if (procedure == PROC_TUNE_TOUCH_SENS) config_tune_set_mode(procedure);
     if (procedure == PROC_TUNE_DEADZONE) config_tune_set_mode(procedure);
     if (procedure == PROC_CALIBRATE) config_calibrate();
-    if (procedure == PROC_RESTART) config_reboot();
-    if (procedure == PROC_BOOTSEL) config_bootsel();
+    if (procedure == PROC_RESTART) power_restart();
+    if (procedure == PROC_BOOTSEL) power_bootsel();  // TODO: BOORSEL_OR_PAIR
     if (procedure == PROC_THANKS) hid_thanks();
     if (procedure == PROC_IGNORE_LED_WARNINGS) config_ignore_problems();
-    if (procedure == PROC_SLEEP) config_sleep();
+    if (procedure == PROC_SLEEP) power_dormant();
     // Scrollwheel alternative modes. (Used for example in Racing profile).
     if (procedure == PROC_ROTARY_MODE_0) rotary_set_mode(0);
     if (procedure == PROC_ROTARY_MODE_1) rotary_set_mode(1);

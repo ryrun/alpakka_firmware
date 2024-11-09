@@ -20,6 +20,7 @@
 #include "version.h"
 #include "common.h"
 #include "pin.h"
+#include "power.h"
 
 static DeviceMode device_mode = WIRED;
 static uint64_t system_clock = 0;
@@ -63,7 +64,7 @@ static void title(char *label) {
 
 static void set_wired() {
     info("LOOP: Wired\n");
-    if (device_mode != WIRED) config_reboot();
+    if (device_mode != WIRED) power_restart();
     device_mode = WIRED;
 }
 

@@ -78,6 +78,7 @@ target_sources(${PROJECT} PUBLIC
     src/logging.c
     src/loop.c
     src/nvm.c
+    src/power.c
     src/profile.c
     src/profiles/console_legacy.c
     src/profiles/console.c
@@ -89,8 +90,8 @@ target_sources(${PROJECT} PUBLIC
     src/profiles/home.c
     src/profiles/racing.c
     src/profiles/rts.c
-    src/self_test.c
     src/rotary.c
+    src/self_test.c
     src/thanks.c
     src/thumbstick.c
     src/touch.c

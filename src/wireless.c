@@ -60,7 +60,7 @@ void wireless_set_uart_data_mode(bool mode) {
     info("RF: data_mode=%i\n", mode);
     uart_data_mode = mode;
     if (mode) {
-        esp_restart(true);
+        esp_restart();
         uart_deinit(ESP_UART);
         uart_init(ESP_UART, ESP_DATA_BAUD);
         info("RF: UART1 init (%i)\n", ESP_DATA_BAUD);

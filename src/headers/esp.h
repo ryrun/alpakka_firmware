@@ -15,6 +15,6 @@
 #define ESP_RESTART_SETTLE 100  // Milliseconds.
 
 void esp_enable(bool state);
-void esp_boot(bool state);
-void esp_restart(bool bootpin);
+void esp_restart();
+void esp_bootsel();
 void esp_flash();

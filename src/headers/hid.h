@@ -263,6 +263,7 @@
 
 #define PROC_IGNORE_LED_WARNINGS  PROC_INDEX + 41
 #define PROC_SLEEP  PROC_INDEX + 42
+#define PROC_BOOTSEL_OR_PAIR  PROC_INDEX + 43
 
 void hid_init();
 void hid_thanks();

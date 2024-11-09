@@ -13,6 +13,7 @@
 #include "tusb_config.h"
 #include "common.h"
 #include "logging.h"
+#include "power.h"
 
 char webusb_buffer[WEBUSB_BUFFER_SIZE] = {0,};
 uint16_t webusb_ptr_in = 0;
@@ -140,8 +141,8 @@ void webusb_handle_status_set(uint8_t time[8]) {
 }
 
 void webusb_handle_proc(uint8_t proc) {
-    if (proc == PROC_RESTART) config_reboot();
-    else if (proc == PROC_BOOTSEL) config_bootsel();
+    if (proc == PROC_RESTART) power_restart();
+    else if (proc == PROC_BOOTSEL) power_bootsel();
     else if (proc == PROC_CALIBRATE) config_calibrate();
     else if (proc == PROC_RESET_FACTORY) config_reset_factory();
     else if (proc == PROC_RESET_CONFIG) config_reset_config();

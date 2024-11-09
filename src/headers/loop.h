@@ -11,7 +11,7 @@
 typedef enum {
     WIRED,
     WIRELESS,
-    DORMANT,
+    FAKESLEEP,
 } DeviceMode;
 
 uint64_t has_system_clock();

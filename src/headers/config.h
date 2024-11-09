@@ -120,8 +120,6 @@ uint8_t config_get_protocol();
 void config_tune_set_mode(uint8_t mode);
 void config_tune(bool direction);
 void config_calibrate();
-void config_reboot();
-void config_bootsel();
 void config_reset_config();
 void config_reset_profiles();
 void config_reset_factory();

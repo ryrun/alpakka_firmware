@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <hardware/sync.h>
-#include <hardware/watchdog.h>
-#include <pico/bootrom.h>
 #include <pico/unique_id.h>
 // #include <pico/sleep.h>
 #include "config.h"
@@ -21,6 +19,7 @@
 #include "webusb.h"
 #include "common.h"
 #include "logging.h"
+#include "power.h"
 
 // Config values.
 Config config_cache;
@@ -327,32 +326,23 @@ void config_tune(bool direction) {
     config_tune_update_leds();
 }
 
-void config_reboot() {
-    watchdog_enable(1, false);  // Reboot after 1 millisecond.
-    sleep_ms(10);  // Stall the exexution to avoid resetting the timer.
-}
-
-void config_bootsel() {
-    reset_usb_boot(0, 0);
-}
-
 void config_reset_factory() {
     info("NVM: Reset to factory defaults\n");
     config_profile_default_all();
     config_delete();
-    config_reboot();
+    power_restart();
 }
 
 void config_reset_config() {
     info("NVM: Reset config\n");
     config_delete();
-    config_reboot();
+    power_restart();
 }
 
 void config_reset_profiles() {
     info("NVM: Reset profiles\n");
     config_profile_default_all();
-    config_reboot();
+    power_restart();
 }
 
 void config_calibrate_execute() {
@@ -544,10 +534,6 @@ void config_alert_if_not_calibrated() {
         warn("Please run calibration\n");
         config_set_problem_calibration(true);
     }
-}
-
-void config_sleep() {
-    // sleep_goto_dormant_until_edge_high(PIN_HOME);
 }
 
 void config_profile_default(uint8_t indexTo, int8_t indexFrom) {

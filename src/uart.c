@@ -9,17 +9,18 @@
 #include "config.h"
 #include "self_test.h"
 #include "logging.h"
+#include "power.h"
 #include "esp.h"
 
 void uart_listen_do(bool limited) {
     char input = getchar_timeout_us(0);
     if (input == 'R') {
         info("UART: Restart\n");
-        config_reboot();
+        power_restart();
     }
     if (input == 'B') {
         info("UART: Bootsel mode\n");
-        config_bootsel();
+        power_bootsel();
     }
 
     if (limited) {

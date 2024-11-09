@@ -11,13 +11,16 @@ void esp_enable(bool state) {
     gpio_put(PIN_ESP_ENABLE, state);
 }
 
-void esp_boot(bool state) {
-    gpio_put(PIN_ESP_BOOT, state);
+void esp_restart() {
+    esp_enable(false);
+    gpio_put(PIN_ESP_BOOT, true);
+    sleep_ms(ESP_RESTART_SETTLE);
+    esp_enable(true);
 }
 
-void esp_restart(bool bootpin) {
+void esp_bootsel() {
     esp_enable(false);
-    esp_boot(bootpin);
+    gpio_put(PIN_ESP_BOOT, false);
     sleep_ms(ESP_RESTART_SETTLE);
     esp_enable(true);
 }
