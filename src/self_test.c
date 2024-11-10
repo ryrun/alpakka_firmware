@@ -106,7 +106,7 @@ void self_test() {
     info("===========\n");
     Profile* profile = profile_get_active(true);
     self_test_buttons(profile);
-    self_test_thumbstick(&(profile->thumbstick));
+    self_test_thumbstick(&(profile->thumbstick0));
     self_test_dhat(&(profile->dhat));
     self_test_rotary(&(profile->rotary));
     info("Tests done\n");

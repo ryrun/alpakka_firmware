@@ -17,8 +17,10 @@
 #include "logging.h"
 #include "webusb.h"
 
-float offset_x = 0;
-float offset_y = 0;
+float offset_lx = 0;
+float offset_ly = 0;
+float offset_rx = 0;
+float offset_ry = 0;
 float config_deadzone = 0;
 
 // Daisywheel.
@@ -28,11 +30,10 @@ Button daisy_b;
 Button daisy_x;
 Button daisy_y;
 
-float thumbstick_adc(uint8_t adc_index, float offset) {
-    adc_select_input(adc_index);
+float thumbstick_adc(uint8_t pin, float offset) {
+    adc_select_input(pin - 26);
     float value = (float)adc_read() - BIT_11;
-    value = value / BIT_11 * CFG_THUMBSTICK_SATURATION;
-    return constrain(value - offset, -1, 1);
+    return (value - offset) * CFG_THUMBSTICK_SATURATION;
 }
 
 void thumbstick_update_deadzone() {
@@ -42,22 +43,35 @@ void thumbstick_update_deadzone() {
 
 void thumbstick_update_offsets() {
     Config *config = config_read();
-    offset_x = config->offset_ts_x;
-    offset_y = config->offset_ts_y;
+    offset_lx = config->offset_ts_lx;
+    offset_ry = config->offset_ts_ly;
+    offset_lx = config->offset_ts_rx;
+    offset_ry = config->offset_ts_ry;
 }
 
-void thumbstick_calibrate() {
+void thumbstick_calibrate_each(uint8_t pin_x, uint8_t pin_y, float *result_x, float *result_y) {
     info("Thumbstick: calibrating...\n");
     float x = 0;
     float y = 0;
     for(uint32_t i=0; i<CFG_CALIBRATION_SAMPLES_THUMBSTICK; i++) {
-        x += thumbstick_adc(2, 0.0);  // TODO FIX INDEX
-        y += thumbstick_adc(3, 0.0);  // TODO FIX INDEX
+        x += thumbstick_adc(pin_x, 0.0);
+        y += thumbstick_adc(pin_y, 0.0);
     }
     x /= CFG_CALIBRATION_SAMPLES_THUMBSTICK;
     y /= CFG_CALIBRATION_SAMPLES_THUMBSTICK;
     info("Thumbstick: calibration x=%f y=%f\n", x, y);
-    config_set_thumbstick_offset(x, y);
+    *result_x = x;
+    *result_y = y;
+}
+
+void thumbstick_calibrate() {
+    float lx = 0;
+    float ly = 0;
+    float rx = 0;
+    float ry = 0;
+    thumbstick_calibrate_each(PIN_THUMBSTICK_LX, PIN_THUMBSTICK_LY, &lx, &ly);
+    thumbstick_calibrate_each(PIN_THUMBSTICK_RX, PIN_THUMBSTICK_RY, &rx, &ry);
+    config_set_thumbstick_offset(lx, ly, rx, ry);
     thumbstick_update_offsets();
 }
 
@@ -66,6 +80,8 @@ void thumbstick_init() {
     adc_init();
     adc_gpio_init(PIN_THUMBSTICK_LX);
     adc_gpio_init(PIN_THUMBSTICK_LY);
+    adc_gpio_init(PIN_THUMBSTICK_RX);
+    adc_gpio_init(PIN_THUMBSTICK_RY);
     thumbstick_update_offsets();
     thumbstick_update_deadzone();
     // Alternative usage of ABXY while doing daisywheel.
@@ -77,16 +93,16 @@ void thumbstick_init() {
 }
 
 void thumbstick_report_axis(uint8_t axis, float value) {
-    if      (axis == GAMEPAD_AXIS_LX)     hid_gamepad_lx(value);
-    else if (axis == GAMEPAD_AXIS_LY)     hid_gamepad_ly(value);
-    else if (axis == GAMEPAD_AXIS_RX)     hid_gamepad_rx(value);
-    else if (axis == GAMEPAD_AXIS_RY)     hid_gamepad_ry(value);
-    else if (axis == GAMEPAD_AXIS_LX_NEG) hid_gamepad_lx(-value);
-    else if (axis == GAMEPAD_AXIS_LY_NEG) hid_gamepad_ly(-value);
-    else if (axis == GAMEPAD_AXIS_RX_NEG) hid_gamepad_rx(-value);
-    else if (axis == GAMEPAD_AXIS_RY_NEG) hid_gamepad_ry(-value);
-    else if (axis == GAMEPAD_AXIS_LZ)     hid_gamepad_lz(value);
-    else if (axis == GAMEPAD_AXIS_RZ)     hid_gamepad_rz(value);
+    if      (axis == GAMEPAD_AXIS_LX)     hid_gamepad_axis(LX, value);
+    else if (axis == GAMEPAD_AXIS_LY)     hid_gamepad_axis(LY, value);
+    else if (axis == GAMEPAD_AXIS_RX)     hid_gamepad_axis(RX, value);
+    else if (axis == GAMEPAD_AXIS_RY)     hid_gamepad_axis(RY, value);
+    else if (axis == GAMEPAD_AXIS_LX_NEG) hid_gamepad_axis(LX, -value);
+    else if (axis == GAMEPAD_AXIS_LY_NEG) hid_gamepad_axis(LY, -value);
+    else if (axis == GAMEPAD_AXIS_RX_NEG) hid_gamepad_axis(RX, -value);
+    else if (axis == GAMEPAD_AXIS_RY_NEG) hid_gamepad_axis(RY, -value);
+    else if (axis == GAMEPAD_AXIS_LZ)     hid_gamepad_axis(LZ, value);
+    else if (axis == GAMEPAD_AXIS_RZ)     hid_gamepad_axis(RZ, value);
 }
 
 uint8_t thumbstick_get_direction(float angle, float overlap) {
@@ -270,11 +286,17 @@ void Thumbstick__report_alphanumeric(Thumbstick *self, ThumbstickPosition pos) {
 }
 
 void Thumbstick__report(Thumbstick *self) {
+    float offset_x = self->index==1 ? offset_lx : offset_rx;
+    float offset_y = self->index==1 ? offset_ly : offset_ry;
     // Do not report if not calibrated.
     if (offset_x == 0 && offset_y == 0) return;
     // Get values from ADC.
-    float x = thumbstick_adc(2, offset_x);  // TODO FIX INDEX
-    float y = thumbstick_adc(3, offset_y);  // TODO FIX INDEX
+    float x = thumbstick_adc(self->pin_x, offset_x);
+    float y = thumbstick_adc(self->pin_y, offset_y);
+    x = (x / BIT_11) / self->saturation;
+    y = (y / BIT_11) / self->saturation;
+    x = constrain(x, -1, 1) * (self->invert_x? -1 : 1);
+    y = constrain(y, -1, 1) * (self->invert_y? -1 : 1);
     // Get correct deadzone.
     float deadzone = self->deadzone_override ? self->deadzone : config_deadzone;
     // Calculate trigonometry.
@@ -315,12 +337,18 @@ void Thumbstick__reset(Thumbstick *self) {
 }
 
 Thumbstick Thumbstick_ (
+    uint8_t index,
+    uint8_t pin_x,
+    uint8_t pin_y,
+    bool invert_x,
+    bool invert_y,
     ThumbstickMode mode,
     ThumbstickDistance distance_mode,
     bool deadzone_override,
     float deadzone,
     float antideadzone,
-    float overlap
+    float overlap,
+    float saturation
 ) {
     Thumbstick thumbstick;
     // Methods.
@@ -335,12 +363,18 @@ Thumbstick Thumbstick_ (
     thumbstick.config_daisywheel = Thumbstick__config_daisywheel;
     thumbstick.report_daisywheel = Thumbstick__report_daisywheel;
     // Attributes.
+    thumbstick.index = index;
+    thumbstick.pin_x = pin_x;
+    thumbstick.pin_y = pin_y;
+    thumbstick.invert_x = invert_x;
+    thumbstick.invert_y = invert_y;
     thumbstick.mode = mode;
     thumbstick.distance_mode = distance_mode;
     thumbstick.deadzone_override = deadzone_override;
     thumbstick.deadzone = deadzone;
     thumbstick.antideadzone = antideadzone;
     thumbstick.overlap = overlap;
+    thumbstick.saturation = saturation;
     thumbstick.glyphstick_index = 0;
     return thumbstick;
 }

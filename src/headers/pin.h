@@ -57,6 +57,8 @@
     #define PIN_I2C_SCL 23
     #define PIN_HOME 24
     #define PIN_ESP_ENABLE 25
+    #define PIN_THUMBSTICK_RY 26
+    #define PIN_THUMBSTICK_RX 27
     #define PIN_THUMBSTICK_LX 28
     #define PIN_THUMBSTICK_LY 29
     #define I2C_CHANNEL i2c1

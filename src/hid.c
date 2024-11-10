@@ -58,12 +58,7 @@ alarm_pool_t *alarm_pool;
 uint8_t state_matrix[256] = {0,};
 int16_t mouse_x = 0;
 int16_t mouse_y = 0;
-double gamepad_lx = 0;
-double gamepad_ly = 0;
-double gamepad_rx = 0;
-double gamepad_ry = 0;
-double gamepad_lz = 0;
-double gamepad_rz = 0;
+double gamepad_axis[6] = {0,};
 
 void hid_matrix_reset(uint8_t keep) {
     for(uint8_t action=0; action<255; action++) {
@@ -259,39 +254,9 @@ void hid_mouse_move(int16_t x, int16_t y) {
     synced_mouse = false;
 }
 
-void hid_gamepad_lx(double value) {
-    if (value == gamepad_lx) return;
-    gamepad_lx += value;  // Multiple inputs can be combined.
-    synced_gamepad = false;
-}
-
-void hid_gamepad_ly(double value) {
-    if (value == gamepad_ly) return;
-    gamepad_ly += value;  // Multiple inputs can be combined.
-    synced_gamepad = false;
-}
-
-void hid_gamepad_lz(double value) {
-    if (value == gamepad_lz) return;
-    gamepad_lz += value;  // Multiple inputs can be combined.
-    synced_gamepad = false;
-}
-
-void hid_gamepad_rx(double value) {
-    if (value == gamepad_rx) return;
-    gamepad_rx += value;  // Multiple inputs can be combined.
-    synced_gamepad = false;
-}
-
-void hid_gamepad_ry(double value) {
-    if (value == gamepad_ry) return;
-    gamepad_ry += value;  // Multiple inputs can be combined.
-    synced_gamepad = false;
-}
-
-void hid_gamepad_rz(double value) {
-    if (value == gamepad_rz) return;
-    gamepad_rz += value;  // Multiple inputs can be combined.
+void hid_gamepad_axis(GamepadAxis axis, double value) {
+    if ((value == gamepad_axis[axis]) && !synced_gamepad) return;
+    gamepad_axis[axis] += value;  // Multiple inputs can be combined.
     synced_gamepad = false;
 }
 
@@ -378,15 +343,15 @@ void hid_gamepad_report() {
         (state_matrix[GAMEPAD_HOME]   << 14)
     );
     // Adjust range from [-1,1] to [-32767,32767].
-    int16_t lx_report = hid_axis(gamepad_lx, GAMEPAD_AXIS_LX, GAMEPAD_AXIS_LX_NEG) * BIT_15;
-    int16_t ly_report = hid_axis(gamepad_ly, GAMEPAD_AXIS_LY, GAMEPAD_AXIS_LY_NEG) * BIT_15;
-    int16_t rx_report = hid_axis(gamepad_rx, GAMEPAD_AXIS_RX, GAMEPAD_AXIS_RX_NEG) * BIT_15;
-    int16_t ry_report = hid_axis(gamepad_ry, GAMEPAD_AXIS_RY, GAMEPAD_AXIS_RY_NEG) * BIT_15;
+    int16_t lx_report = hid_axis(gamepad_axis[LX], GAMEPAD_AXIS_LX, GAMEPAD_AXIS_LX_NEG) * BIT_15;
+    int16_t ly_report = hid_axis(gamepad_axis[LY], GAMEPAD_AXIS_LY, GAMEPAD_AXIS_LY_NEG) * BIT_15;
+    int16_t rx_report = hid_axis(gamepad_axis[RX], GAMEPAD_AXIS_RX, GAMEPAD_AXIS_RX_NEG) * BIT_15;
+    int16_t ry_report = hid_axis(gamepad_axis[RY], GAMEPAD_AXIS_RY, GAMEPAD_AXIS_RY_NEG) * BIT_15;
     // HID triggers must be also defined as unsigned in the USB descriptor, and has to be manually
     // value-shifted from signed to unsigned here, otherwise Windows is having erratic behavior and
     // inconsistencies between games (not sure if a bug in Windows' DirectInput or TinyUSB).
-    int16_t lz_report = ((hid_axis(gamepad_lz, GAMEPAD_AXIS_LZ, 0) * 2) - 1) * BIT_15;
-    int16_t rz_report = ((hid_axis(gamepad_rz, GAMEPAD_AXIS_RZ, 0) * 2) - 1) * BIT_15;
+    int16_t lz_report = ((hid_axis(gamepad_axis[LZ], GAMEPAD_AXIS_LZ, 0) * 2) - 1) * BIT_15;
+    int16_t rz_report = ((hid_axis(gamepad_axis[RZ], GAMEPAD_AXIS_RZ, 0) * 2) - 1) * BIT_15;
     GamepadReport report = {
         lx_report,
         ly_report,
@@ -413,13 +378,13 @@ void hid_xinput_report(bool wireless) {
         buttons_1 += state_matrix[GAMEPAD_INDEX + i + 8] << i;
     }
     // Adjust range from [-1,1] to [-32767,32767].
-    int16_t lx_report = hid_axis(gamepad_lx, GAMEPAD_AXIS_LX, GAMEPAD_AXIS_LX_NEG) * BIT_15;
-    int16_t ly_report = hid_axis(gamepad_ly, GAMEPAD_AXIS_LY, GAMEPAD_AXIS_LY_NEG) * BIT_15;
-    int16_t rx_report = hid_axis(gamepad_rx, GAMEPAD_AXIS_RX, GAMEPAD_AXIS_RX_NEG) * BIT_15;
-    int16_t ry_report = hid_axis(gamepad_ry, GAMEPAD_AXIS_RY, GAMEPAD_AXIS_RY_NEG) * BIT_15;
+    int16_t lx_report = hid_axis(gamepad_axis[LX], GAMEPAD_AXIS_LX, GAMEPAD_AXIS_LX_NEG) * BIT_15;
+    int16_t ly_report = hid_axis(gamepad_axis[LY], GAMEPAD_AXIS_LY, GAMEPAD_AXIS_LY_NEG) * BIT_15;
+    int16_t rx_report = hid_axis(gamepad_axis[RX], GAMEPAD_AXIS_RX, GAMEPAD_AXIS_RX_NEG) * BIT_15;
+    int16_t ry_report = hid_axis(gamepad_axis[RY], GAMEPAD_AXIS_RY, GAMEPAD_AXIS_RY_NEG) * BIT_15;
     // Adjust range from [0,1] to [0,255].
-    uint16_t lz_report = hid_axis(gamepad_lz, GAMEPAD_AXIS_LZ, 0) * BIT_8;
-    uint16_t rz_report = hid_axis(gamepad_rz, GAMEPAD_AXIS_RZ, 0) * BIT_8;
+    uint16_t lz_report = hid_axis(gamepad_axis[LZ], GAMEPAD_AXIS_LZ, 0) * BIT_8;
+    uint16_t rz_report = hid_axis(gamepad_axis[RZ], GAMEPAD_AXIS_RZ, 0) * BIT_8;
     XInputReport report = {
         .report_id   = 0,
         .report_size = XINPUT_REPORT_SIZE,
@@ -440,13 +405,10 @@ void hid_xinput_report(bool wireless) {
     priority_gamepad = 0;
 }
 
-void hid_gamepad_reset() {
-    gamepad_lx = 0;
-    gamepad_ly = 0;
-    gamepad_rx = 0;
-    gamepad_ry = 0;
-    gamepad_lz = 0;
-    gamepad_rz = 0;
+void hid_gamepad_axis_reset() {
+    // Gamepad axis values being reset so potentially unsent values are not
+    // aggregated with the next cycle.
+    memset(gamepad_axis, 0, sizeof(gamepad_axis));
 }
 
 bool hid_report_wired() {
@@ -478,9 +440,7 @@ bool hid_report_wired() {
             }
             hid_xinput_report(false);
         }
-        // Gamepad values being reset so potentially unsent values are not
-        // aggregated with the next cycle.
-        hid_gamepad_reset();
+        hid_gamepad_axis_reset();
         return true;
     } else {
         return false;
@@ -503,9 +463,7 @@ bool hid_report_wireless() {
         if (config_get_protocol() == PROTOCOL_GENERIC) hid_gamepad_report();
         else hid_xinput_report(true);
     }
-    // Gamepad values being reset so potentially unsent values are not
-    // aggregated with the next cycle.
-    hid_gamepad_reset();
+    hid_gamepad_axis_reset();
 }
 
 void hid_report_dongle(uint8_t report_id, uint8_t* payload) {

@@ -6,7 +6,6 @@
 #include <string.h>
 #include <hardware/sync.h>
 #include <pico/unique_id.h>
-// #include <pico/sleep.h>
 #include "config.h"
 #include "nvm.h"
 #include "led.h"
@@ -134,8 +133,10 @@ void config_write_init() {
         .sens_touch = 1,
         .deadzone = 0,
         .vibration = 0,
-        .offset_ts_x = 0,
-        .offset_ts_y = 0,
+        .offset_ts_lx = 0,
+        .offset_ts_ly = 0,
+        .offset_ts_rx = 0,
+        .offset_ts_ry = 0,
         .offset_gyro_0_x = 0,
         .offset_gyro_0_y = 0,
         .offset_gyro_0_z = 0,
@@ -207,9 +208,13 @@ void config_print() {
     info("  long_calibration=%i\n", config_cache.long_calibration);
     info("  swap_gyros=%i\n", config_cache.swap_gyros);
     info("  touch_invert_polarity=%i\n", config_cache.touch_invert_polarity);
-    info("  offset_thumbstick x=%.4f y=%.4f\n",
-        config_cache.offset_ts_x,
-        config_cache.offset_ts_y
+    info("  offset_thumbstick_0 x=%.4f y=%.4f\n",
+        config_cache.offset_ts_lx,
+        config_cache.offset_ts_ly
+    );
+    info("  offset_thumbstick_1 x=%.4f y=%.4f\n",
+        config_cache.offset_ts_rx,
+        config_cache.offset_ts_ry
     );
     info("  offset_gyro_0  x=%8.2f y=%8.2f z=%8.2f\n",
         config_cache.offset_gyro_0_x,
@@ -243,9 +248,11 @@ uint8_t config_get_profile() {
     return config_cache.profile;
 }
 
-void config_set_thumbstick_offset(float x, float y) {
-    config_cache.offset_ts_x = x;
-    config_cache.offset_ts_y = y;
+void config_set_thumbstick_offset(float lx, float ly, float rx, float ry) {
+    config_cache.offset_ts_lx = lx;
+    config_cache.offset_ts_ly = ly;
+    config_cache.offset_ts_rx = rx;
+    config_cache.offset_ts_ry = ry;
     config_cache_synced = false;
 }
 
@@ -529,7 +536,7 @@ bool config_problems_are_pending() {
 }
 
 void config_alert_if_not_calibrated() {
-    if (config_cache.offset_ts_x == 0 && config_cache.offset_ts_y == 0) {
+    if (config_cache.offset_ts_lx == 0 && config_cache.offset_ts_ly == 0) {
         warn("The controller is not calibrated\n");
         warn("Please run calibration\n");
         config_set_problem_calibration(true);

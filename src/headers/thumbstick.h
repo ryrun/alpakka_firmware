@@ -63,12 +63,18 @@ struct Thumbstick_struct {
     void (*config_4dir) (Thumbstick *self, Button left, Button right, Button up, Button down, Button push, Button inner, Button outer);
     void (*config_glyphstick) (Thumbstick *self, Actions actions, Glyph glyph);
     void (*config_daisywheel) (Thumbstick *self, uint8_t dir, uint8_t button, Actions actions);
+    uint8_t index;
+    uint8_t pin_x;
+    uint8_t pin_y;
+    bool invert_x;
+    bool invert_y;
     ThumbstickMode mode;
     ThumbstickDistance distance_mode;
     bool deadzone_override;
     float deadzone;
     float antideadzone;
     float overlap;
+    float saturation;
     Button left;
     Button right;
     Button up;
@@ -83,12 +89,18 @@ struct Thumbstick_struct {
 };
 
 Thumbstick Thumbstick_ (
+    uint8_t index,
+    uint8_t pin_x,
+    uint8_t pin_y,
+    bool invert_x,
+    bool invert_y,
     ThumbstickMode mode,
     ThumbstickDistance distance_mode,
     bool deadzone_override,
     float deadzone,
     float antideadzone,
-    float overlap
+    float overlap,
+    float saturation
 );
 
 void thumbstick_init();

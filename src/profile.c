@@ -55,7 +55,8 @@ void Profile__report(Profile *self) {
     self->r4.report(&self->r4);
     self->dhat.report(&self->dhat);
     self->rotary.report(&self->rotary);
-    self->thumbstick.report(&self->thumbstick);
+    self->thumbstick0.report(&self->thumbstick0);
+    self->thumbstick1.report(&self->thumbstick1);
     self->gyro.report(&self->gyro);
 }
 
@@ -80,7 +81,8 @@ void Profile__reset(Profile *self) {
     self->r4.reset(&self->r4);
     self->dhat.reset(&self->dhat);
     self->rotary.reset(&self->rotary);
-    self->thumbstick.reset(&self->thumbstick);
+    self->thumbstick0.reset(&self->thumbstick0);
+    self->thumbstick1.reset(&self->thumbstick1);
     self->gyro.reset(&self->gyro);
 }
 
@@ -126,19 +128,25 @@ void Profile__load_from_config(Profile *self, CtrlProfile *profile) {
     rotary.config_mode(&rotary, 3, up.actions_3, down.actions_3);
     rotary.config_mode(&rotary, 4, up.actions_4, down.actions_4);
     self->rotary = rotary;
-    // Thumbstick.
+    // Thumbstick left.
     CtrlThumbstick ctrl_thumbtick = profile->sections[SECTION_THUMBSTICK].thumbstick;
-    self->thumbstick = Thumbstick_(
+    self->thumbstick0 = Thumbstick_(
+        0,  // Left.
+        PIN_THUMBSTICK_LX,
+        PIN_THUMBSTICK_LY,
+        false,
+        false,
         ctrl_thumbtick.mode,
         ctrl_thumbtick.distance_mode,
         ctrl_thumbtick.deadzone_override,
         ctrl_thumbtick.deadzone / 100.0,
         ctrl_thumbtick.antideadzone / 100.0,
-        (int8_t)ctrl_thumbtick.overlap / 100.0
+        (int8_t)ctrl_thumbtick.overlap / 100.0,
+        1.0
     );
     if (ctrl_thumbtick.mode == THUMBSTICK_MODE_4DIR) {
-        self->thumbstick.config_4dir(
-            &(self->thumbstick),
+        self->thumbstick0.config_4dir(
+            &(self->thumbstick0),
             Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_THUMBSTICK_LEFT]),
             Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_THUMBSTICK_RIGHT]),
             Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_THUMBSTICK_UP]),
@@ -156,8 +164,8 @@ void Profile__load_from_config(Profile *self, CtrlProfile *profile) {
                 CtrlGlyph ctrl_glyph = profile->sections[SECTION_GLYPHS_0+s].glyphs.glyphs[g];
                 Glyph glyph = {0};
                 glyph_decode(glyph, ctrl_glyph.glyph);
-                self->thumbstick.config_glyphstick(
-                    &(self->thumbstick),
+                self->thumbstick0.config_glyphstick(
+                    &(self->thumbstick0),
                     ctrl_glyph.actions,
                     glyph
                 );
@@ -169,13 +177,42 @@ void Profile__load_from_config(Profile *self, CtrlProfile *profile) {
             // Iterate groups.
             for(uint8_t g=0; g<2; g++) {
                 CtrlDaisyGroup group = profile->sections[SECTION_DAISY_0+s].daisy.groups[g];
-                self->thumbstick.config_daisywheel(&(self->thumbstick), dir, 0, group.actions_a);
-                self->thumbstick.config_daisywheel(&(self->thumbstick), dir, 1, group.actions_b);
-                self->thumbstick.config_daisywheel(&(self->thumbstick), dir, 2, group.actions_x);
-                self->thumbstick.config_daisywheel(&(self->thumbstick), dir, 3, group.actions_y);
+                self->thumbstick0.config_daisywheel(&(self->thumbstick0), dir, 0, group.actions_a);
+                self->thumbstick0.config_daisywheel(&(self->thumbstick0), dir, 1, group.actions_b);
+                self->thumbstick0.config_daisywheel(&(self->thumbstick0), dir, 2, group.actions_x);
+                self->thumbstick0.config_daisywheel(&(self->thumbstick0), dir, 3, group.actions_y);
                 dir += 1;
             }
         }
+    }
+    // Thumbstick right.
+    // CtrlThumbstick ctrl_thumbtick = profile->sections[SECTION_THUMBSTICK].thumbstick;
+    self->thumbstick1 = Thumbstick_(
+        1,  // Right.
+        PIN_THUMBSTICK_RX,
+        PIN_THUMBSTICK_RY,
+        true,
+        false,
+        ctrl_thumbtick.mode,
+        ctrl_thumbtick.distance_mode,
+        true, // ctrl_thumbtick.deadzone_override,
+        0.15,  // ctrl_thumbtick.deadzone / 100.0,
+        ctrl_thumbtick.antideadzone / 100.0,
+        -0.5,  // (int8_t)ctrl_thumbtick.overlap / 100.0
+        0.7
+    );
+    if (ctrl_thumbtick.mode == THUMBSTICK_MODE_4DIR) {
+        Actions actions_none = {0, 0, 0, 0};
+        self->thumbstick1.config_4dir(
+            &(self->thumbstick1),
+            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_LEFT]),
+            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_RIGHT]),
+            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_UP]),
+            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_DOWN]),
+            Button_from_ctrl(PIN_DHAT_PUSH, profile->sections[SECTION_DHAT_PUSH]),
+            Button_(PIN_NONE, NORMAL, actions_none, actions_none, actions_none), // Inner.
+            Button_(PIN_NONE, NORMAL, actions_none, actions_none, actions_none) // Outer.
+        );
     }
     // Gyro.
     CtrlGyro ctrl_gyro = profile->sections[SECTION_GYRO].gyro;
