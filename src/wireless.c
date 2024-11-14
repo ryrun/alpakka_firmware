@@ -19,16 +19,16 @@
 static bool uart_data_mode = false;
 
 
-static void led_task() {
-    static uint8_t i = 0;
-    static bool led_state;
-    i++;
-    if (i==100) {
-        led_board_set(led_state);
-        led_state = !led_state;
-        i = 0;
-    }
-}
+// static void led_task() {
+//     static uint8_t i = 0;
+//     static bool led_state;
+//     i++;
+//     if (i==100) {
+//         led_board_set(led_state);
+//         led_state = !led_state;
+//         i = 0;
+//     }
+// }
 
 void wireless_send(uint8_t report_id, void *packet, uint8_t len) {
     uint8_t control[4] = {16, 32, 64, 128};
@@ -76,8 +76,12 @@ void wireless_set_uart_data_mode(bool mode) {
 }
 
 void wireless_init(bool dongle) {
-    if (dongle) info("INIT: RF dongle\n");
-    else info("INIT: RF controller\n");
+    if (dongle) {
+        info("INIT: RF dongle\n");
+        led_board_set(true);
+    } else {
+        info("INIT: RF controller\n");
+    }
     // Boot pin.
     bool boot = false;
     info("RF: ESP boot=%i\n", boot);
@@ -110,7 +114,7 @@ void wireless_controller_task() {
 }
 
 void wireless_dongle_task() {
-    led_task();
+    // led_task();
     if (!uart_data_mode) {
         cross_logging();
     } else {
