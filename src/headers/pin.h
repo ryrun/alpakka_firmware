@@ -45,8 +45,8 @@
     #define PIN_ROTARY_A 11
     #define PIN_TOUCH_IN 12
     #define PIN_TOUCH_OUT 13
-    #define PIN_BATT_STAT_2 14
-    #define PIN_BATT_STAT_1 15
+    // #define PIN_BATT_STAT_2 14
+    #define PIN_BATT_STAT_1 14
     #define PIN_SPI_RX 16
     #define PIN_ESP_BOOT 17
     #define PIN_SPI_CK 18

@@ -5,7 +5,7 @@
 #include "esp.h"
 #include "config.h"
 #include "pin.h"
-
+#include "power.h"
 
 void esp_enable(bool state) {
     gpio_put(PIN_ESP_ENABLE, state);
@@ -56,6 +56,6 @@ void esp_bootsel() {
         // loader_port_pi_pico_deinit();
         printf("RF: ESP flash done\n");
         printf("RF: Going into bootsel mode...\n");
-        config_bootsel();
+        power_bootsel();
     }
 #endif

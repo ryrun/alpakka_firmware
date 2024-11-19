@@ -76,11 +76,11 @@ static void set_wireless() {
 
 static void battery_init() {
     gpio_init(PIN_BATT_STAT_1);
-    gpio_init(PIN_BATT_STAT_2);
+    // gpio_init(PIN_BATT_STAT_2);
     gpio_pull_up(PIN_BATT_STAT_1);
-    gpio_pull_up(PIN_BATT_STAT_2);
+    // gpio_pull_up(PIN_BATT_STAT_2);
     gpio_set_dir(PIN_BATT_STAT_1, GPIO_IN);
-    gpio_set_dir(PIN_BATT_STAT_2, GPIO_IN);
+    // gpio_set_dir(PIN_BATT_STAT_2, GPIO_IN);
 }
 
 static void board_led() {
@@ -90,9 +90,9 @@ static void board_led() {
     if (i == 100) {
         i = 0;
         bool stat1 = gpio_get(PIN_BATT_STAT_1);
-        bool stat2 = gpio_get(PIN_BATT_STAT_2);
+        // bool stat2 = gpio_get(PIN_BATT_STAT_2);
         // info("%i %i\n", stat1, stat2);
-        if (!stat1 && stat2) {
+        if (!stat1) {
             if (device_mode == WIRED) {
                 gpio_put(PIN_LED_BOARD, true);
             }
