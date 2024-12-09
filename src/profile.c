@@ -187,6 +187,10 @@ void Profile__load_from_config(Profile *self, CtrlProfile *profile) {
     }
     // Thumbstick right.
     // CtrlThumbstick ctrl_thumbtick = profile->sections[SECTION_THUMBSTICK].thumbstick;
+    // TODO: real saturation from profile
+    CtrlButton ctrl_dhat_left = profile->sections[SECTION_DHAT_LEFT].button;
+    float deadzone = 0.15;
+    if (ctrl_dhat_left.actions[0] == KEY_1) deadzone = 0.65; // TODO: Remove this hack.
     self->thumbstick1 = Thumbstick_(
         1,  // Right.
         PIN_THUMBSTICK_RX,
@@ -196,7 +200,7 @@ void Profile__load_from_config(Profile *self, CtrlProfile *profile) {
         ctrl_thumbtick.mode,
         ctrl_thumbtick.distance_mode,
         true, // ctrl_thumbtick.deadzone_override,
-        0.15,  // ctrl_thumbtick.deadzone / 100.0,
+        deadzone,  // ctrl_thumbtick.deadzone / 100.0,
         ctrl_thumbtick.antideadzone / 100.0,
         -0.5,  // (int8_t)ctrl_thumbtick.overlap / 100.0
         0.7
