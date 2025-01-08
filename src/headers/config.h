@@ -22,12 +22,10 @@
 
 #define CFG_LED_BRIGHTNESS 0.2
 
-#if defined DEVICE_ALPAKKA_V0
-    #define CFG_TICK_FREQUENCY 250  // Hz.
-#elif defined DEVICE_ALPAKKA_V1
-    #define CFG_TICK_FREQUENCY 250  // Hz.
-#elif defined DEVICE_DONGLE || defined DEVICE_LLAMA
+#ifdef DEVICE_DONGLE
     #define CFG_TICK_FREQUENCY 1000  // Hz.
+#else
+    #define CFG_TICK_FREQUENCY 250  // Hz.
 #endif
 
 #define CFG_IMU_TICK_SAMPLES 128  // Multi-sampling per pooling cycle.
@@ -45,6 +43,7 @@
 
 #define CFG_GYRO_SENSITIVITY  pow(2, -9) * 1.45
 
+// TODO: Move this logic to IMU preprocessor.
 #if defined DEVICE_ALPAKKA_V0 || defined DEVICE_DONGLE || defined DEVICE_LLAMA
     #define CFG_GYRO_SENSITIVITY_X  CFG_GYRO_SENSITIVITY * 1
     #define CFG_GYRO_SENSITIVITY_Y  CFG_GYRO_SENSITIVITY * 1

@@ -528,36 +528,6 @@ void hid_report_dongle(uint8_t report_id, uint8_t* payload) {
     }
 }
 
-// void hid_report_from_queue_mouse() {
-//     MouseReport combined = {0,};
-//     uint8_t num = 0;
-//     while(!queue_is_empty(hid_get_mouse_queue())) {
-//         num += 1;
-//         uint8_t entry[REPORT_QUEUE_ITEM_SIZE];
-//         queue_remove_blocking(hid_get_mouse_queue(), entry);
-//         MouseReport report = *(MouseReport*)entry;
-//         if (num > 1) {
-//             report.x += combined.x;
-//             report.y += combined.y;
-//         }
-//         memcpy(&combined, &report, sizeof(MouseReport));
-//     }
-//     if (num > 1) printf("%i ", num);
-//     if (num > 0) {
-//         tud_task();
-//         if (tud_ready() && tud_hid_ready()) {
-//             tud_hid_report(REPORT_MOUSE, &combined, sizeof(MouseReport));
-//         } else {
-//             printf("M");
-//         }
-//     }
-// }
-
-// void hid_report_from_queue(bool alternate) {
-//     if (alternate) return;
-//     else hid_report_from_queue_mouse();
-// }
-
 // A not-so-secret easter egg.
 void hid_thanks_(alarm_id_t alarm) {
     cancel_alarm(alarm);
@@ -587,17 +557,7 @@ void hid_thanks() {
     add_alarm_in_ms(5, (alarm_callback_t)hid_thanks_, NULL, true);
 }
 
-// queue_t* hid_get_kb_queue() {
-//     return &kb_queue;
-// }
-
-// queue_t* hid_get_mouse_queue() {
-//     return &mouse_queue;
-// }
-
 void hid_init() {
     info("INIT: HID\n");
     alarm_pool = alarm_pool_create(2, 255);
-    // queue_init(&kb_queue, REPORT_QUEUE_ITEM_SIZE, REPORT_QUEUE_LEN);
-    // queue_init(&mouse_queue, REPORT_QUEUE_ITEM_SIZE, REPORT_QUEUE_LEN);
 }
