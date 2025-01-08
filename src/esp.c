@@ -8,6 +8,7 @@
 #include "power.h"
 
 void esp_enable(bool state) {
+    info("ESP: enable=%i\n", state);
     gpio_put(PIN_ESP_ENABLE, state);
 }
 

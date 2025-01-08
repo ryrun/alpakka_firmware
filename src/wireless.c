@@ -83,14 +83,12 @@ void wireless_init(bool dongle) {
         info("INIT: RF controller\n");
     }
     // Boot pin.
-    bool boot = false;
-    info("RF: ESP boot=%i\n", boot);
     gpio_init(PIN_ESP_BOOT);
     gpio_set_dir(PIN_ESP_BOOT, GPIO_OUT);
-    gpio_put(PIN_ESP_BOOT, boot);
+    gpio_put(PIN_ESP_BOOT, false);
     // Power enable pin.
     bool enable = false;
-    info("RF: ESP enable=%i\n", enable);
+    info("ESP: enable=%i\n", enable);
     gpio_init(PIN_ESP_ENABLE);
     gpio_set_dir(PIN_ESP_ENABLE, GPIO_OUT);
     gpio_put(PIN_ESP_ENABLE, enable);
@@ -99,9 +97,6 @@ void wireless_init(bool dongle) {
     uart_init(ESP_UART, ESP_BOOTLOADER_BAUD);
     gpio_set_function(PIN_UART1_TX, GPIO_FUNC_UART);
     gpio_set_function(PIN_UART1_RX, GPIO_FUNC_UART);
-    //
-    wireless_set_uart_data_mode(true);
-    // esp_restart(true);
 }
 
 void wireless_controller_task() {
