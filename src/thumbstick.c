@@ -126,6 +126,93 @@ uint8_t thumbstick_get_direction(float angle, float overlap) {
     return mask;
 }
 
+void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t index) {
+    const uint8_t SECTION_STICK_SETTINGS = index ? SECTION_RSTICK_SETTINGS : SECTION_LSTICK_SETTINGS;
+    const uint8_t SECTION_STICK_LEFT = index ? SECTION_RSTICK_LEFT : SECTION_LSTICK_LEFT;
+    const uint8_t SECTION_STICK_RIGHT = index ? SECTION_RSTICK_RIGHT : SECTION_LSTICK_RIGHT;
+    const uint8_t SECTION_STICK_UP = index ? SECTION_RSTICK_UP : SECTION_LSTICK_UP;
+    const uint8_t SECTION_STICK_DOWN = index ? SECTION_RSTICK_DOWN : SECTION_LSTICK_DOWN;
+    const uint8_t SECTION_STICK_UL = index ? SECTION_RSTICK_UL : SECTION_LSTICK_UL;
+    const uint8_t SECTION_STICK_UR = index ? SECTION_RSTICK_UR : SECTION_LSTICK_UR;
+    const uint8_t SECTION_STICK_DL = index ? SECTION_RSTICK_DL : SECTION_LSTICK_DL;
+    const uint8_t SECTION_STICK_DR = index ? SECTION_RSTICK_DR : SECTION_LSTICK_DR;
+    const uint8_t SECTION_STICK_PUSH = index ? SECTION_RSTICK_PUSH : SECTION_LSTICK_PUSH;
+    const uint8_t SECTION_STICK_INNER = index ? SECTION_RSTICK_INNER : SECTION_LSTICK_INNER;
+    const uint8_t SECTION_STICK_OUTER = index ? SECTION_RSTICK_OUTER : SECTION_LSTICK_OUTER;
+    const uint8_t PIN_PUSH = index ? PIN_R3 : PIN_L3;
+
+    CtrlThumbstick ctrl_thumbtick = ctrl->sections[SECTION_STICK_SETTINGS].thumbstick;
+    *thumbstick = Thumbstick_(
+        index,
+        index==0 ? PIN_THUMBSTICK_LX : PIN_THUMBSTICK_RX,
+        index==0 ? PIN_THUMBSTICK_LY : PIN_THUMBSTICK_RY,
+        index==0 ? false : true,
+        index==0 ? false : false,
+        ctrl_thumbtick.mode,
+        ctrl_thumbtick.distance_mode,
+        ctrl_thumbtick.deadzone_override,
+        ctrl_thumbtick.deadzone / 100.0,
+        ctrl_thumbtick.antideadzone / 100.0,
+        (int8_t)ctrl_thumbtick.overlap / 100.0,
+        ctrl_thumbtick.saturation / 100.0
+    );
+    if (ctrl_thumbtick.mode == THUMBSTICK_MODE_4DIR) {
+        thumbstick->config_4dir(
+            thumbstick,
+            Button_from_ctrl(PIN_VIRTUAL, ctrl->sections[SECTION_STICK_LEFT]),
+            Button_from_ctrl(PIN_VIRTUAL, ctrl->sections[SECTION_STICK_RIGHT]),
+            Button_from_ctrl(PIN_VIRTUAL, ctrl->sections[SECTION_STICK_UP]),
+            Button_from_ctrl(PIN_VIRTUAL, ctrl->sections[SECTION_STICK_DOWN]),
+            Button_from_ctrl(PIN_VIRTUAL, ctrl->sections[SECTION_STICK_INNER]),
+            Button_from_ctrl(PIN_VIRTUAL, ctrl->sections[SECTION_STICK_OUTER]),
+            Button_from_ctrl(PIN_PUSH,    ctrl->sections[SECTION_STICK_PUSH])
+        );
+    }
+    if (ctrl_thumbtick.mode == THUMBSTICK_MODE_8DIR) {
+        thumbstick->config_8dir(
+            thumbstick,
+            Button_from_ctrl(PIN_VIRTUAL,   ctrl->sections[SECTION_STICK_LEFT]),
+            Button_from_ctrl(PIN_VIRTUAL,   ctrl->sections[SECTION_STICK_RIGHT]),
+            Button_from_ctrl(PIN_VIRTUAL,   ctrl->sections[SECTION_STICK_UP]),
+            Button_from_ctrl(PIN_VIRTUAL,   ctrl->sections[SECTION_STICK_DOWN]),
+            Button_from_ctrl(PIN_VIRTUAL,   ctrl->sections[SECTION_STICK_UL]),
+            Button_from_ctrl(PIN_VIRTUAL,   ctrl->sections[SECTION_STICK_UR]),
+            Button_from_ctrl(PIN_VIRTUAL,   ctrl->sections[SECTION_STICK_DL]),
+            Button_from_ctrl(PIN_VIRTUAL,   ctrl->sections[SECTION_STICK_DR]),
+            Button_from_ctrl(PIN_PUSH,      ctrl->sections[SECTION_STICK_PUSH])
+        );
+    }
+    if (ctrl_thumbtick.mode == THUMBSTICK_MODE_ALPHANUMERIC) {
+        // Iterate sections.
+        for(uint8_t s=0; s<4; s++) {
+            // Iterate groups.
+            for(uint8_t g=0; g<11; g++) {
+                CtrlGlyph ctrl_glyph = ctrl->sections[SECTION_GLYPHS_0+s].glyphs.glyphs[g];
+                Glyph glyph = {0};
+                glyph_decode(glyph, ctrl_glyph.glyph);
+                thumbstick->config_glyphstick(
+                    thumbstick,
+                    ctrl_glyph.actions,
+                    glyph
+                );
+            }
+        }
+        uint8_t dir = 0;
+        // Iterate sections.
+        for(uint8_t s=0; s<4; s++) {
+            // Iterate groups.
+            for(uint8_t g=0; g<2; g++) {
+                CtrlDaisyGroup group = ctrl->sections[SECTION_DAISY_0+s].daisy.groups[g];
+                thumbstick->config_daisywheel(thumbstick, dir, 0, group.actions_a);
+                thumbstick->config_daisywheel(thumbstick, dir, 1, group.actions_b);
+                thumbstick->config_daisywheel(thumbstick, dir, 2, group.actions_x);
+                thumbstick->config_daisywheel(thumbstick, dir, 3, group.actions_y);
+                dir += 1;
+            }
+        }
+    }
+}
+
 // ============================================================================
 // Class.
 

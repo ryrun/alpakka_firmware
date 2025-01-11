@@ -6,6 +6,7 @@
 #include <string.h>
 #include "config.h"
 #include "profile.h"
+#include "thumbstick.h"
 #include "button.h"
 #include "bus.h"
 #include "glyph.h"
@@ -53,10 +54,13 @@ void Profile__report(Profile *self) {
     self->r2.report(&self->r2);
     self->l4.report(&self->l4);
     self->r4.report(&self->r4);
-    self->dhat.report(&self->dhat);
     self->rotary.report(&self->rotary);
     self->thumbstick0.report(&self->thumbstick0);
-    self->thumbstick1.report(&self->thumbstick1);
+    #if defined DEVICE_ALPAKKA_V0
+        self->dhat.report(&self->dhat);
+    #elif defined DEVICE_ALPAKKA_V1
+        self->thumbstick1.report(&self->thumbstick1);
+    #endif
     self->gyro.report(&self->gyro);
 }
 
@@ -106,18 +110,6 @@ void Profile__load_from_config(Profile *self, CtrlProfile *profile) {
     self->r2 =         Button_from_ctrl(PIN_R2,         profile->sections[SECTION_R2]);
     self->l4 =         Button_from_ctrl(PIN_L4,         profile->sections[SECTION_L4]);
     self->r4 =         Button_from_ctrl(PIN_R4,         profile->sections[SECTION_R4]);
-    // Dhat.
-    self->dhat = Dhat_(
-        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_DHAT_LEFT]),
-        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_DHAT_RIGHT]),
-        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_DHAT_UP]),
-        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_DHAT_DOWN]),
-        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_DHAT_UL]),
-        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_DHAT_UR]),
-        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_DHAT_DL]),
-        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_DHAT_DR]),
-        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_DHAT_PUSH])
-    );
     // Rotary.
     CtrlRotary up = profile->sections[SECTION_ROTARY_UP].rotary;
     CtrlRotary down = profile->sections[SECTION_ROTARY_DOWN].rotary;
@@ -128,129 +120,23 @@ void Profile__load_from_config(Profile *self, CtrlProfile *profile) {
     rotary.config_mode(&rotary, 3, up.actions_3, down.actions_3);
     rotary.config_mode(&rotary, 4, up.actions_4, down.actions_4);
     self->rotary = rotary;
-    // Thumbstick left.
-    CtrlThumbstick ctrl_thumbtick = profile->sections[SECTION_THUMBSTICK].thumbstick;
-    self->thumbstick0 = Thumbstick_(
-        0,  // Left.
-        PIN_THUMBSTICK_LX,
-        PIN_THUMBSTICK_LY,
-        false,
-        false,
-        ctrl_thumbtick.mode,
-        ctrl_thumbtick.distance_mode,
-        ctrl_thumbtick.deadzone_override,
-        ctrl_thumbtick.deadzone / 100.0,
-        ctrl_thumbtick.antideadzone / 100.0,
-        (int8_t)ctrl_thumbtick.overlap / 100.0,
-        1.0
+    // Thumbsticks.
+    thumbstick_from_ctrl(&(self->thumbstick0), profile, 0); // Left.
+    thumbstick_from_ctrl(&(self->thumbstick1), profile, 1); // Right.
+    // Dhat.
+    self->dhat = Dhat_(
+        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_RSTICK_LEFT]),
+        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_RSTICK_RIGHT]),
+        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_RSTICK_UP]),
+        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_RSTICK_DOWN]),
+        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_RSTICK_UL]),
+        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_RSTICK_UR]),
+        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_RSTICK_DL]),
+        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_RSTICK_DR]),
+        Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_RSTICK_PUSH])
     );
-    if (ctrl_thumbtick.mode == THUMBSTICK_MODE_4DIR) {
-        self->thumbstick0.config_4dir(
-            &(self->thumbstick0),
-            Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_THUMBSTICK_LEFT]),
-            Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_THUMBSTICK_RIGHT]),
-            Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_THUMBSTICK_UP]),
-            Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_THUMBSTICK_DOWN]),
-            Button_from_ctrl(PIN_L3,      profile->sections[SECTION_THUMBSTICK_PUSH]),
-            Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_THUMBSTICK_INNER]),
-            Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_THUMBSTICK_OUTER])
-        );
-    }
-    // TODO: mode 8dir
-    if (ctrl_thumbtick.mode == THUMBSTICK_MODE_ALPHANUMERIC) {
-        // Iterate sections.
-        for(uint8_t s=0; s<4; s++) {
-            // Iterate groups.
-            for(uint8_t g=0; g<11; g++) {
-                CtrlGlyph ctrl_glyph = profile->sections[SECTION_GLYPHS_0+s].glyphs.glyphs[g];
-                Glyph glyph = {0};
-                glyph_decode(glyph, ctrl_glyph.glyph);
-                self->thumbstick0.config_glyphstick(
-                    &(self->thumbstick0),
-                    ctrl_glyph.actions,
-                    glyph
-                );
-            }
-        }
-        uint8_t dir = 0;
-        // Iterate sections.
-        for(uint8_t s=0; s<4; s++) {
-            // Iterate groups.
-            for(uint8_t g=0; g<2; g++) {
-                CtrlDaisyGroup group = profile->sections[SECTION_DAISY_0+s].daisy.groups[g];
-                self->thumbstick0.config_daisywheel(&(self->thumbstick0), dir, 0, group.actions_a);
-                self->thumbstick0.config_daisywheel(&(self->thumbstick0), dir, 1, group.actions_b);
-                self->thumbstick0.config_daisywheel(&(self->thumbstick0), dir, 2, group.actions_x);
-                self->thumbstick0.config_daisywheel(&(self->thumbstick0), dir, 3, group.actions_y);
-                dir += 1;
-            }
-        }
-    }
-    // Thumbstick right.
-    // CtrlThumbstick ctrl_thumbtick = profile->sections[SECTION_THUMBSTICK].thumbstick;
-    // TODO: real saturation from profile
-    CtrlButton ctrl_dhat_left = profile->sections[SECTION_DHAT_LEFT].button;
-    bool is_8dir = ctrl_dhat_left.actions[0] == KEY_1;
-    if (!is_8dir) { // TODO: Fix.
-        self->thumbstick1 = Thumbstick_(
-            1,  // Right.
-            PIN_THUMBSTICK_RX,
-            PIN_THUMBSTICK_RY,
-            true,
-            false,
-            THUMBSTICK_MODE_4DIR,
-            THUMBSTICK_DISTANCE_AXIAL,
-            true, // ctrl_thumbtick.deadzone_override,
-            0.2,  // ctrl_thumbtick.deadzone / 100.0,
-            ctrl_thumbtick.antideadzone / 100.0,
-            0.5,  // (int8_t)ctrl_thumbtick.overlap / 100.0
-            0.7  // Saturation
-        );
-    } else {
-        self->thumbstick1 = Thumbstick_(
-            1,  // Right.
-            PIN_THUMBSTICK_RX,
-            PIN_THUMBSTICK_RY,
-            true,
-            false,
-            THUMBSTICK_MODE_8DIR,
-            0,
-            true, // ctrl_thumbtick.deadzone_override,
-            0.9, // ctrl_thumbtick.deadzone / 100.0,
-            ctrl_thumbtick.antideadzone / 100.0,
-            0.5,  // (int8_t)ctrl_thumbtick.overlap / 100.0
-            0.7  // Saturation
-        );
-    }
-    if (!is_8dir /*is_8dirctrl_thumbtick.mode == THUMBSTICK_MODE_4DIR*/) {
-        Actions actions_none = {0, 0, 0, 0};
-        self->thumbstick1.config_4dir(
-            &(self->thumbstick1),
-            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_LEFT]),
-            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_RIGHT]),
-            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_UP]),
-            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_DOWN]),
-            Button_from_ctrl(PIN_DHAT_PUSH, profile->sections[SECTION_DHAT_PUSH]),
-            Button_(PIN_NONE, NORMAL, actions_none, actions_none, actions_none), // Inner.
-            Button_(PIN_NONE, NORMAL, actions_none, actions_none, actions_none) // Outer.
-        );
-    }
-    if (is_8dir /*is_8dirctrl_thumbtick.mode == THUMBSTICK_MODE_4DIR*/) {
-        self->thumbstick1.config_8dir(
-            &(self->thumbstick1),
-            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_LEFT]),
-            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_RIGHT]),
-            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_UP]),
-            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_DOWN]),
-            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_UL]),
-            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_UR]),
-            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_DL]),
-            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_DR]),
-            Button_from_ctrl(PIN_DHAT_PUSH, profile->sections[SECTION_DHAT_PUSH])
-        );
-    }
     // Gyro.
-    CtrlGyro ctrl_gyro = profile->sections[SECTION_GYRO].gyro;
+    CtrlGyro ctrl_gyro = profile->sections[SECTION_GYRO_SETTINGS].gyro;
     CtrlGyroAxis ctrl_gyro_x = profile->sections[SECTION_GYRO_X].gyro_axis;
     CtrlGyroAxis ctrl_gyro_y = profile->sections[SECTION_GYRO_Y].gyro_axis;
     CtrlGyroAxis ctrl_gyro_z = profile->sections[SECTION_GYRO_Z].gyro_axis;

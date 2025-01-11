@@ -118,3 +118,4 @@ void thumbstick_init();
 void thumbstick_report();
 void thumbstick_calibrate();
 void thumbstick_update_deadzone();
+void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t index);

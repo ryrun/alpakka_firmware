@@ -91,7 +91,7 @@ Dhat Dhat_ (
     dhat.right = Button_(PIN_DHAT_RIGHT, NORMAL, none, none, none);
     dhat.up =    Button_(PIN_DHAT_UP,    NORMAL, none, none, none);
     dhat.down =  Button_(PIN_DHAT_DOWN,  NORMAL, none, none, none);
-    dhat.push =  Button_(PIN_DHAT_PUSH,  NORMAL, none, none, none);
+    dhat.push =  Button_(PIN_R3,         NORMAL, none, none, none);
     // Virtual buttons.
     dhat.up_left = up_left;
     dhat.up_center = up_center;
