@@ -156,6 +156,7 @@ void Profile__load_from_config(Profile *self, CtrlProfile *profile) {
             Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_THUMBSTICK_OUTER])
         );
     }
+    // TODO: mode 8dir
     if (ctrl_thumbtick.mode == THUMBSTICK_MODE_ALPHANUMERIC) {
         // Iterate sections.
         for(uint8_t s=0; s<4; s++) {
@@ -189,23 +190,39 @@ void Profile__load_from_config(Profile *self, CtrlProfile *profile) {
     // CtrlThumbstick ctrl_thumbtick = profile->sections[SECTION_THUMBSTICK].thumbstick;
     // TODO: real saturation from profile
     CtrlButton ctrl_dhat_left = profile->sections[SECTION_DHAT_LEFT].button;
-    float deadzone = 0.15;
-    if (ctrl_dhat_left.actions[0] == KEY_1) deadzone = 0.65; // TODO: Remove this hack.
-    self->thumbstick1 = Thumbstick_(
-        1,  // Right.
-        PIN_THUMBSTICK_RX,
-        PIN_THUMBSTICK_RY,
-        true,
-        false,
-        ctrl_thumbtick.mode,
-        ctrl_thumbtick.distance_mode,
-        true, // ctrl_thumbtick.deadzone_override,
-        deadzone,  // ctrl_thumbtick.deadzone / 100.0,
-        ctrl_thumbtick.antideadzone / 100.0,
-        -0.5,  // (int8_t)ctrl_thumbtick.overlap / 100.0
-        0.7
-    );
-    if (ctrl_thumbtick.mode == THUMBSTICK_MODE_4DIR) {
+    bool is_8dir = ctrl_dhat_left.actions[0] == KEY_1;
+    if (!is_8dir) { // TODO: Fix.
+        self->thumbstick1 = Thumbstick_(
+            1,  // Right.
+            PIN_THUMBSTICK_RX,
+            PIN_THUMBSTICK_RY,
+            true,
+            false,
+            THUMBSTICK_MODE_4DIR,
+            THUMBSTICK_DISTANCE_AXIAL,
+            true, // ctrl_thumbtick.deadzone_override,
+            0.2,  // ctrl_thumbtick.deadzone / 100.0,
+            ctrl_thumbtick.antideadzone / 100.0,
+            0.5,  // (int8_t)ctrl_thumbtick.overlap / 100.0
+            0.7  // Saturation
+        );
+    } else {
+        self->thumbstick1 = Thumbstick_(
+            1,  // Right.
+            PIN_THUMBSTICK_RX,
+            PIN_THUMBSTICK_RY,
+            true,
+            false,
+            THUMBSTICK_MODE_8DIR,
+            0,
+            true, // ctrl_thumbtick.deadzone_override,
+            0.9, // ctrl_thumbtick.deadzone / 100.0,
+            ctrl_thumbtick.antideadzone / 100.0,
+            0.5,  // (int8_t)ctrl_thumbtick.overlap / 100.0
+            0.7  // Saturation
+        );
+    }
+    if (!is_8dir /*is_8dirctrl_thumbtick.mode == THUMBSTICK_MODE_4DIR*/) {
         Actions actions_none = {0, 0, 0, 0};
         self->thumbstick1.config_4dir(
             &(self->thumbstick1),
@@ -216,6 +233,20 @@ void Profile__load_from_config(Profile *self, CtrlProfile *profile) {
             Button_from_ctrl(PIN_DHAT_PUSH, profile->sections[SECTION_DHAT_PUSH]),
             Button_(PIN_NONE, NORMAL, actions_none, actions_none, actions_none), // Inner.
             Button_(PIN_NONE, NORMAL, actions_none, actions_none, actions_none) // Outer.
+        );
+    }
+    if (is_8dir /*is_8dirctrl_thumbtick.mode == THUMBSTICK_MODE_4DIR*/) {
+        self->thumbstick1.config_8dir(
+            &(self->thumbstick1),
+            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_LEFT]),
+            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_RIGHT]),
+            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_UP]),
+            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_DOWN]),
+            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_UL]),
+            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_UR]),
+            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_DL]),
+            Button_from_ctrl(PIN_VIRTUAL,   profile->sections[SECTION_DHAT_DR]),
+            Button_from_ctrl(PIN_DHAT_PUSH, profile->sections[SECTION_DHAT_PUSH])
         );
     }
     // Gyro.

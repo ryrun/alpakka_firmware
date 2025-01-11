@@ -62,10 +62,6 @@
 #define CFG_HOLD_LONG_TIME 2000  // Milliseconds.
 #define CFG_DOUBLE_PRESS_TIME 300  // Milliseconds.
 
-#define CFG_THUMBSTICK_SATURATION 1.6
-#define CFG_THUMBSTICK_INNER_RADIUS 0.75
-#define CFG_THUMBSTICK_ADDITIONAL_DEADZONE_FOR_BUTTONS 0.05
-
 #define CFG_DHAT_DEBOUNCE_TIME 100  // Milliseconds.
 
 typedef struct __packed _Config {

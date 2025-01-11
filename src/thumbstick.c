@@ -30,10 +30,20 @@ Button daisy_b;
 Button daisy_x;
 Button daisy_y;
 
-float thumbstick_adc(uint8_t pin, float offset) {
-    adc_select_input(pin - 26);
-    float value = (float)adc_read() - BIT_11;
-    return (value - offset) * CFG_THUMBSTICK_SATURATION;
+float smoothed[4] = {0, 0, 0, 0};
+
+float thumbstick_adc(uint8_t pin, float offset, bool smooth) {
+    uint8_t index = pin - 26;
+    adc_select_input(index);
+    float value = ((float)adc_read() - BIT_11) / BIT_11;
+    value = (value - offset) * THUMBSTICK_BASELINE_SATURATION;
+    if (smooth) {
+        float factor = 8 - (fabs(value - smoothed[index])) * 8;
+        factor = constrain(factor, 1, 8);
+        value = (value + (smoothed[index] * (factor - 1))) / factor;
+        smoothed[index] = value;
+    }
+    return value;
 }
 
 void thumbstick_update_deadzone() {
@@ -54,8 +64,8 @@ void thumbstick_calibrate_each(uint8_t pin_x, uint8_t pin_y, float *result_x, fl
     float x = 0;
     float y = 0;
     for(uint32_t i=0; i<CFG_CALIBRATION_SAMPLES_THUMBSTICK; i++) {
-        x += thumbstick_adc(pin_x, 0.0);
-        y += thumbstick_adc(pin_y, 0.0);
+        x += thumbstick_adc(pin_x, 0.0, false);
+        y += thumbstick_adc(pin_y, 0.0, false);
     }
     x /= CFG_CALIBRATION_SAMPLES_THUMBSTICK;
     y /= CFG_CALIBRATION_SAMPLES_THUMBSTICK;
@@ -138,13 +148,36 @@ void Thumbstick__config_4dir(
     self->outer = outer;
 }
 
-void Thumbstick__report_axial(
+void Thumbstick__config_8dir(
+    Thumbstick *self,
+    Button left,
+    Button right,
+    Button up,
+    Button down,
+    Button ul,
+    Button ur,
+    Button dl,
+    Button dr,
+    Button push
+) {
+    self->left = left;
+    self->right = right;
+    self->up = up;
+    self->down = down;
+    self->ul = ul;
+    self->ur = ur;
+    self->dl = dl;
+    self->dr = dr;
+    self->push = push;
+}
+
+void Thumbstick__report_4dir_axial(
     Thumbstick *self,
     ThumbstickPosition pos
 ) {
     // Evaluate virtual buttons.
-    if (pos.radius > CFG_THUMBSTICK_ADDITIONAL_DEADZONE_FOR_BUTTONS) {
-        if (pos.radius < CFG_THUMBSTICK_INNER_RADIUS) self->inner.virtual_press = true;
+    if (pos.radius > THUMBSTICK_ADDITIONAL_DEADZONE_FOR_BUTTONS) {
+        if (pos.radius < THUMBSTICK_INNER_RADIUS) self->inner.virtual_press = true;
         else self->outer.virtual_press = true;
         uint8_t direction = thumbstick_get_direction(pos.angle, self->overlap);
         if (direction & DIR4_MASK_LEFT)  self->left.virtual_press = true;
@@ -172,7 +205,36 @@ void Thumbstick__report_axial(
     self->push.report(&self->push);
 }
 
-void Thumbstick__report_radial(Thumbstick *self, ThumbstickPosition pos) {
+void Thumbstick__report_8dir(
+    Thumbstick *self,
+    ThumbstickPosition pos
+) {
+    // Evaluate virtual buttons.
+    if (pos.radius > THUMBSTICK_ADDITIONAL_DEADZONE_FOR_BUTTONS) {
+        uint8_t direction = thumbstick_get_direction(pos.angle, self->overlap);
+        if      (direction == DIR4_MASK_LEFT)  self->left.virtual_press = true;
+        else if (direction == DIR4_MASK_RIGHT) self->right.virtual_press = true;
+        else if (direction == DIR4_MASK_UP)    self->up.virtual_press = true;
+        else if (direction == DIR4_MASK_DOWN)  self->down.virtual_press = true;
+        else if (direction == (DIR4_MASK_UP   + DIR4_MASK_LEFT))  self->ul.virtual_press = true;
+        else if (direction == (DIR4_MASK_UP   + DIR4_MASK_RIGHT)) self->ur.virtual_press = true;
+        else if (direction == (DIR4_MASK_DOWN + DIR4_MASK_LEFT))  self->dl.virtual_press = true;
+        else if (direction == (DIR4_MASK_DOWN + DIR4_MASK_RIGHT)) self->dr.virtual_press = true;
+    }
+    // Report directional virtual buttons.
+    self->left.report(&self->left);
+    self->right.report(&self->right);
+    self->up.report(&self->up);
+    self->down.report(&self->down);
+    self->ul.report(&self->ul);
+    self->ur.report(&self->ur);
+    self->dl.report(&self->dl);
+    self->dr.report(&self->dr);
+    // Report push.
+    self->push.report(&self->push);
+}
+
+void Thumbstick__report_4dir_radial(Thumbstick *self, ThumbstickPosition pos) {
     uint8_t direction = thumbstick_get_direction(pos.angle, self->overlap);
     thumbstick_report_axis(self->left.actions[0],  (direction & DIR4_MASK_LEFT)  ? pos.radius : 0);
     thumbstick_report_axis(self->right.actions[0], (direction & DIR4_MASK_RIGHT) ? pos.radius : 0);
@@ -291,10 +353,10 @@ void Thumbstick__report(Thumbstick *self) {
     // Do not report if not calibrated.
     if (offset_x == 0 && offset_y == 0) return;
     // Get values from ADC.
-    float x = thumbstick_adc(self->pin_x, offset_x);
-    float y = thumbstick_adc(self->pin_y, offset_y);
-    x = (x / BIT_11) / self->saturation;
-    y = (y / BIT_11) / self->saturation;
+    float x = thumbstick_adc(self->pin_x, offset_x, true);
+    float y = thumbstick_adc(self->pin_y, offset_y, true);
+    x /= self->saturation;
+    y /= self->saturation;
     x = constrain(x, -1, 1) * (self->invert_x? -1 : 1);
     y = constrain(y, -1, 1) * (self->invert_y? -1 : 1);
     // Get correct deadzone.
@@ -315,13 +377,18 @@ void Thumbstick__report(Thumbstick *self) {
     // Report.
     if (self->mode == THUMBSTICK_MODE_4DIR) {
         if (self->distance_mode == THUMBSTICK_DISTANCE_AXIAL) {
-            self->report_axial(self, pos);
+            self->report_4dir_axial(self, pos);
         }
         if (self->distance_mode == THUMBSTICK_DISTANCE_RADIAL) {
-            self->report_radial(self, pos);
+            self->report_4dir_radial(self, pos);
         }
     }
-    else if (self->mode == THUMBSTICK_MODE_ALPHANUMERIC) self->report_alphanumeric(self, pos);
+    else if (self->mode == THUMBSTICK_MODE_8DIR) {
+        self->report_8dir(self, pos);
+    }
+    else if (self->mode == THUMBSTICK_MODE_ALPHANUMERIC) {
+        self->report_alphanumeric(self, pos);
+    }
 }
 
 void Thumbstick__reset(Thumbstick *self) {
@@ -353,11 +420,13 @@ Thumbstick Thumbstick_ (
     Thumbstick thumbstick;
     // Methods.
     thumbstick.report = Thumbstick__report;
-    thumbstick.report_axial = Thumbstick__report_axial;
-    thumbstick.report_radial = Thumbstick__report_radial;
+    thumbstick.report_4dir_axial = Thumbstick__report_4dir_axial;
+    thumbstick.report_4dir_radial = Thumbstick__report_4dir_radial;
+    thumbstick.report_8dir = Thumbstick__report_8dir;
     thumbstick.report_alphanumeric = Thumbstick__report_alphanumeric;
     thumbstick.reset = Thumbstick__reset;
     thumbstick.config_4dir = Thumbstick__config_4dir;
+    thumbstick.config_8dir = Thumbstick__config_8dir;
     thumbstick.config_glyphstick = Thumbstick__config_glyphstick;
     thumbstick.report_glyphstick = Thumbstick__report_glyphstick;
     thumbstick.config_daisywheel = Thumbstick__config_daisywheel;
