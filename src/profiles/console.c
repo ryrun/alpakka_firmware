@@ -133,7 +133,7 @@ void config_profile_default_console(CtrlProfile *profile){
         .saturation=70,
         .overlap=50,
         .deadzone_override=true,
-        .deadzone=80,
+        .deadzone=60,
     };
     profile->sections[SECTION_RSTICK_LEFT].button = (CtrlButton){
         .mode=NORMAL,

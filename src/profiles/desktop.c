@@ -117,7 +117,7 @@ void config_profile_default_desktop(CtrlProfile *profile){
         .saturation=70,
         .overlap=50,
         .deadzone_override=true,
-        .deadzone=80,
+        .deadzone=60,
     };
     profile->sections[SECTION_RSTICK_UL].button = (CtrlButton){
         .mode=NORMAL,

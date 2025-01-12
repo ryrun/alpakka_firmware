@@ -38,8 +38,8 @@ float thumbstick_adc(uint8_t pin, float offset, bool smooth) {
     float value = ((float)adc_read() - BIT_11) / BIT_11;
     value = (value - offset) * THUMBSTICK_BASELINE_SATURATION;
     if (smooth) {
-        float factor = 8 - (fabs(value - smoothed[index])) * 8;
-        factor = constrain(factor, 1, 8);
+        float factor = ADC_SMOOTH_THRESHOLD - fabs(value - smoothed[index]);
+        factor = constrain(factor * ADC_SMOOTH_MAX, 1, ADC_SMOOTH_MAX);
         value = (value + (smoothed[index] * (factor - 1))) / factor;
         smoothed[index] = value;
     }
@@ -448,6 +448,7 @@ void Thumbstick__report(Thumbstick *self) {
     y = constrain(y, -1, 1) * (self->invert_y? -1 : 1);
     // Get correct deadzone.
     float deadzone = self->deadzone_override ? self->deadzone : config_deadzone;
+    deadzone /= self->saturation;
     // Calculate trigonometry.
     float angle = atan2(x, -y) * (180 / M_PI);
     float radius = sqrt(powf(x, 2) + powf(y, 2));
