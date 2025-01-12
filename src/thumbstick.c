@@ -154,7 +154,7 @@ void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t ind
         ctrl_thumbtick.deadzone / 100.0,
         ctrl_thumbtick.antideadzone / 100.0,
         (int8_t)ctrl_thumbtick.overlap / 100.0,
-        ctrl_thumbtick.saturation / 100.0
+        ctrl_thumbtick.saturation > 0 ? ctrl_thumbtick.saturation / 100.0 : 1.0
     );
     if (ctrl_thumbtick.mode == THUMBSTICK_MODE_4DIR) {
         thumbstick->config_4dir(
@@ -163,9 +163,9 @@ void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t ind
             Button_from_ctrl(PIN_VIRTUAL, ctrl->sections[SECTION_STICK_RIGHT]),
             Button_from_ctrl(PIN_VIRTUAL, ctrl->sections[SECTION_STICK_UP]),
             Button_from_ctrl(PIN_VIRTUAL, ctrl->sections[SECTION_STICK_DOWN]),
+            Button_from_ctrl(PIN_PUSH,    ctrl->sections[SECTION_STICK_PUSH]),
             Button_from_ctrl(PIN_VIRTUAL, ctrl->sections[SECTION_STICK_INNER]),
-            Button_from_ctrl(PIN_VIRTUAL, ctrl->sections[SECTION_STICK_OUTER]),
-            Button_from_ctrl(PIN_PUSH,    ctrl->sections[SECTION_STICK_PUSH])
+            Button_from_ctrl(PIN_VIRTUAL, ctrl->sections[SECTION_STICK_OUTER])
         );
     }
     if (ctrl_thumbtick.mode == THUMBSTICK_MODE_8DIR) {
