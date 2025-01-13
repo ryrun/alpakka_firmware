@@ -71,11 +71,19 @@ Vector imu_read_gyro_bits(uint8_t cs) {
     double offset_x = (cs==PIN_SPI_CS0) ? offset_gyro_0_x : offset_gyro_1_x;
     double offset_y = (cs==PIN_SPI_CS0) ? offset_gyro_0_y : offset_gyro_1_y;
     double offset_z = (cs==PIN_SPI_CS0) ? offset_gyro_0_z : offset_gyro_1_z;
-    return (Vector){
-        (double)x - offset_x,
-        (double)y - offset_y,
-        (double)z - offset_z,
-    };
+    #ifdef DEVICE_ALPAKKA_V0
+        return (Vector){
+            (double)x - offset_x,
+            (double)y - offset_y,
+            (double)z - offset_z,
+        };
+    #else /* DEVICE_ALPAKKA_V1 */
+        return (Vector){
+            (double)x - offset_x,
+            -(double)y - offset_y,
+            -(double)z - offset_z,
+        };
+    #endif
 }
 
 Vector imu_read_accel_bits(uint8_t cs) {
@@ -87,11 +95,19 @@ Vector imu_read_accel_bits(uint8_t cs) {
     double offset_x = (cs==PIN_SPI_CS0) ? offset_accel_0_x : offset_accel_1_x;
     double offset_y = (cs==PIN_SPI_CS0) ? offset_accel_0_y : offset_accel_1_y;
     double offset_z = (cs==PIN_SPI_CS0) ? offset_accel_0_z : offset_accel_1_z;
-    return (Vector){
-        (double)x - offset_x,
-        (double)y - offset_y,
-        (double)z - offset_z,
-    };
+    #ifdef DEVICE_ALPAKKA_V0
+        return (Vector){
+            (double)x - offset_x,
+            (double)y - offset_y,
+            (double)z - offset_z,
+        };
+    #else /* DEVICE_ALPAKKA_V1 */
+        return (Vector){
+            -(double)x - offset_x,
+            -(double)y - offset_y,
+            (double)z - offset_z,
+        };
+    #endif
 }
 
 Vector imu_read_gyro_burst(uint8_t cs, uint8_t samples) {
