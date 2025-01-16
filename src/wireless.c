@@ -62,21 +62,15 @@ void wireless_init(bool dongle) {
     } else {
         info("INIT: RF controller\n");
     }
-    // Boot pin.
-    gpio_init(PIN_ESP_BOOT);
-    gpio_set_dir(PIN_ESP_BOOT, GPIO_OUT);
-    gpio_put(PIN_ESP_BOOT, false);
-    // Power enable pin.
-    bool enable = false;
-    info("ESP: enable=%i\n", enable);
-    gpio_init(PIN_ESP_ENABLE);
-    gpio_set_dir(PIN_ESP_ENABLE, GPIO_OUT);
-    gpio_put(PIN_ESP_ENABLE, enable);
+    // Prepare ESP.
+    esp_init();
     // Secondary UART.
-    info("RF: UART1 init (%i)\n", ESP_BOOTLOADER_BAUD);
-    uart_init(ESP_UART, ESP_BOOTLOADER_BAUD);
-    gpio_set_function(PIN_UART1_TX, GPIO_FUNC_UART);
-    gpio_set_function(PIN_UART1_RX, GPIO_FUNC_UART);
+    #ifndef DEVICE_ALPAKKA_V0
+        info("RF: UART1 init (%i)\n", ESP_BOOTLOADER_BAUD);
+        uart_init(ESP_UART, ESP_BOOTLOADER_BAUD);
+        gpio_set_function(PIN_UART1_TX, GPIO_FUNC_UART);
+        gpio_set_function(PIN_UART1_RX, GPIO_FUNC_UART);
+    #endif
 }
 
 void wireless_controller_task() {

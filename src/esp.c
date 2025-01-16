@@ -7,21 +7,42 @@
 #include "pin.h"
 #include "power.h"
 
+void esp_init() {
+    #ifndef DEVICE_ALPAKKA_V0
+        // Boot pin.
+        gpio_init(PIN_ESP_BOOT);
+        gpio_set_dir(PIN_ESP_BOOT, GPIO_OUT);
+        gpio_put(PIN_ESP_BOOT, false);
+        // Power enable pin.
+        bool enable = false;
+        info("ESP: enable=%i\n", enable);
+        gpio_init(PIN_ESP_ENABLE);
+        gpio_set_dir(PIN_ESP_ENABLE, GPIO_OUT);
+        gpio_put(PIN_ESP_ENABLE, enable);
+    #endif
+}
+
 void esp_enable(bool state) {
     info("ESP: enable=%i\n", state);
-    gpio_put(PIN_ESP_ENABLE, state);
+    #ifndef DEVICE_ALPAKKA_V0
+        gpio_put(PIN_ESP_ENABLE, state);
+    #endif
 }
 
 void esp_restart() {
     esp_enable(false);
-    gpio_put(PIN_ESP_BOOT, true);
+    #ifndef DEVICE_ALPAKKA_V0
+        gpio_put(PIN_ESP_BOOT, true);
+    #endif
     sleep_ms(ESP_RESTART_SETTLE);
     esp_enable(true);
 }
 
 void esp_bootsel() {
     esp_enable(false);
-    gpio_put(PIN_ESP_BOOT, false);
+    #ifndef DEVICE_ALPAKKA_V0
+        gpio_put(PIN_ESP_BOOT, false);
+    #endif
     sleep_ms(ESP_RESTART_SETTLE);
     esp_enable(true);
 }
