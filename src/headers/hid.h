@@ -338,15 +338,4 @@ typedef struct __packed _GamepadReport {
     uint32_t buttons;
 } GamepadReport;
 
-typedef struct __packed _MetaReport {
-    KeyboardReport kb_report;
-    MouseReport m_report;
-    XInputReport x_report;
-    uint8_t kb_reports;
-    uint8_t m_reports;
-    uint8_t x_reports;
-    bool mouse_eot;  // Mouse End Of Transmission.
-} MetaReport;
-
-
 void hid_report_dongle(uint8_t report_id, uint8_t* payload);

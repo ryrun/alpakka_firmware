@@ -19,7 +19,7 @@
 static bool uart_data_mode = false;
 
 void wireless_send(uint8_t report_id, void *packet, uint8_t len) {
-    uint8_t control[4] = {16, 32, 64, 128};
+    uint8_t control[4] = UART_CONTROL_BYTES;
     uint8_t command[8] = {0,};
     uint8_t payload[32] = {0,};
     payload[0] = report_id;

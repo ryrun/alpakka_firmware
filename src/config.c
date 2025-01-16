@@ -6,7 +6,6 @@
 #include <string.h>
 #include <hardware/sync.h>
 #include <pico/unique_id.h>
-// #include <pico/sleep.h>
 #include "config.h"
 #include "nvm.h"
 #include "led.h"

@@ -46,6 +46,7 @@ void esp_bootsel() {
             .dont_initialize_peripheral = true,
         };
         loader_port_pi_pico_init(&config);
+        // See https://docs.espressif.com/projects/esptool/en/latest/esp32/esptool/flasher-stub.html
         uint32_t connect = connect_to_target_with_stub(ESP_FLASHER_BAUD, ESP_FLASHER_BAUD_MAX);
         if (connect != ESP_LOADER_SUCCESS) {
             error("RF: ESP flasher cannot connect (error=%li)\n", connect);

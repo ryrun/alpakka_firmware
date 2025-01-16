@@ -28,25 +28,22 @@
     #define PIN_LED_BOARD 25
     #define PIN_THUMBSTICK_LY 26
     #define PIN_THUMBSTICK_LX 27
-    #define I2C_CHANNEL i2c1
-    #define SPI_CHANNEL spi1
 #endif
 
 // Custom board.
 #if defined DEVICE_ALPAKKA_V1 || defined DEVICE_DONGLE || defined DEVICE_LLAMA
     #define PIN_LED_BOARD 3
-    #define PIN_SPI_CS1 4
-    #define PIN_SPI_CS0 5
-    #define PIN_LED_LEFT 6
-    #define PIN_LED_DOWN 7
-    #define PIN_LED_RIGHT 8
-    #define PIN_LED_UP 9
-    #define PIN_ROTARY_B 10
-    #define PIN_ROTARY_A 11
-    #define PIN_TOUCH_IN 12
-    #define PIN_TOUCH_OUT 13
-    // #define PIN_BATT_STAT_2 14
-    #define PIN_BATT_STAT_1 14
+    #define PIN_SPI_CS1 5
+    #define PIN_SPI_CS0 6
+    #define PIN_LED_LEFT 7
+    #define PIN_LED_DOWN 8
+    #define PIN_LED_RIGHT 9
+    #define PIN_LED_UP 10
+    #define PIN_ROTARY_B 11
+    #define PIN_ROTARY_A 12
+    #define PIN_TOUCH_IN 13
+    #define PIN_TOUCH_OUT 14
+    #define PIN_BATT_STAT_1 15
     #define PIN_SPI_RX 16
     #define PIN_ESP_BOOT 17
     #define PIN_SPI_CK 18
@@ -59,11 +56,11 @@
     #define PIN_ESP_ENABLE 25
     #define PIN_THUMBSTICK_LX 28
     #define PIN_THUMBSTICK_LY 29
-    #define I2C_CHANNEL i2c1
-    #define SPI_CHANNEL spi0
 #endif
 
 // IO EXPANSION 1.
+// Format 1XX.
+// Example: 104 means IO expander 1 pin 4.
 #define PIN_GROUP_IO_0 100
 #define PIN_GROUP_IO_0_END 199
 #define PIN_SELECT_1 114
@@ -80,6 +77,8 @@
 #define PIN_PCBGEN_1 113
 
 // IO EXPANSION 2.
+// Format 2XX.
+// Example: 204 means IO expander 2 pin 4.
 #define PIN_GROUP_IO_1 200
 #define PIN_GROUP_IO_1_END 249
 #define PIN_START_1 200

@@ -40,6 +40,9 @@ void power_dormant() {
     uint32_t event = IO_BANK0_DORMANT_WAKE_INTE0_GPIO0_LEVEL_LOW_BITS;
     gpio_set_dormant_irq_enabled(PIN_HOME, event, true);
     // Set watchdog to restart the controller after wake up.
+    // This will force the controller to restart immediately after waking up,
+    // which is much simpler than preparing all the clock sources to be
+    // correctly stopped and restored.
     watchdog_enable(100, false);
     // Go sleep.
     xosc_dormant();
