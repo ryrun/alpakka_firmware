@@ -105,7 +105,7 @@ target_sources(${PROJECT} PUBLIC
 
 if(DEVICE MATCHES "llama")
     set(PORT PI_PICO)
-    set(MD5_ENABLED 1)
+    set(MD5_ENABLED 1)  # For after-flashing hash verification.
     add_subdirectory("deps/esp-serial-flasher" ${CMAKE_BINARY_DIR}/flasher)
     target_link_libraries(${PROJECT} PRIVATE flasher)
     target_sources(${PROJECT} PUBLIC deps/esp-serial-flasher/examples/common/example_common.c)

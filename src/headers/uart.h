@@ -4,9 +4,10 @@
 #pragma once
 
 #define UART_RX_BUFFER_SIZE 1024
+#define UART_CONTROL_BYTES {16, 32, 64, 128}
 
-void uart_listen();
-void uart_listen_char_limited();
+void uart_listen_serial();
+void uart_listen_serial_limited();
 
 void uart_rx_buffer_init();
 bool uart_rx_buffer_is_empty();

@@ -74,37 +74,34 @@ static void set_wireless() {
     device_mode = WIRELESS;
 }
 
-static void battery_init() {
-    gpio_init(PIN_BATT_STAT_1);
-    // gpio_init(PIN_BATT_STAT_2);
-    gpio_pull_up(PIN_BATT_STAT_1);
-    // gpio_pull_up(PIN_BATT_STAT_2);
-    gpio_set_dir(PIN_BATT_STAT_1, GPIO_IN);
-    // gpio_set_dir(PIN_BATT_STAT_2, GPIO_IN);
+static void battery_stat_init() {
+    #ifndef DEVICE_ALPAKKA_V0
+        gpio_init(PIN_BATT_STAT_1);
+        gpio_pull_up(PIN_BATT_STAT_1);
+        gpio_set_dir(PIN_BATT_STAT_1, GPIO_IN);
+    #endif
 }
 
 static void board_led() {
-    static uint8_t i = 0;
-    static bool blink = false;
-    i++;
-    if (i == 100) {
-        i = 0;
-        bool stat1 = gpio_get(PIN_BATT_STAT_1);
-        // bool stat2 = gpio_get(PIN_BATT_STAT_2);
-        // info("%i %i\n", stat1, stat2);
-        if (!stat1) {
-            if (device_mode == WIRED) {
-                gpio_put(PIN_LED_BOARD, true);
-            }
-            if (device_mode == WIRELESS) {
-                blink = !blink;
-                gpio_put(PIN_LED_BOARD, blink);
-            }
-
-        } else {
-            gpio_put(PIN_LED_BOARD, false);
-        }
-    }
+    // TODO: redo with analog voltage read.
+    // static uint8_t i = 0;
+    // static bool blink = false;
+    // i++;
+    // if (i == 100) {
+    //     i = 0;
+    //     bool stat1 = gpio_get(PIN_BATT_STAT_1);
+    //     if (!stat1) {
+    //         if (device_mode == WIRED) {
+    //             gpio_put(PIN_LED_BOARD, true);
+    //         }
+    //         if (device_mode == WIRELESS) {
+    //             blink = !blink;
+    //             gpio_put(PIN_LED_BOARD, blink);
+    //         }
+    //     } else {
+    //         gpio_put(PIN_LED_BOARD, false);
+    //     }
+    // }
 }
 
 void loop_controller_init() {
@@ -124,14 +121,16 @@ void loop_controller_init() {
     rotary_init();
     imu_init();
     profile_init();
-    battery_init();
-    wireless_init(false);
+    battery_stat_init();
+    #ifndef DEVICE_ALPAKKA_V0
+        wireless_init(false);
+    #endif
     if (usb) {
         set_wired();
     } else {
         set_wireless();
     }
-    loop_cycle();
+    loop_run();
 }
 
 void loop_dongle_init() {
@@ -147,7 +146,7 @@ void loop_dongle_init() {
     bus_init();
     hid_init();
     wireless_init(true);
-    loop_cycle();
+    loop_run();
 }
 
 void loop_controller_task() {
@@ -170,7 +169,7 @@ void loop_controller_task() {
         if ((!(i % CFG_TICK_FREQUENCY)) && usb_is_connected()) set_wired();
     }
     // Listen to UART commands.
-    uart_listen();
+    uart_listen_serial();
     // Update state of board LED.
     board_led();
 }
@@ -182,7 +181,7 @@ void loop_dongle_task() {
         webusb_read();
         webusb_flush();
     }
-    uart_listen();
+    uart_listen_serial();
 }
 
 void loop_llama_init() {
@@ -192,7 +191,7 @@ void loop_llama_init() {
     esp_flash();
 }
 
-void loop_cycle() {
+void loop_run() {
     info("LOOP: Main loop start\n");
     uint16_t i = 0;
     logging_set_onloop(true);

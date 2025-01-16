@@ -307,6 +307,8 @@ bool hid_report_wireless();
 
 extern bool hid_allow_communication;
 
+#define HID_REPORT_PRIORITY_RATIO 8
+
 #define REPORT_KEYBOARD 1
 #define REPORT_MOUSE 2
 #define REPORT_GAMEPAD 3
@@ -341,16 +343,5 @@ typedef struct __packed _GamepadReport {
     int16_t rz;
     uint32_t buttons;
 } GamepadReport;
-
-typedef struct __packed _MetaReport {
-    KeyboardReport kb_report;
-    MouseReport m_report;
-    XInputReport x_report;
-    uint8_t kb_reports;
-    uint8_t m_reports;
-    uint8_t x_reports;
-    bool mouse_eot;  // Mouse End Of Transmission.
-} MetaReport;
-
 
 void hid_report_dongle(uint8_t report_id, uint8_t* payload);

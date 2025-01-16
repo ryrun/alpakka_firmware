@@ -18,27 +18,14 @@
 
 static bool uart_data_mode = false;
 
-
-// static void led_task() {
-//     static uint8_t i = 0;
-//     static bool led_state;
-//     i++;
-//     if (i==100) {
-//         led_board_set(led_state);
-//         led_state = !led_state;
-//         i = 0;
-//     }
-// }
-
 void wireless_send(uint8_t report_id, void *packet, uint8_t len) {
-    uint8_t control[4] = {16, 32, 64, 128};
+    uint8_t control[4] = UART_CONTROL_BYTES;
     uint8_t command[8] = {0,};
     uint8_t payload[32] = {0,};
     payload[0] = report_id;
     memcpy(&payload[1], packet, len);
     uart_write_blocking(ESP_UART, control, 4);
     uart_write_blocking(ESP_UART, payload, 32);
-    // printf(">");
 }
 
 static void cross_logging() {
@@ -48,13 +35,6 @@ static void cross_logging() {
         printf("%c", character);
     }
 }
-
-// static void uart_rx() {
-//     while(uart_is_readable(ESP_UART)) {
-//         char c = uart_getc(ESP_UART);
-//         printf("%i ", c);
-//     }
-// }
 
 void wireless_set_uart_data_mode(bool mode) {
     info("RF: data_mode=%i\n", mode);
@@ -82,26 +62,15 @@ void wireless_init(bool dongle) {
     } else {
         info("INIT: RF controller\n");
     }
-    // Boot pin.
-    bool boot = false;
-    info("RF: ESP boot=%i\n", boot);
-    gpio_init(PIN_ESP_BOOT);
-    gpio_set_dir(PIN_ESP_BOOT, GPIO_OUT);
-    gpio_put(PIN_ESP_BOOT, boot);
-    // Power enable pin.
-    bool enable = false;
-    info("RF: ESP enable=%i\n", enable);
-    gpio_init(PIN_ESP_ENABLE);
-    gpio_set_dir(PIN_ESP_ENABLE, GPIO_OUT);
-    gpio_put(PIN_ESP_ENABLE, enable);
+    // Prepare ESP.
+    esp_init();
     // Secondary UART.
-    info("RF: UART1 init (%i)\n", ESP_BOOTLOADER_BAUD);
-    uart_init(ESP_UART, ESP_BOOTLOADER_BAUD);
-    gpio_set_function(PIN_UART1_TX, GPIO_FUNC_UART);
-    gpio_set_function(PIN_UART1_RX, GPIO_FUNC_UART);
-    //
-    wireless_set_uart_data_mode(true);
-    // esp_restart(true);
+    #ifndef DEVICE_ALPAKKA_V0
+        info("RF: UART1 init (%i)\n", ESP_BOOTLOADER_BAUD);
+        uart_init(ESP_UART, ESP_BOOTLOADER_BAUD);
+        gpio_set_function(PIN_UART1_TX, GPIO_FUNC_UART);
+        gpio_set_function(PIN_UART1_RX, GPIO_FUNC_UART);
+    #endif
 }
 
 void wireless_controller_task() {

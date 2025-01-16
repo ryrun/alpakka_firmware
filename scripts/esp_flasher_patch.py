@@ -1,3 +1,10 @@
+'''
+This script removes all the stub bootloaders but the C2 (the ESP flasher
+library comes with ALL of them), and prepares the binary to be used by the
+Pico-SDK, most importantly enforcing that these arrays are used directly from
+flash rather than loading such large data into RAM.
+'''
+
 PATH = 'src/esp_stubs.c'
 
 # Read.

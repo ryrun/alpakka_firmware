@@ -19,6 +19,15 @@
 #define I2C_IO_REG_PULL 0x46
 #define I2C_IO_REG_PULL_DIR 0x48
 
+// Bus channels.
+#if defined DEVICE_ALPAKKA_V0
+    #define I2C_CHANNEL i2c1
+    #define SPI_CHANNEL spi1
+#elif defined DEVICE_ALPAKKA_V1 || defined DEVICE_DONGLE || defined DEVICE_LLAMA
+    #define I2C_CHANNEL i2c1
+    #define SPI_CHANNEL spi0
+#endif
+
 typedef enum Tristate_enum {
     TRIESTATE_FLOAT,
     TRIESTATE_DOWN,

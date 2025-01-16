@@ -302,10 +302,10 @@ void config_tune_update_leds() {
     if (config_tune_mode == PROC_TUNE_TOUCH_SENS) {
         led_static_mask(LED_RIGHT);
         if (config_cache.sens_touch == 0) led_blink_mask(LED_DOWN);
-        if (config_cache.sens_touch == 1) led_blink_mask(LED_DOWN + LED_LEFT);
-        if (config_cache.sens_touch == 2) led_blink_mask(LED_LEFT);
-        if (config_cache.sens_touch == 3) led_blink_mask(LED_LEFT + LED_UP);
-        if (config_cache.sens_touch == 4) led_blink_mask(LED_UP);
+        if (config_cache.sens_touch == 1) led_blink_mask(LED_LEFT);
+        if (config_cache.sens_touch == 2) led_blink_mask(LED_UP);
+        if (config_cache.sens_touch == 3) led_blink_mask(LED_LEFT + LED_DOWN);
+        if (config_cache.sens_touch == 4) led_blink_mask(LED_LEFT + LED_UP);
         led_set_mode(LED_MODE_BLINK);
     }
 }

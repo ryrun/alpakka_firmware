@@ -4,16 +4,13 @@
 #include "loop.h"
 
 int main() {
-    #ifdef DEVICE_ALPAKKA_V0
+    #if defined DEVICE_ALPAKKA_V0
         loop_controller_init();
-    #endif
-    #ifdef DEVICE_ALPAKKA_V1
+    #elif defined DEVICE_ALPAKKA_V1
         loop_controller_init();
-    #endif
-    #ifdef DEVICE_DONGLE
+    #elif defined DEVICE_DONGLE
         loop_dongle_init();
-    #endif
-    #ifdef DEVICE_LLAMA
+    #elif defined DEVICE_LLAMA
         loop_llama_init();
     #endif
 }

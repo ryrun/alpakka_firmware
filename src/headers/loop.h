@@ -22,4 +22,4 @@ DeviceMode loop_get_device_mode();
 void loop_controller_init();
 void loop_dongle_init();
 void loop_llama_init();
-void loop_cycle();
+void loop_run();

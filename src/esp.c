@@ -7,20 +7,42 @@
 #include "pin.h"
 #include "power.h"
 
+void esp_init() {
+    #ifndef DEVICE_ALPAKKA_V0
+        // Boot pin.
+        gpio_init(PIN_ESP_BOOT);
+        gpio_set_dir(PIN_ESP_BOOT, GPIO_OUT);
+        gpio_put(PIN_ESP_BOOT, false);
+        // Power enable pin.
+        bool enable = false;
+        info("ESP: enable=%i\n", enable);
+        gpio_init(PIN_ESP_ENABLE);
+        gpio_set_dir(PIN_ESP_ENABLE, GPIO_OUT);
+        gpio_put(PIN_ESP_ENABLE, enable);
+    #endif
+}
+
 void esp_enable(bool state) {
-    gpio_put(PIN_ESP_ENABLE, state);
+    info("ESP: enable=%i\n", state);
+    #ifndef DEVICE_ALPAKKA_V0
+        gpio_put(PIN_ESP_ENABLE, state);
+    #endif
 }
 
 void esp_restart() {
     esp_enable(false);
-    gpio_put(PIN_ESP_BOOT, true);
+    #ifndef DEVICE_ALPAKKA_V0
+        gpio_put(PIN_ESP_BOOT, true);
+    #endif
     sleep_ms(ESP_RESTART_SETTLE);
     esp_enable(true);
 }
 
 void esp_bootsel() {
     esp_enable(false);
-    gpio_put(PIN_ESP_BOOT, false);
+    #ifndef DEVICE_ALPAKKA_V0
+        gpio_put(PIN_ESP_BOOT, false);
+    #endif
     sleep_ms(ESP_RESTART_SETTLE);
     esp_enable(true);
 }
@@ -45,6 +67,7 @@ void esp_bootsel() {
             .dont_initialize_peripheral = true,
         };
         loader_port_pi_pico_init(&config);
+        // See https://docs.espressif.com/projects/esptool/en/latest/esp32/esptool/flasher-stub.html
         uint32_t connect = connect_to_target_with_stub(ESP_FLASHER_BAUD, ESP_FLASHER_BAUD_MAX);
         if (connect != ESP_LOADER_SUCCESS) {
             error("RF: ESP flasher cannot connect (error=%li)\n", connect);

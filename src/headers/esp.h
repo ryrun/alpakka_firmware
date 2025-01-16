@@ -14,6 +14,7 @@
 #define ESP_DATA_BAUD (115200 * 8)
 #define ESP_RESTART_SETTLE 100  // Milliseconds.
 
+void esp_init();
 void esp_enable(bool state);
 void esp_restart();
 void esp_bootsel();

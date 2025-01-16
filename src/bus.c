@@ -65,7 +65,7 @@ void bus_i2c_io_pcb_gen_determine() {
         // See https://github.com/inputlabs/alpakka_pcb/blob/main/generations.md
         config_set_pcb_gen(value_0);
     #elif defined DEVICE_ALPAKKA_V1
-        config_set_pcb_gen(1);
+        config_set_pcb_gen(0);
     #endif
 }
 

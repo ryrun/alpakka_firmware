@@ -12,7 +12,7 @@
 #include "power.h"
 #include "esp.h"
 
-void uart_listen_do(bool limited) {
+void uart_listen_serial_do(bool limited) {
     char input = getchar_timeout_us(0);
     if (input == 'R') {
         info("UART: Restart\n");
@@ -49,16 +49,16 @@ void uart_listen_do(bool limited) {
     }
 }
 
-void uart_listen() {
+void uart_listen_serial() {
     static uint16_t i = 0;
     i += 1;
     // Execute only once per second.
     if (i % CFG_TICK_FREQUENCY) return;
-    uart_listen_do(false);
+    uart_listen_serial_do(false);
 }
 
-void uart_listen_char_limited() {
-    uart_listen_do(true);
+void uart_listen_serial_limited() {
+    uart_listen_serial_do(true);
 }
 
 // Ring buffer since RP2040 hardware FIFO is only 32 bytes.
@@ -103,32 +103,3 @@ void uart_rx_irq_callback() {
         uart_rx_buffer_put(c);
     }
 }
-
-// LlamaMessage uart_llama_parse() {
-//     static uint8_t command[8] = {0,};
-//     static uint8_t payload[32] = {0,};
-//     static uint8_t i = 0;
-//     LlamaMessage llama = {};
-//     while(!uart_rx_buffer_is_empty()) {
-//         char c = uart_rx_buffer_get();
-//         if (i < 4) {
-//             // Check control bytes.
-//             if ((i==0 && c==16) || (i==1 && c==32) || (i==2 && c==64) || (i==3 && c==128))  {
-//                 i += 1;
-//             } else {
-//                 i = 0;
-//             }
-//         } else if (i < 12) {
-//             command[i-4] = c;
-//             i += 1;
-//         } else {
-//             payload[i-4-8] = c;
-//             i += 1;
-//             if (i == 4+8+32) {
-//                 i = 0;
-//                 llama.command
-//                 return
-//             }
-//         }
-//     }
-// }
