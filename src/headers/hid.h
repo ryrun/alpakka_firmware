@@ -303,6 +303,8 @@ bool hid_report_wireless();
 
 extern bool hid_allow_communication;
 
+#define HID_REPORT_PRIORITY_RATIO 8
+
 #define REPORT_KEYBOARD 1
 #define REPORT_MOUSE 2
 #define REPORT_GAMEPAD 3

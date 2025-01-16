@@ -29,7 +29,6 @@
 #endif
 
 #define CFG_IMU_TICK_SAMPLES 128  // Multi-sampling per pooling cycle.
-#define CFG_HID_REPORT_PRIORITY_RATIO 8
 
 #define CFG_TICK_INTERVAL_IN_MS  (1000 / CFG_TICK_FREQUENCY)
 #define CFG_TICK_INTERVAL_IN_US  (1000000 / CFG_TICK_FREQUENCY)
