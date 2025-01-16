@@ -14,6 +14,8 @@ else()
 endif()
 
 set(PROJECT alpakka)
+set(PICO_BOARD pico)
+
 project(${PROJECT} C CXX ASM)
 pico_sdk_init()
 
@@ -21,14 +23,29 @@ add_executable(${PROJECT}
     src/main.c
 )
 
-target_link_libraries(${PROJECT}
+if(DEFINED DEVICE)
+    if(DEVICE MATCHES "alpakka_v0")
+        target_compile_definitions(${PROJECT} PUBLIC DEVICE_ALPAKKA_V0=1)
+    elseif(DEVICE MATCHES "alpakka_v1")
+        target_compile_definitions(${PROJECT} PUBLIC DEVICE_ALPAKKA_V1=1)
+    elseif(DEVICE MATCHES "dongle")
+        target_compile_definitions(${PROJECT} PUBLIC DEVICE_DONGLE=1)
+    elseif(DEVICE MATCHES "llama")
+        target_compile_definitions(${PROJECT} PUBLIC DEVICE_LLAMA=1)
+    else()
+        message(FATAL_ERROR "Target device unknown")
+    endif()
+else()
+    message(FATAL_ERROR "Target device not defined")
+endif()
+
+target_link_libraries(${PROJECT} PRIVATE
     pico_stdlib
-    pico_rand
-    pico_multicore
     pico_time
     pico_unique_id
     pico_bootrom
     pico_bootsel_via_double_reset
+    pico_rand
     hardware_adc
     hardware_flash
     hardware_i2c
@@ -42,6 +59,7 @@ target_link_libraries(${PROJECT}
 target_include_directories(${PROJECT} PUBLIC
     src
     src/headers
+    deps
 )
 
 target_sources(${PROJECT} PUBLIC
@@ -51,13 +69,16 @@ target_sources(${PROJECT} PUBLIC
     src/config.c
     src/ctrl.c
     src/dhat.c
+    src/esp.c
     src/glyph.c
     src/gyro.c
     src/hid.c
     src/imu.c
     src/led.c
     src/logging.c
+    src/loop.c
     src/nvm.c
+    src/power.c
     src/profile.c
     src/profiles/console_legacy.c
     src/profiles/console.c
@@ -69,8 +90,8 @@ target_sources(${PROJECT} PUBLIC
     src/profiles/home.c
     src/profiles/racing.c
     src/profiles/rts.c
-    src/self_test.c
     src/rotary.c
+    src/self_test.c
     src/thanks.c
     src/thumbstick.c
     src/touch.c
@@ -78,8 +99,17 @@ target_sources(${PROJECT} PUBLIC
     src/uart.c
     src/vector.c
     src/webusb.c
+    src/wireless.c
     src/xinput.c
 )
+
+if(DEVICE MATCHES "llama")
+    set(PORT PI_PICO)
+    set(MD5_ENABLED 1)  # For after-flashing hash verification.
+    add_subdirectory("deps/esp-serial-flasher" ${CMAKE_BINARY_DIR}/flasher)
+    target_link_libraries(${PROJECT} PRIVATE flasher)
+    target_sources(${PROJECT} PUBLIC deps/esp-serial-flasher/examples/common/example_common.c)
+endif()
 
 pico_enable_stdio_uart(${PROJECT} 1)
 pico_add_extra_outputs(${PROJECT})

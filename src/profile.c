@@ -15,6 +15,7 @@
 #include "webusb.h"
 #include "logging.h"
 #include "common.h"
+#include "power.h"
 
 Profile profiles[PROFILE_SLOTS];
 uint8_t profile_active_index = -1;
@@ -271,7 +272,7 @@ void profile_reset_all() {
 }
 
 void profile_report_active() {
-    if (profile_pending_reboot && !home_is_active) config_reboot();
+    if (profile_pending_reboot && !home_is_active) power_restart();
     if (pending_reset) profile_reset_all();
     Profile* profile = profile_get_active(false);
     profile->report(profile);

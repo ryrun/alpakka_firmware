@@ -5,6 +5,7 @@
 #include "vector.h"
 
 // LSM6DSR
+#define IMU_READ 0b10000000  // Read byte.
 #define IMU_WHO_AM_I 0x0f  // Identifier address.
 #define IMU_CTRL1_XL 0x10  // Accelerometer config address.
 #define IMU_CTRL1_XL_2G 0b10100010  // Accelerometer config value for 2G range.

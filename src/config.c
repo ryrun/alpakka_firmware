@@ -5,12 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <hardware/sync.h>
-#include <hardware/watchdog.h>
-#include <pico/bootrom.h>
 #include <pico/unique_id.h>
 #include "config.h"
 #include "nvm.h"
 #include "led.h"
+#include "pin.h"
 #include "hid.h"
 #include "imu.h"
 #include "thumbstick.h"
@@ -19,6 +18,7 @@
 #include "webusb.h"
 #include "common.h"
 #include "logging.h"
+#include "power.h"
 
 // Config values.
 Config config_cache;
@@ -325,32 +325,23 @@ void config_tune(bool direction) {
     config_tune_update_leds();
 }
 
-void config_reboot() {
-    watchdog_enable(1, false);  // Reboot after 1 millisecond.
-    sleep_ms(10);  // Stall the exexution to avoid resetting the timer.
-}
-
-void config_bootsel() {
-    reset_usb_boot(0, 0);
-}
-
 void config_reset_factory() {
     info("NVM: Reset to factory defaults\n");
     config_profile_default_all();
     config_delete();
-    config_reboot();
+    power_restart();
 }
 
 void config_reset_config() {
     info("NVM: Reset config\n");
     config_delete();
-    config_reboot();
+    power_restart();
 }
 
 void config_reset_profiles() {
     info("NVM: Reset profiles\n");
     config_profile_default_all();
-    config_reboot();
+    power_restart();
 }
 
 void config_calibrate_execute() {
@@ -609,9 +600,9 @@ void config_init_profiles_from_nvm() {
 }
 
 void config_init() {
-    char pico_id[64];
-    pico_get_unique_board_id_string(pico_id, 64);
-    info("Pico UID: %s\n", pico_id);
+    char board_id[64];
+    pico_get_unique_board_id_string(board_id, 64);
+    info("Board UID: %s\n", board_id);
     info("INIT: Config\n");
     config_load();
     if (

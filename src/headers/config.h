@@ -22,10 +22,16 @@
 
 #define CFG_LED_BRIGHTNESS 0.2
 
-#define CFG_TICK_FREQUENCY 250  // Hz.
-#define CFG_TICK_INTERVAL  (1000 / CFG_TICK_FREQUENCY)
+#ifdef DEVICE_DONGLE
+    #define CFG_TICK_FREQUENCY 1000  // Hz.
+#else
+    #define CFG_TICK_FREQUENCY 250  // Hz.
+#endif
+
 #define CFG_IMU_TICK_SAMPLES 128  // Multi-sampling per pooling cycle.
-#define CFG_HID_REPORT_PRIORITY_RATIO 8
+
+#define CFG_TICK_INTERVAL_IN_MS  (1000 / CFG_TICK_FREQUENCY)
+#define CFG_TICK_INTERVAL_IN_US  (1000000 / CFG_TICK_FREQUENCY)
 
 #define NVM_SYNC_FREQUENCY  (CFG_TICK_FREQUENCY / 2)
 
@@ -35,9 +41,18 @@
 #define CFG_CALIBRATION_LONG_FACTOR 4
 
 #define CFG_GYRO_SENSITIVITY  pow(2, -9) * 1.45
-#define CFG_GYRO_SENSITIVITY_X  CFG_GYRO_SENSITIVITY * 1
-#define CFG_GYRO_SENSITIVITY_Y  CFG_GYRO_SENSITIVITY * 1
-#define CFG_GYRO_SENSITIVITY_Z  CFG_GYRO_SENSITIVITY * 1
+
+// TODO: Move this logic to IMU preprocessor.
+#if defined DEVICE_ALPAKKA_V0 || defined DEVICE_DONGLE || defined DEVICE_LLAMA
+    #define CFG_GYRO_SENSITIVITY_X  CFG_GYRO_SENSITIVITY * 1
+    #define CFG_GYRO_SENSITIVITY_Y  CFG_GYRO_SENSITIVITY * 1
+    #define CFG_GYRO_SENSITIVITY_Z  CFG_GYRO_SENSITIVITY * 1
+#elif defined DEVICE_ALPAKKA_V1
+    #define CFG_GYRO_SENSITIVITY_X  CFG_GYRO_SENSITIVITY * 1
+    #define CFG_GYRO_SENSITIVITY_Y  CFG_GYRO_SENSITIVITY * -1
+    #define CFG_GYRO_SENSITIVITY_Z  CFG_GYRO_SENSITIVITY * -1
+#endif
+
 #define CFG_MOUSE_WHEEL_DEBOUNCE 1000
 #define CFG_ACCEL_CORRECTION_SMOOTH 50  // Number of averaged samples for the correction vector.
 #define CFG_ACCEL_CORRECTION_RATE 0.0007  // How fast the correction is applied.
@@ -91,6 +106,7 @@ typedef struct __packed _Config {
 } Config;
 
 void config_init();
+void config_init_profiles();
 void config_sync();
 Config* config_read();
 void config_delete();
@@ -102,8 +118,6 @@ uint8_t config_get_protocol();
 void config_tune_set_mode(uint8_t mode);
 void config_tune(bool direction);
 void config_calibrate();
-void config_reboot();
-void config_bootsel();
 void config_reset_config();
 void config_reset_profiles();
 void config_reset_factory();
