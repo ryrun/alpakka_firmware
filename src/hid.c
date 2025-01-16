@@ -459,7 +459,6 @@ bool hid_report_gamepad(bool wired) {
     GamepadReport report = hid_get_gamepad_report();
     if (wired) tud_hid_report(REPORT_GAMEPAD, &report, sizeof(report));
     else wireless_send(REPORT_GAMEPAD, &report, sizeof(report));
-    hid_reset_gamepad();
     synced_gamepad = true;
     priority_gamepad = 0;
 }
@@ -468,7 +467,6 @@ bool hid_report_xinput(bool wired) {
     XInputReport report = hid_get_xinput_report();
     if (wired) xinput_send_report(&report);
     else wireless_send(REPORT_XINPUT, &report, sizeof(report));
-    hid_reset_gamepad();
     synced_gamepad = true;
     priority_gamepad = 0;
 }
@@ -505,6 +503,7 @@ bool hid_report_wired() {
             if (tud_suspended()) tud_remote_wakeup();
             hid_report_xinput(true);
         }
+        hid_reset_gamepad();
         return true;
     } else {
         return false;
@@ -520,6 +519,7 @@ bool hid_report_wireless() {
     if (device_to_report == REPORT_MOUSE) hid_report_mouse(false);
     if (device_to_report == REPORT_GAMEPAD) hid_report_gamepad(false);
     if (device_to_report == REPORT_XINPUT) hid_report_xinput(false);
+    hid_reset_gamepad();
 }
 
 void hid_report_dongle(uint8_t report_id, uint8_t* payload) {
