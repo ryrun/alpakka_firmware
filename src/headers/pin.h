@@ -3,9 +3,13 @@
 
 #pragma once
 
-// BOARD PINS
+// Groups.
 #define PIN_GROUP_BOARD 1
 #define PIN_GROUP_BOARD_END 99
+#define PIN_GROUP_IO_0 100
+#define PIN_GROUP_IO_0_END 199
+#define PIN_GROUP_IO_1 200
+#define PIN_GROUP_IO_1_END 249
 
 // Pico.
 #ifdef DEVICE_ALPAKKA_V0
@@ -28,6 +32,35 @@
     #define PIN_LED_BOARD 25
     #define PIN_THUMBSTICK_LY 26
     #define PIN_THUMBSTICK_LX 27
+    #define PIN_THUMBSTICK_RY 0
+    #define PIN_THUMBSTICK_RX 0
+    // Expanders.
+    #define PIN_SELECT_1 114
+    #define PIN_SELECT_2 113
+    #define PIN_DPAD_LEFT 104
+    #define PIN_DPAD_RIGHT 101
+    #define PIN_DPAD_UP 103
+    #define PIN_DPAD_DOWN 100
+    #define PIN_L1 102
+    #define PIN_L2 115
+    #define PIN_L3 112
+    #define PIN_L4 109
+    #define PIN_PCBGEN_0 111
+    #define PIN_PCBGEN_1 110
+    #define PIN_START_1 200
+    #define PIN_START_2 201
+    #define PIN_A 215
+    #define PIN_B 210
+    #define PIN_X 213
+    #define PIN_Y 211
+    #define PIN_DHAT_LEFT 203
+    #define PIN_DHAT_RIGHT 205
+    #define PIN_DHAT_UP 206
+    #define PIN_DHAT_DOWN 202
+    #define PIN_R1 212
+    #define PIN_R2 214
+    #define PIN_R3 204
+    #define PIN_R4 207
 #endif
 
 // Custom board.
@@ -58,45 +91,34 @@
     #define PIN_THUMBSTICK_RX 27
     #define PIN_THUMBSTICK_LX 28
     #define PIN_THUMBSTICK_LY 29
+    // Expanders.
+    #define PIN_SELECT_1 114
+    #define PIN_SELECT_2 110
+    #define PIN_DPAD_LEFT 104
+    #define PIN_DPAD_RIGHT 101
+    #define PIN_DPAD_UP 103
+    #define PIN_DPAD_DOWN 100
+    #define PIN_L1 102
+    #define PIN_L2 115
+    #define PIN_L3 109
+    #define PIN_L4 108
+    #define PIN_PCBGEN_0 111
+    #define PIN_PCBGEN_1 113
+    #define PIN_START_1 200
+    #define PIN_START_2 201
+    #define PIN_A 215
+    #define PIN_B 210
+    #define PIN_X 213
+    #define PIN_Y 211
+    #define PIN_DHAT_LEFT 203
+    #define PIN_DHAT_RIGHT 205
+    #define PIN_DHAT_UP 206
+    #define PIN_DHAT_DOWN 204
+    #define PIN_R1 212
+    #define PIN_R2 214
+    #define PIN_R3 202
+    #define PIN_R4 207
 #endif
-
-// IO EXPANSION 1.
-// Format 1XX.
-// Example: 104 means IO expander 1 pin 4.
-#define PIN_GROUP_IO_0 100
-#define PIN_GROUP_IO_0_END 199
-#define PIN_SELECT_1 114
-#define PIN_SELECT_2 110
-#define PIN_DPAD_LEFT 104
-#define PIN_DPAD_RIGHT 101
-#define PIN_DPAD_UP 103
-#define PIN_DPAD_DOWN 100
-#define PIN_L1 102
-#define PIN_L2 115
-#define PIN_L3 109
-#define PIN_L4 108
-#define PIN_PCBGEN_0 111
-#define PIN_PCBGEN_1 113
-
-// IO EXPANSION 2.
-// Format 2XX.
-// Example: 204 means IO expander 2 pin 4.
-#define PIN_GROUP_IO_1 200
-#define PIN_GROUP_IO_1_END 249
-#define PIN_START_1 200
-#define PIN_START_2 201
-#define PIN_A 215
-#define PIN_B 210
-#define PIN_X 213
-#define PIN_Y 211
-#define PIN_DHAT_LEFT 203
-#define PIN_DHAT_RIGHT 205
-#define PIN_DHAT_UP 206
-#define PIN_DHAT_DOWN 204
-#define PIN_R1 212
-#define PIN_R2 214
-#define PIN_R3 202
-#define PIN_R4 207
 
 // SPECIAL PINS.
 #define PIN_GROUP_SPECIAL 250
