@@ -32,17 +32,20 @@ Button daisy_y;
 
 float smoothed[4] = {0, 0, 0, 0};
 
-float thumbstick_adc(uint8_t pin, float offset, bool smooth) {
+float thumbstick_adc(uint8_t pin) {
     uint8_t index = pin - 26;
     adc_select_input(index);
     float value = ((float)adc_read() - BIT_11) / BIT_11;
-    value = (value - offset) * THUMBSTICK_BASELINE_SATURATION;
-    if (smooth) {
-        float factor = ADC_SMOOTH_THRESHOLD - fabs(value - smoothed[index]);
-        factor = constrain(factor * ADC_SMOOTH_MAX, 1, ADC_SMOOTH_MAX);
-        value = (value + (smoothed[index] * (factor - 1))) / factor;
-        smoothed[index] = value;
-    }
+    return value * THUMBSTICK_BASELINE_SATURATION;
+}
+
+float thumbstick_adc_smoothed(uint8_t pin) {
+    uint8_t index = pin - 26;
+    float value = thumbstick_adc(pin);
+    float factor = ADC_SMOOTH_THRESHOLD - fabs(value - smoothed[index]);
+    factor = constrain(factor * ADC_SMOOTH_MAX, 1, ADC_SMOOTH_MAX);
+    value = (value + (smoothed[index] * (factor - 1))) / factor;
+    smoothed[index] = value;
     return value;
 }
 
@@ -54,8 +57,8 @@ void thumbstick_update_deadzone() {
 void thumbstick_update_offsets() {
     Config *config = config_read();
     offset_lx = config->offset_ts_lx;
-    offset_ry = config->offset_ts_ly;
-    offset_lx = config->offset_ts_rx;
+    offset_ly = config->offset_ts_ly;
+    offset_rx = config->offset_ts_rx;
     offset_ry = config->offset_ts_ry;
 }
 
@@ -80,7 +83,9 @@ void thumbstick_calibrate() {
     float rx = 0;
     float ry = 0;
     thumbstick_calibrate_each(PIN_THUMBSTICK_LX, PIN_THUMBSTICK_LY, &lx, &ly);
-    thumbstick_calibrate_each(PIN_THUMBSTICK_RX, PIN_THUMBSTICK_RY, &rx, &ry);
+    #ifdef DEVICE_ALPAKKA_V1
+        thumbstick_calibrate_each(PIN_THUMBSTICK_RX, PIN_THUMBSTICK_RY, &rx, &ry);
+    #endif
     config_set_thumbstick_offset(lx, ly, rx, ry);
     thumbstick_update_offsets();
 }
@@ -90,8 +95,10 @@ void thumbstick_init() {
     adc_init();
     adc_gpio_init(PIN_THUMBSTICK_LX);
     adc_gpio_init(PIN_THUMBSTICK_LY);
-    adc_gpio_init(PIN_THUMBSTICK_RX);
-    adc_gpio_init(PIN_THUMBSTICK_RY);
+    #ifdef DEVICE_ALPAKKA_V1
+        adc_gpio_init(PIN_THUMBSTICK_RX);
+        adc_gpio_init(PIN_THUMBSTICK_RY);
+    #endif
     thumbstick_update_offsets();
     thumbstick_update_deadzone();
     // Alternative usage of ABXY while doing daisywheel.
@@ -435,13 +442,13 @@ void Thumbstick__report_alphanumeric(Thumbstick *self, ThumbstickPosition pos) {
 }
 
 void Thumbstick__report(Thumbstick *self) {
-    float offset_x = self->index==1 ? offset_lx : offset_rx;
-    float offset_y = self->index==1 ? offset_ly : offset_ry;
+    float offset_x = self->index==0 ? offset_lx : offset_rx;
+    float offset_y = self->index==0 ? offset_ly : offset_ry;
     // Do not report if not calibrated.
     if (offset_x == 0 && offset_y == 0) return;
     // Get values from ADC.
-    float x = thumbstick_adc(self->pin_x, offset_x, true);
-    float y = thumbstick_adc(self->pin_y, offset_y, true);
+    float x = thumbstick_adc_smoothed(self->pin_x) - offset_x;
+    float y = thumbstick_adc_smoothed(self->pin_y) - offset_y;
     x /= self->saturation;
     y /= self->saturation;
     x = constrain(x, -1, 1) * (self->invert_x? -1 : 1);
