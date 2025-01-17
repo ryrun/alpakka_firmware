@@ -63,16 +63,19 @@ void thumbstick_update_offsets() {
 }
 
 void thumbstick_calibrate_each(uint8_t pin_x, uint8_t pin_y, float *result_x, float *result_y) {
-    info("Thumbstick: calibrating...\n");
+    info("Thumbstick: calibrating axis...\n");
     float x = 0;
     float y = 0;
-    for(uint32_t i=0; i<CFG_CALIBRATION_SAMPLES_THUMBSTICK; i++) {
-        x += thumbstick_adc(pin_x, 0.0, false);
-        y += thumbstick_adc(pin_y, 0.0, false);
+    uint32_t nsamples = CFG_CALIBRATION_SAMPLES_THUMBSTICK;
+    info("| 0%%%*s100%% |\n", CFG_CALIBRATION_PROGRESS_BAR - 10, "");
+    for(uint32_t i=0; i<nsamples; i++) {
+        x += thumbstick_adc(pin_x);
+        y += thumbstick_adc(pin_y);
+        if (!(i % (nsamples / CFG_CALIBRATION_PROGRESS_BAR))) info("=");
     }
     x /= CFG_CALIBRATION_SAMPLES_THUMBSTICK;
     y /= CFG_CALIBRATION_SAMPLES_THUMBSTICK;
-    info("Thumbstick: calibration x=%f y=%f\n", x, y);
+    info("\nThumbstick: calibrated x=%.03f y=%.03f\n", x, y);
     *result_x = x;
     *result_y = y;
 }
