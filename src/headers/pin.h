@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-only
 // Copyright (C) 2022, Input Labs Oy.
 
+/*
+Pin numbers from 0 to 29 are RP2040 GPIOs.
+Pin numbers from 100 to 115 are IO Expander 1, from pin 0 to pin 15.
+Pin numbers from 200 to 215 are IO Expander 2, from pin 0 to pin 15.
+*/
+
 #pragma once
 
 // Groups.
