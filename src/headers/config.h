@@ -8,11 +8,16 @@
 #include "ctrl.h"
 #include "logging.h"
 
+#define MAJOR 1000 * 1000
+#define MINOR 1000
+#define PATCH 1
+
+#define NVM_CONFIG_VERSION  ((MAJOR * 1) + (MINOR * 0) + (PATCH * 0))
 #define NVM_CONTROL_BYTE 0b01010101
 #define NVM_CONFIG_ADDR 0x001D0000
 #define NVM_CONFIG_SIZE 256
-#define NVM_CONFIG_VERSION 98000
-#define NVM_PROFILE_VERSION 96000
+
+#define NVM_PROFILE_VERSION  ((MAJOR * 1) + (MINOR * 0) + (PATCH * 0))
 #define NVM_PROFILE_SIZE 4096
 #define NVM_PROFILE_SLOTS 14
 

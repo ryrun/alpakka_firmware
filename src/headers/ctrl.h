@@ -42,7 +42,7 @@ typedef enum Ctrl_cfg_type_enum {
 } Ctrl_cfg_type;
 
 typedef enum CtrlSectionType_enum {
-    // Unsorted indexes to increase backwards compatibility.
+    // Unsorted indexes to keep backwards compatibility.
     SECTION_META = 1,
     SECTION_A,
     SECTION_B,
