@@ -284,6 +284,36 @@
     HID_INPUT         ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
   HID_COLLECTION_END
 
+#define TUD_HID_REPORT_DESC_KEYBOARD_14KRO(...) \
+    HID_USAGE_PAGE ( HID_USAGE_PAGE_DESKTOP      )                   ,\
+    HID_USAGE      ( HID_USAGE_DESKTOP_KEYBOARD  )                   ,\
+    HID_COLLECTION ( HID_COLLECTION_APPLICATION  )                   ,\
+      /* Report ID if any */\
+      __VA_ARGS__ \
+      /* Modifier keys (8 bits) */ \
+      HID_USAGE_PAGE  ( HID_USAGE_PAGE_KEYBOARD  )                   ,\
+      HID_USAGE_MIN   ( 0xE0                                   ) ,\
+      HID_USAGE_MAX   ( 0xE7                                   ) ,\
+      HID_LOGICAL_MIN ( 0                                      ) ,\
+      HID_LOGICAL_MAX ( 1                                      ) ,\
+      HID_REPORT_COUNT( 8                                      ) ,\
+      HID_REPORT_SIZE ( 1                                      ) ,\
+      HID_INPUT       ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
+      /* Reserved (8 bits for alignment) */ \
+      HID_REPORT_COUNT( 1                                      ) ,\
+      HID_REPORT_SIZE ( 8                                      ) ,\
+      HID_INPUT       ( HID_CONSTANT                           ) ,\
+      /* Key codes (14 bytes, each representing one key) */ \
+      HID_USAGE_PAGE  ( HID_USAGE_PAGE_KEYBOARD                ) ,\
+      HID_USAGE_MIN   ( 0x00                                   ) ,\
+      HID_USAGE_MAX   ( 0xFF                                   ) ,\
+      HID_LOGICAL_MIN ( 0                                      ) ,\
+      HID_LOGICAL_MAX ( 0xFF                                   ) ,\
+      HID_REPORT_COUNT( 14                                     ) ,\
+      HID_REPORT_SIZE ( 8                                      ) ,\
+      HID_INPUT       ( HID_DATA | HID_ARRAY | HID_ABSOLUTE    ) ,\
+    HID_COLLECTION_END
+
 typedef struct {
   uint8_t buttons;
   int16_t x;

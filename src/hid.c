@@ -306,26 +306,32 @@ void hid_mouse_report() {
 }
 
 void hid_keyboard_report() {
-    uint8_t report[6] = {0};
-    uint8_t keys_available = 6;
-    for(int i=0; i<=115; i++) {
-        if (state_matrix[i] >= 1) {
-            report[keys_available - 1] = (uint8_t)i;
+    uint8_t report[16] = {0}; // 1 byte for modifiers + 1 reserved byte + 14 keycodes
+    uint8_t keys_available = 14;
+
+    // Collect keycodes for up to 14 simultaneous key presses
+    for (int i = 0; i <= 115; i++) {
+        if (state_matrix[i] >= 1) { // Key is pressed
+            report[2 + (14 - keys_available)] = (uint8_t)i;
             keys_available--;
             if (keys_available == 0) {
-                break;
+                break; // Stop if we've collected 14 keycodes
             }
         }
     }
+
+    // Calculate the modifier byte
     uint8_t modifier = 0;
-    for(int i=0; i<8; i++) {
-        modifier += !!state_matrix[MODIFIER_INDEX + i] << i;
+    for (int i = 0; i < 8; i++) {
+        modifier |= (!!state_matrix[MODIFIER_INDEX + i]) << i;
     }
-    tud_hid_keyboard_report(
-        REPORT_KEYBOARD,
-        modifier,
-        report
-    );
+
+    // Set modifier and reserved bytes
+    report[0] = modifier; // Modifier keys
+    report[1] = 0;        // Reserved byte
+
+    // Send the 14KRO report
+    tud_hid_report(REPORT_KEYBOARD, report, sizeof(report));
 }
 
 double hid_axis(
