@@ -63,11 +63,14 @@ void touch_load_from_config() {
     Config *config = config_read();
     polarity_mode = !config->touch_invert_polarity;
     // Reset to initial baseline.
-    baseline = (
-        config_get_pcb_gen() == 0 ?
-        TOUCH_AUTO_START_GEN0 :
-        TOUCH_AUTO_START_GEN1
-    );
+    baseline = TOUCH_AUTO_START_V1_GEN0;
+    #ifdef DEVICE_ALPAKKA_V0
+        baseline = (
+            config_get_pcb_gen() == 0 ?
+            TOUCH_AUTO_START_V0_GEN0 :
+            TOUCH_AUTO_START_V0_GEN1
+        );
+    #endif
 }
 
 // Perform the time measurement (charge / discharge).

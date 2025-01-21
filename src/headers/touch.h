@@ -8,8 +8,9 @@
 #define TOUCH_TIMEOUT 100  // Microseconds.
 
 // The starting baseline threshold value when using dynamic.
-#define TOUCH_AUTO_START_GEN0 2  // Microseconds.
-#define TOUCH_AUTO_START_GEN1 10 // Microseconds.
+#define TOUCH_AUTO_START_V0_GEN0 2  // Microseconds.
+#define TOUCH_AUTO_START_V0_GEN1 10 // Microseconds.
+#define TOUCH_AUTO_START_V1_GEN0 10 // Microseconds.
 
 // Dynamic threshold algorithm tuning.
 #define TOUCH_AUTO_RATIO_PRESET1 2.0
