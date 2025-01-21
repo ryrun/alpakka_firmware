@@ -69,8 +69,8 @@ Pin numbers from 200 to 215 are IO Expander 2, from pin 0 to pin 15.
     #define PIN_R4 207
 #endif
 
-// Custom board.
-#if defined DEVICE_ALPAKKA_V1 || defined DEVICE_DONGLE || defined DEVICE_LLAMA
+// Marmota.
+#ifdef DEVICE_HAS_MARMOTA
     #define PIN_LED_BOARD 3
     #define PIN_SPI_CS1 5
     #define PIN_SPI_CS0 6

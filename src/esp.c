@@ -7,44 +7,57 @@
 #include "pin.h"
 #include "power.h"
 
+void esp_log_state() {
+    info(
+        "ESP: enable=%i boot=%i\n",
+        gpio_get(PIN_ESP_ENABLE),
+        gpio_get(PIN_ESP_BOOT)
+    );
+}
+
 void esp_init() {
-    #ifndef DEVICE_ALPAKKA_V0
+    #ifdef DEVICE_HAS_MARMOTA
         // Boot pin.
         gpio_init(PIN_ESP_BOOT);
         gpio_set_dir(PIN_ESP_BOOT, GPIO_OUT);
         gpio_put(PIN_ESP_BOOT, false);
         // Power enable pin.
-        bool enable = false;
-        info("ESP: enable=%i\n", enable);
         gpio_init(PIN_ESP_ENABLE);
         gpio_set_dir(PIN_ESP_ENABLE, GPIO_OUT);
-        gpio_put(PIN_ESP_ENABLE, enable);
+        gpio_put(PIN_ESP_ENABLE, false);
+        // Log.
+        esp_log_state();
     #endif
 }
 
 void esp_enable(bool state) {
-    info("ESP: enable=%i\n", state);
-    #ifndef DEVICE_ALPAKKA_V0
+    #ifdef DEVICE_HAS_MARMOTA
         gpio_put(PIN_ESP_ENABLE, state);
     #endif
 }
 
 void esp_restart() {
-    esp_enable(false);
-    #ifndef DEVICE_ALPAKKA_V0
+    #ifdef DEVICE_HAS_MARMOTA
+        info("ESP: Restart\n");
+        esp_enable(false);
         gpio_put(PIN_ESP_BOOT, true);
+        sleep_ms(ESP_RESTART_SETTLE);
+        esp_enable(true);
+        sleep_ms(ESP_RESTART_SETTLE);
+        esp_log_state();
     #endif
-    sleep_ms(ESP_RESTART_SETTLE);
-    esp_enable(true);
 }
 
 void esp_bootsel() {
-    esp_enable(false);
-    #ifndef DEVICE_ALPAKKA_V0
+    #ifdef DEVICE_HAS_MARMOTA
+        info("ESP: Bootsel\n");
+        esp_enable(false);
         gpio_put(PIN_ESP_BOOT, false);
+        sleep_ms(ESP_RESTART_SETTLE);
+        esp_enable(true);
+        sleep_ms(ESP_RESTART_SETTLE);
+        esp_log_state();
     #endif
-    sleep_ms(ESP_RESTART_SETTLE);
-    esp_enable(true);
 }
 
 #ifdef DEVICE_LLAMA
