@@ -33,19 +33,27 @@ Button daisy_y;
 float smoothed[4] = {0, 0, 0, 0};
 
 float thumbstick_adc(uint8_t pin) {
-    uint8_t index = pin - 26;
-    adc_select_input(index);
+    uint8_t channel = pin - 26;
+    adc_select_input(channel);
     float value = ((float)adc_read() - BIT_11) / BIT_11;
     return value * THUMBSTICK_BASELINE_SATURATION;
 }
 
 float thumbstick_adc_smoothed(uint8_t pin) {
-    uint8_t index = pin - 26;
+    // Dynamic smooting depending on how big the diff to previous samples are:
+    // Small diff -> Max smooth.
+    // Bigger diff -> Progressively less smooting.
+    // Diff over threshold -> No smoothing.
+    uint8_t channel = pin - 26;
     float value = thumbstick_adc(pin);
-    float factor = ADC_SMOOTH_THRESHOLD - fabs(value - smoothed[index]);
-    factor = constrain(factor * ADC_SMOOTH_MAX, 1, ADC_SMOOTH_MAX);
-    value = (value + (smoothed[index] * (factor - 1))) / factor;
-    smoothed[index] = value;
+    // Determine factor, apply threshold.
+    float factor = ADC_SMOOTH_THRESHOLD - fabs(value - smoothed[channel]);
+    // Scale and ignore negative factor.
+    factor - max(0, factor * ADC_SMOOTH_MAX);
+    // Do rolling average.
+    value = smooth(smoothed[channel], value, factor);
+    // Update rolling value and return.
+    smoothed[channel] = value;
     return value;
 }
 

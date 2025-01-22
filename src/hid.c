@@ -396,7 +396,12 @@ void hid_reset_mouse() {
 void hid_reset_gamepad_axis() {
     // Gamepad axis values being reset so potentially unsent values are not
     // aggregated with the next cycle.
-    memset(gamepad_axis, 0, sizeof(gamepad_axis));
+    gamepad_axis[LX] = 0;
+    gamepad_axis[LY] = 0;
+    gamepad_axis[LZ] = 0;
+    gamepad_axis[RX] = 0;
+    gamepad_axis[RY] = 0;
+    gamepad_axis[RZ] = 0;
 }
 
 bool hid_report_keyboard(bool wired) {
