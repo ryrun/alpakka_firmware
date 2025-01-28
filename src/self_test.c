@@ -106,8 +106,12 @@ void self_test() {
     info("===========\n");
     Profile* profile = profile_get_active(true);
     self_test_buttons(profile);
-    self_test_thumbstick(&(profile->thumbstick0));
-    self_test_dhat(&(profile->dhat));
+    self_test_thumbstick(&(profile->left_thumbstick));
+    #if defined DEVICE_ALPAKKA_V0
+        self_test_dhat(&(profile->dhat));
+    #elif defined DEVICE_ALPAKKA_V1
+        self_test_thumbstick(&(profile->right_thumbstick));
+    #endif
     self_test_rotary(&(profile->rotary));
     info("Tests done\n");
     info("==========\n");

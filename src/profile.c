@@ -55,11 +55,11 @@ void Profile__report(Profile *self) {
     self->l4.report(&self->l4);
     self->r4.report(&self->r4);
     self->rotary.report(&self->rotary);
-    self->thumbstick0.report(&self->thumbstick0);
+    self->left_thumbstick.report(&self->left_thumbstick);
     #if defined DEVICE_ALPAKKA_V0
         self->dhat.report(&self->dhat);
     #elif defined DEVICE_ALPAKKA_V1
-        self->thumbstick1.report(&self->thumbstick1);
+        self->right_thumbstick.report(&self->right_thumbstick);
     #endif
     self->gyro.report(&self->gyro);
 }
@@ -85,8 +85,8 @@ void Profile__reset(Profile *self) {
     self->r4.reset(&self->r4);
     self->dhat.reset(&self->dhat);
     self->rotary.reset(&self->rotary);
-    self->thumbstick0.reset(&self->thumbstick0);
-    self->thumbstick1.reset(&self->thumbstick1);
+    self->left_thumbstick.reset(&self->left_thumbstick);
+    self->right_thumbstick.reset(&self->right_thumbstick);
     self->gyro.reset(&self->gyro);
 }
 
@@ -121,8 +121,8 @@ void Profile__load_from_config(Profile *self, CtrlProfile *profile) {
     rotary.config_mode(&rotary, 4, up.actions_4, down.actions_4);
     self->rotary = rotary;
     // Thumbsticks.
-    thumbstick_from_ctrl(&(self->thumbstick0), profile, 0); // Left.
-    thumbstick_from_ctrl(&(self->thumbstick1), profile, 1); // Right.
+    thumbstick_from_ctrl(&(self->left_thumbstick), profile, 0);
+    thumbstick_from_ctrl(&(self->right_thumbstick), profile, 1);
     // Dhat.
     self->dhat = Dhat_(
         Button_from_ctrl(PIN_VIRTUAL, profile->sections[SECTION_RSTICK_LEFT]),
