@@ -23,7 +23,7 @@
 #if defined DEVICE_ALPAKKA_V0
     #define I2C_CHANNEL i2c1
     #define SPI_CHANNEL spi1
-#elif defined DEVICE_ALPAKKA_V1 || defined DEVICE_DONGLE || defined DEVICE_LLAMA
+#elif defined DEVICE_HAS_MARMOTA
     #define I2C_CHANNEL i2c1
     #define SPI_CHANNEL spi0
 #endif

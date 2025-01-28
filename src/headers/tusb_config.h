@@ -43,12 +43,14 @@
 
 #define USB_WIN_VENDOR  0x0170  // Input Labs.
 #define USB_WIN_PRODUCT 0xA09C  // Alpakka (Xinput)
+#define USB_WIN_PRODUCT_DONGLE 0xD99A  // Dongle (Xinput)
 
 #define USB_UNIX_VENDOR  0x045E  // 360 controller vendor.
 #define USB_UNIX_PRODUCT 0x028E  // 360 controller product.
 
 #define USB_GENERIC_VENDOR  0x0170  // Input Labs.
 #define USB_GENERIC_PRODUCT 0xA09D  // Alpakka (HID complilant gamepad)
+#define USB_GENERIC_PRODUCT_DONGLE 0xD99C  // Dongle (HID complilant gamepad)
 
 #define USB_TEST_VENDOR  0x0170  // Input Labs.
 #define USB_TEST_PRODUCT 0xFF00  // Test.

@@ -75,7 +75,7 @@ static void set_wireless() {
 }
 
 static void battery_stat_init() {
-    #ifndef DEVICE_ALPAKKA_V0
+    #ifdef DEVICE_HAS_MARMOTA
         gpio_init(PIN_BATT_STAT_1);
         gpio_pull_up(PIN_BATT_STAT_1);
         gpio_set_dir(PIN_BATT_STAT_1, GPIO_IN);
@@ -83,25 +83,26 @@ static void battery_stat_init() {
 }
 
 static void board_led() {
-    // TODO: redo with analog voltage read.
-    // static uint8_t i = 0;
-    // static bool blink = false;
-    // i++;
-    // if (i == 100) {
-    //     i = 0;
-    //     bool stat1 = gpio_get(PIN_BATT_STAT_1);
-    //     if (!stat1) {
-    //         if (device_mode == WIRED) {
-    //             gpio_put(PIN_LED_BOARD, true);
-    //         }
-    //         if (device_mode == WIRELESS) {
-    //             blink = !blink;
-    //             gpio_put(PIN_LED_BOARD, blink);
-    //         }
-    //     } else {
-    //         gpio_put(PIN_LED_BOARD, false);
-    //     }
-    // }
+    #ifdef DEVICE_HAS_MARMOTA
+        static uint8_t i = 0;
+        static bool blink = false;
+        i++;
+        if (i == 100) {
+            i = 0;
+            bool stat1 = gpio_get(PIN_BATT_STAT_1);
+            if (!stat1) {
+                if (device_mode == WIRED) {
+                    gpio_put(PIN_LED_BOARD, true);
+                }
+                // if (device_mode == WIRELESS) {  // TODO: redo with analog voltage read.
+                //     blink = !blink;
+                //     gpio_put(PIN_LED_BOARD, blink);
+                // }
+            } else {
+                gpio_put(PIN_LED_BOARD, false);
+            }
+        }
+    #endif
 }
 
 void loop_controller_init() {
@@ -122,9 +123,7 @@ void loop_controller_init() {
     imu_init();
     profile_init();
     battery_stat_init();
-    #ifndef DEVICE_ALPAKKA_V0
-        wireless_init(false);
-    #endif
+    wireless_init(false);
     if (usb) {
         set_wired();
     } else {
@@ -146,6 +145,7 @@ void loop_dongle_init() {
     bus_init();
     hid_init();
     wireless_init(true);
+    set_wireless();  // Dongle is always in wireless mode.
     loop_run();
 }
 

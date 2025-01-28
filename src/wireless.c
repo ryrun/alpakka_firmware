@@ -56,16 +56,16 @@ void wireless_set_uart_data_mode(bool mode) {
 }
 
 void wireless_init(bool dongle) {
-    if (dongle) {
-        info("INIT: RF dongle\n");
-        led_board_set(true);
-    } else {
-        info("INIT: RF controller\n");
-    }
-    // Prepare ESP.
-    esp_init();
-    // Secondary UART.
-    #ifndef DEVICE_ALPAKKA_V0
+    #ifdef DEVICE_HAS_MARMOTA
+        if (dongle) {
+            info("INIT: RF dongle\n");
+            led_board_set(true);
+        } else {
+            info("INIT: RF controller\n");
+        }
+        // Prepare ESP.
+        esp_init();
+        // Secondary UART.
         info("RF: UART1 init (%i)\n", ESP_BOOTLOADER_BAUD);
         uart_init(ESP_UART, ESP_BOOTLOADER_BAUD);
         gpio_set_function(PIN_UART1_TX, GPIO_FUNC_UART);

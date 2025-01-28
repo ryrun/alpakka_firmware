@@ -47,7 +47,11 @@ uint8_t const *tud_descriptor_device_cb() {
     static tusb_desc_device_t descriptor_device = {DESCRIPTOR_DEVICE};
     if (config_get_protocol() == PROTOCOL_XINPUT_WIN) {
         descriptor_device.idVendor = USB_WIN_VENDOR;
-        descriptor_device.idProduct = USB_WIN_PRODUCT;
+        #ifdef DEVICE_IS_ALPAKKA
+            descriptor_device.idProduct = USB_WIN_PRODUCT;
+        #elif defined DEVICE_DONGLE
+            descriptor_device.idProduct = USB_WIN_PRODUCT_DONGLE;
+        #endif
     }
     if (config_get_protocol() == PROTOCOL_XINPUT_UNIX) {
         descriptor_device.idVendor = USB_UNIX_VENDOR;
