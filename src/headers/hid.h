@@ -265,6 +265,15 @@
 #define PROC_SLEEP  PROC_INDEX + 42
 #define PROC_BOOTSEL_OR_PAIR  PROC_INDEX + 43
 
+typedef enum _GamepadAxis {
+    LX,
+    LY,
+    LZ,
+    RX,
+    RY,
+    RZ
+} GamepadAxis;
+
 void hid_init();
 void hid_thanks();
 
@@ -290,12 +299,7 @@ void hid_mouse_wheel(int8_t z);
 
 // Gamepad.
 bool hid_is_axis(uint8_t key);
-void hid_gamepad_lx(double value);
-void hid_gamepad_ly(double value);
-void hid_gamepad_rx(double value);
-void hid_gamepad_ry(double value);
-void hid_gamepad_lz(double value);
-void hid_gamepad_rz(double value);
+void hid_gamepad_axis(GamepadAxis axis, double value);
 
 // Report.
 bool hid_report_wired();

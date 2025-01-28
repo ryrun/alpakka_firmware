@@ -71,11 +71,19 @@ Vector imu_read_gyro_bits(uint8_t cs) {
     double offset_x = (cs==PIN_SPI_CS0) ? offset_gyro_0_x : offset_gyro_1_x;
     double offset_y = (cs==PIN_SPI_CS0) ? offset_gyro_0_y : offset_gyro_1_y;
     double offset_z = (cs==PIN_SPI_CS0) ? offset_gyro_0_z : offset_gyro_1_z;
-    return (Vector){
-        (double)x - offset_x,
-        (double)y - offset_y,
-        (double)z - offset_z,
-    };
+    #ifdef DEVICE_ALPAKKA_V0
+        return (Vector){
+            (double)x - offset_x,
+            (double)y - offset_y,
+            (double)z - offset_z,
+        };
+    #else /* DEVICE_ALPAKKA_V1 */
+        return (Vector){
+            (double)x - offset_x,
+            -(double)y - offset_y,
+            -(double)z - offset_z,
+        };
+    #endif
 }
 
 Vector imu_read_accel_bits(uint8_t cs) {
@@ -87,11 +95,19 @@ Vector imu_read_accel_bits(uint8_t cs) {
     double offset_x = (cs==PIN_SPI_CS0) ? offset_accel_0_x : offset_accel_1_x;
     double offset_y = (cs==PIN_SPI_CS0) ? offset_accel_0_y : offset_accel_1_y;
     double offset_z = (cs==PIN_SPI_CS0) ? offset_accel_0_z : offset_accel_1_z;
-    return (Vector){
-        (double)x - offset_x,
-        (double)y - offset_y,
-        (double)z - offset_z,
-    };
+    #ifdef DEVICE_ALPAKKA_V0
+        return (Vector){
+            (double)x - offset_x,
+            (double)y - offset_y,
+            (double)z - offset_z,
+        };
+    #else /* DEVICE_ALPAKKA_V1 */
+        return (Vector){
+            -(double)x - offset_x,
+            -(double)y - offset_y,
+            (double)z - offset_z,
+        };
+    #endif
 }
 
 Vector imu_read_gyro_burst(uint8_t cs, uint8_t samples) {
@@ -132,7 +148,7 @@ Vector imu_read_accel() {
     };
 }
 
-Vector imu_calibrate_single(uint8_t cs, bool mode, double* x, double* y, double* z) {
+void imu_calibrate_single(uint8_t cs, bool mode, double* x, double* y, double* z) {
     char *mode_str = mode ? "accel" : "gyro";
     info("IMU: cs=%i calibrating %s...\n", cs, mode_str);
     double sum_x = 0;
@@ -151,12 +167,14 @@ Vector imu_calibrate_single(uint8_t cs, bool mode, double* x, double* y, double*
     }
     // Sampling.
     uint32_t i = 0;
+    info("| 0%%%*s100%% |\n", CFG_CALIBRATION_PROGRESS_BAR - 10, "");
     while(i < nsamples) {
         Vector sample = mode ? imu_read_accel_bits(cs) : imu_read_gyro_bits(cs);
         sum_x += sample.x;
         sum_y += sample.y;
         sum_z += sample.z;
         i++;
+        if (!(i % (nsamples / CFG_CALIBRATION_PROGRESS_BAR))) info("=");
     }
     // Average.
     *x = sum_x / nsamples;
@@ -165,7 +183,7 @@ Vector imu_calibrate_single(uint8_t cs, bool mode, double* x, double* y, double*
     // Assuming the resting state of the controller is having a vector of 1G
     // pointing down. (Newton's fault for inventing the gravity /jk).
     if (mode==1) *z -= BIT_14;
-    info("IMU: cs=%i %s calibration x=%f y=%f z=%f\n", cs, mode_str, *x, *y, *z);
+    info("\nIMU: cs=%i %s calibrated x=%.02f y=%.02f z=%.02f\n", cs, mode_str, *x, *y, *z);
 }
 
 void imu_load_calibration() {

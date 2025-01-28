@@ -8,11 +8,16 @@
 #include "ctrl.h"
 #include "logging.h"
 
+#define MAJOR 1000 * 1000
+#define MINOR 1000
+#define PATCH 1
+
+#define NVM_CONFIG_VERSION  ((MAJOR * 1) + (MINOR * 0) + (PATCH * 0))
 #define NVM_CONTROL_BYTE 0b01010101
 #define NVM_CONFIG_ADDR 0x001D0000
 #define NVM_CONFIG_SIZE 256
-#define NVM_CONFIG_VERSION 97000
-#define NVM_PROFILE_VERSION 96000
+
+#define NVM_PROFILE_VERSION  ((MAJOR * 1) + (MINOR * 0) + (PATCH * 0))
 #define NVM_PROFILE_SIZE 4096
 #define NVM_PROFILE_SLOTS 14
 
@@ -39,19 +44,12 @@
 #define CFG_CALIBRATION_SAMPLES_GYRO 500000  // Samples.
 #define CFG_CALIBRATION_SAMPLES_ACCEL 100000  // Samples.
 #define CFG_CALIBRATION_LONG_FACTOR 4
+#define CFG_CALIBRATION_PROGRESS_BAR 40
 
-#define CFG_GYRO_SENSITIVITY  pow(2, -9) * 1.45
-
-// TODO: Move this logic to IMU preprocessor.
-#if defined DEVICE_ALPAKKA_V0 || defined DEVICE_DONGLE || defined DEVICE_LLAMA
-    #define CFG_GYRO_SENSITIVITY_X  CFG_GYRO_SENSITIVITY * 1
-    #define CFG_GYRO_SENSITIVITY_Y  CFG_GYRO_SENSITIVITY * 1
-    #define CFG_GYRO_SENSITIVITY_Z  CFG_GYRO_SENSITIVITY * 1
-#elif defined DEVICE_ALPAKKA_V1
-    #define CFG_GYRO_SENSITIVITY_X  CFG_GYRO_SENSITIVITY * 1
-    #define CFG_GYRO_SENSITIVITY_Y  CFG_GYRO_SENSITIVITY * -1
-    #define CFG_GYRO_SENSITIVITY_Z  CFG_GYRO_SENSITIVITY * -1
-#endif
+#define CFG_GYRO_SENSITIVITY  (pow(2, -9) * 1.45)
+#define CFG_GYRO_SENSITIVITY_X  (CFG_GYRO_SENSITIVITY * 1)
+#define CFG_GYRO_SENSITIVITY_Y  (CFG_GYRO_SENSITIVITY * 1)
+#define CFG_GYRO_SENSITIVITY_Z  (CFG_GYRO_SENSITIVITY * 1)
 
 #define CFG_MOUSE_WHEEL_DEBOUNCE 1000
 #define CFG_ACCEL_CORRECTION_SMOOTH 50  // Number of averaged samples for the correction vector.
@@ -61,10 +59,6 @@
 #define CFG_HOLD_TIME 200  // Milliseconds.
 #define CFG_HOLD_LONG_TIME 2000  // Milliseconds.
 #define CFG_DOUBLE_PRESS_TIME 300  // Milliseconds.
-
-#define CFG_THUMBSTICK_SATURATION 1.6
-#define CFG_THUMBSTICK_INNER_RADIUS 0.75
-#define CFG_THUMBSTICK_ADDITIONAL_DEADZONE_FOR_BUTTONS 0.05
 
 #define CFG_DHAT_DEBOUNCE_TIME 100  // Milliseconds.
 
@@ -80,8 +74,10 @@ typedef struct __packed _Config {
     double sens_mouse_values[3];
     int8_t sens_touch_values[5];
     float deadzone_values[3];
-    float offset_ts_x;
-    float offset_ts_y;
+    float offset_ts_lx;
+    float offset_ts_ly;
+    float offset_ts_rx;
+    float offset_ts_ry;
     double offset_gyro_0_x;
     double offset_gyro_0_y;
     double offset_gyro_0_z;
@@ -111,7 +107,7 @@ void config_sync();
 Config* config_read();
 void config_delete();
 
-void config_set_thumbstick_offset(float x, float y);
+void config_set_thumbstick_offset(float lx, float ly, float rx, float ry);
 void config_set_gyro_offset(double ax, double ay, double az, double bx, double by, double bz);
 void config_set_accel_offset(double ax, double ay, double az, double bx, double by, double bz);
 uint8_t config_get_protocol();
