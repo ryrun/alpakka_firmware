@@ -66,12 +66,14 @@ static void set_wired() {
     info("LOOP: Wired\n");
     if (device_mode != WIRED) power_restart();
     device_mode = WIRED;
+    touch_update_auto_ratio();
 }
 
 static void set_wireless() {
     info("LOOP: Wireless\n");
-    wireless_set_uart_data_mode(true);
     device_mode = WIRELESS;
+    wireless_set_uart_data_mode(true);
+    touch_update_auto_ratio();
 }
 
 static void battery_stat_init() {

@@ -43,6 +43,7 @@ There are 2 modes of operation:
 #include <pico/stdlib.h>
 #include "config.h"
 #include "touch.h"
+#include "loop.h"
 #include "pin.h"
 #include "common.h"
 #include "logging.h"
@@ -56,9 +57,6 @@ void touch_load_from_config() {
     // Load sensitivity presets.
     uint8_t preset = config_get_touch_sens_preset();
     sens_from_config = config_get_touch_sens_value(preset);
-    if (sens_from_config == -1) threshold_ratio = TOUCH_AUTO_RATIO_PRESET1;
-    if (sens_from_config == -2) threshold_ratio = TOUCH_AUTO_RATIO_PRESET2;
-    if (sens_from_config == -3) threshold_ratio = TOUCH_AUTO_RATIO_PRESET3;
     // Load polarity.
     Config *config = config_read();
     polarity_mode = !config->touch_invert_polarity;
@@ -115,6 +113,27 @@ float touch_get_elapsed_multisample() {
         samples++;
     }
     return total / samples;
+}
+
+void touch_update_auto_ratio() {
+    // When the touch sensitivity is negative it means the touch detection is
+    // in "dynamic" mode.
+    // When the controller is in wireless mode (working on battery) the return
+    // path is much sorter and the timing is different; so the ratio has to be
+    // adjusted when the mode changes from wired to wireless (and viceversa).
+    if (loop_get_device_mode() == WIRED) {
+        if (sens_from_config == -1) threshold_ratio = TOUCH_AUTO_RATIO_WIRED_PRESET1;
+        if (sens_from_config == -2) threshold_ratio = TOUCH_AUTO_RATIO_WIRED_PRESET2;
+        if (sens_from_config == -3) threshold_ratio = TOUCH_AUTO_RATIO_WIRED_PRESET3;
+    }
+    if (loop_get_device_mode() == WIRELESS) {
+        if (sens_from_config == -1) threshold_ratio = TOUCH_AUTO_RATIO_WIRELESS_PRESET1;
+        if (sens_from_config == -2) threshold_ratio = TOUCH_AUTO_RATIO_WIRELESS_PRESET2;
+        if (sens_from_config == -3) threshold_ratio = TOUCH_AUTO_RATIO_WIRELESS_PRESET3;
+    }
+    if (threshold_ratio > 0) {
+        info("Touch: threshold_ratio=%0.2f\n", threshold_ratio);
+    }
 }
 
 // Calculate dynamic threshold.
