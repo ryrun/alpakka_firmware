@@ -35,7 +35,7 @@ for i, segment in enumerate(segments):
 # Write.
 headers = [
     '#include <stdint.h>\n'
-    '#include <pico/platform.h>\n'
+    '#include <pico.h>\n'
 ]
 composed = ''.join(headers + segments + lines)
 open(PATH, 'w', encoding='utf8').write(composed)
