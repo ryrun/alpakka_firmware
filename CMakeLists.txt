@@ -6,8 +6,10 @@ cmake_minimum_required(VERSION 3.16)
 if (EXISTS ./deps/pico-sdk AND EXISTS ./deps/arm-toolchain)
     # If the dependencies are local.
     set(PICO_SDK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/deps/pico-sdk)
+    set(PICO_SDK_EXTRAS ${CMAKE_CURRENT_SOURCE_DIR}/deps/pico-extras)
     set(PICO_TOOLCHAIN_PATH ${CMAKE_CURRENT_SOURCE_DIR}/deps/arm-toolchain)
     include(${PICO_SDK_PATH}/pico_sdk_init.cmake)
+    include(${PICO_SDK_EXTRAS}/external/pico_extras_import.cmake)
 else()
     # If the dependencies are global.
     include(scripts/pico_sdk_import.cmake)
@@ -58,6 +60,7 @@ target_link_libraries(${PROJECT} PRIVATE
     hardware_spi
     hardware_sync
     hardware_timer
+    hardware_sleep
     tinyusb_device
 )
 

@@ -62,6 +62,19 @@ void imu_init() {
     imu_init_single(IMU1, IMU_CTRL2_G_125);
 }
 
+void imu_power_off_single(uint8_t cs) {
+    bus_spi_write(cs, IMU_CTRL1_XL, IMU_CTRL1_XL_OFF);
+    bus_spi_write(cs, IMU_CTRL2_G, IMU_CTRL2_G_OFF);
+    uint8_t xl = bus_spi_read_one(cs, IMU_READ | IMU_CTRL1_XL);
+    uint8_t g = bus_spi_read_one(cs, IMU_READ | IMU_CTRL2_G);
+    info("IMU cs=%i xl=0b%08i g=0b%08i\n", cs, bin(xl), bin(g));
+}
+
+void imu_power_off() {
+    imu_power_off_single(IMU0);
+    imu_power_off_single(IMU1);
+}
+
 Vector imu_read_gyro_bits(uint8_t cs) {
     uint8_t buf[6];
     bus_spi_read(cs, IMU_READ | IMU_OUTX_L_G, buf, 6);

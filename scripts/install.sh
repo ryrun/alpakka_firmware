@@ -5,6 +5,10 @@
 SDK_URL=https://github.com/raspberrypi/pico-sdk.git
 SDK_TAG=2.1.0
 
+# Pico Extras.
+EXTRAS_URL=https://github.com/raspberrypi/pico-extras.git
+EXTRAS_TAG=sdk-2.1.0
+
 # ESP serial flasher
 ESPSF_URL=https://github.com/espressif/esp-serial-flasher
 ESPSF_TAG=v1.6.2
@@ -54,6 +58,13 @@ cd pico-sdk
 git checkout --quiet $SDK_TAG
 echo "Configuring Pico C SDK..."
 git submodule update --init
+cd ..
+
+# Pico Extras.
+echo "Downloading Pico Extras..."
+git clone $EXTRAS_URL
+cd pico-extras
+git checkout --quiet $EXTRAS_TAG
 cd ..
 
 # ESP serial flasher.

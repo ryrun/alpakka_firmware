@@ -33,6 +33,14 @@ void esp_init() {
 void esp_enable(bool state) {
     #ifdef DEVICE_HAS_MARMOTA
         gpio_put(PIN_ESP_ENABLE, state);
+        sleep_ms(ESP_RESTART_SETTLE);
+    #endif
+}
+
+void esp_bootpin(bool state) {
+    #ifdef DEVICE_HAS_MARMOTA
+        gpio_put(PIN_ESP_BOOT, state);
+        sleep_ms(ESP_RESTART_SETTLE);
     #endif
 }
 
@@ -40,10 +48,8 @@ void esp_restart() {
     #ifdef DEVICE_HAS_MARMOTA
         info("ESP: Restart\n");
         esp_enable(false);
-        gpio_put(PIN_ESP_BOOT, true);
-        sleep_ms(ESP_RESTART_SETTLE);
+        esp_bootpin(true);
         esp_enable(true);
-        sleep_ms(ESP_RESTART_SETTLE);
         esp_log_state();
     #endif
 }
@@ -52,10 +58,8 @@ void esp_bootsel() {
     #ifdef DEVICE_HAS_MARMOTA
         info("ESP: Bootsel\n");
         esp_enable(false);
-        gpio_put(PIN_ESP_BOOT, false);
-        sleep_ms(ESP_RESTART_SETTLE);
+        esp_bootpin(false);
         esp_enable(true);
-        sleep_ms(ESP_RESTART_SETTLE);
         esp_log_state();
     #endif
 }

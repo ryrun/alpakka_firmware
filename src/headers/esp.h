@@ -16,6 +16,7 @@
 
 void esp_init();
 void esp_enable(bool state);
+void esp_bootpin(bool state);
 void esp_restart();
 void esp_bootsel();
 void esp_flash();

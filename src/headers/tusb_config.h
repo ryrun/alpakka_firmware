@@ -65,6 +65,8 @@
     #define WEBUSB_ID  'A', 0, '0', 0, '0', 0, '8', 0, '0', 0
 #elif defined DEVICE_DONGLE
     #define WEBUSB_ID  'D', 0, '0', 0, '0', 0, '8', 0, '0', 0
+#else
+    #define WEBUSB_ID  'X', 0, '0', 0, '0', 0, '8', 0, '0', 0
 #endif
 
 #define DESCRIPTOR_DEVICE \
