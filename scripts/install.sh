@@ -3,7 +3,7 @@
 
 # Pico SDK.
 SDK_URL=https://github.com/raspberrypi/pico-sdk.git
-SDK_TAG=1.5.1
+SDK_TAG=2.1.0
 
 # ESP serial flasher
 ESPSF_URL=https://github.com/espressif/esp-serial-flasher
