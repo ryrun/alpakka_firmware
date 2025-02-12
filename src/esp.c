@@ -8,11 +8,13 @@
 #include "power.h"
 
 void esp_log_state() {
-    info(
-        "ESP: enable=%i boot=%i\n",
-        gpio_get(PIN_ESP_ENABLE),
-        gpio_get(PIN_ESP_BOOT)
-    );
+    #ifdef DEVICE_HAS_MARMOTA
+        info(
+            "ESP: enable=%i boot=%i\n",
+            gpio_get(PIN_ESP_ENABLE),
+            gpio_get(PIN_ESP_BOOT)
+        );
+    #endif
 }
 
 void esp_init() {

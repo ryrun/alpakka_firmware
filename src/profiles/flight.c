@@ -49,11 +49,15 @@ void config_profile_default_flight(CtrlProfile *profile){
     // Thumbstick (left).
     profile->sections[SECTION_LSTICK_SETTINGS].thumbstick = (CtrlThumbstick){
         .mode=THUMBSTICK_MODE_OFF,
+        .overlap=50,
+        .saturation=100,
     };
 
     // Thumbstick (right) / DHat.
     profile->sections[SECTION_RSTICK_SETTINGS].thumbstick = (CtrlThumbstick){
         .mode=THUMBSTICK_MODE_OFF,
+        .overlap=50,
+        .saturation=70,
     };
     // profile->sections[SECTION_RSTICK_LEFT].button = (CtrlButton){};
     // profile->sections[SECTION_RSTICK_RIGHT].button = (CtrlButton){};

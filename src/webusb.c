@@ -51,10 +51,10 @@ bool webusb_transfer(Ctrl ctrl) {
     // Claim USB endpoint.
     if (!usbd_edpt_claim(0, ADDR_WEBUSB_IN)) return false;
     // Transfer data.
-    if (!usbd_edpt_xfer(0, ADDR_WEBUSB_IN, (char*)&ctrl, ctrl.len+4)) return false;
+    bool success = usbd_edpt_xfer(0, ADDR_WEBUSB_IN, (char*)&ctrl, ctrl.len+4);
     // Release USB endpoint.
     usbd_edpt_release(0, ADDR_WEBUSB_IN);
-    return true;
+    return success;
 }
 
 bool webusb_flush() {

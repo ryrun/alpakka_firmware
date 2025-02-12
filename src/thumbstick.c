@@ -276,10 +276,7 @@ void Thumbstick__config_8dir(
     self->push = push;
 }
 
-void Thumbstick__report_4dir_axial(
-    Thumbstick *self,
-    ThumbstickPosition pos
-) {
+void Thumbstick__report_4dir_axial(Thumbstick *self, ThumbstickPosition pos) {
     // Evaluate virtual buttons.
     if (pos.radius > THUMBSTICK_ADDITIONAL_DEADZONE_FOR_BUTTONS) {
         if (pos.radius < THUMBSTICK_INNER_RADIUS) self->inner.virtual_press = true;
@@ -310,13 +307,20 @@ void Thumbstick__report_4dir_axial(
     self->push.report(&self->push);
 }
 
-void Thumbstick__report_8dir(
-    Thumbstick *self,
-    ThumbstickPosition pos
-) {
+
+void Thumbstick__report_4dir_radial(Thumbstick *self, ThumbstickPosition pos) {
+    uint8_t direction = thumbstick_get_direction(pos.angle, self->overlap);
+    thumbstick_report_axis(self->left.actions[0],  (direction & DIR4_MASK_LEFT)  ? pos.radius : 0);
+    thumbstick_report_axis(self->right.actions[0], (direction & DIR4_MASK_RIGHT) ? pos.radius : 0);
+    thumbstick_report_axis(self->up.actions[0],    (direction & DIR4_MASK_UP)    ? pos.radius : 0);
+    thumbstick_report_axis(self->down.actions[0],  (direction & DIR4_MASK_DOWN)  ? pos.radius : 0);
+    self->push.report(&self->push);
+}
+
+void Thumbstick__report_8dir(Thumbstick *self, ThumbstickPosition pos) {
     // Evaluate virtual buttons.
     if (pos.radius > THUMBSTICK_ADDITIONAL_DEADZONE_FOR_BUTTONS) {
-        uint8_t direction = thumbstick_get_direction(pos.angle, self->overlap);
+        uint8_t direction = thumbstick_get_direction(pos.angle, 50); // Fixed overlap.
         if      (direction == DIR4_MASK_LEFT)  self->left.virtual_press = true;
         else if (direction == DIR4_MASK_RIGHT) self->right.virtual_press = true;
         else if (direction == DIR4_MASK_UP)    self->up.virtual_press = true;
@@ -336,15 +340,6 @@ void Thumbstick__report_8dir(
     self->dl.report(&self->dl);
     self->dr.report(&self->dr);
     // Report push.
-    self->push.report(&self->push);
-}
-
-void Thumbstick__report_4dir_radial(Thumbstick *self, ThumbstickPosition pos) {
-    uint8_t direction = thumbstick_get_direction(pos.angle, self->overlap);
-    thumbstick_report_axis(self->left.actions[0],  (direction & DIR4_MASK_LEFT)  ? pos.radius : 0);
-    thumbstick_report_axis(self->right.actions[0], (direction & DIR4_MASK_RIGHT) ? pos.radius : 0);
-    thumbstick_report_axis(self->up.actions[0],    (direction & DIR4_MASK_UP)    ? pos.radius : 0);
-    thumbstick_report_axis(self->down.actions[0],  (direction & DIR4_MASK_DOWN)  ? pos.radius : 0);
     self->push.report(&self->push);
 }
 
