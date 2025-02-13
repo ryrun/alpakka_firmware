@@ -320,7 +320,7 @@ void Thumbstick__report_4dir_radial(Thumbstick *self, ThumbstickPosition pos) {
 void Thumbstick__report_8dir(Thumbstick *self, ThumbstickPosition pos) {
     // Evaluate virtual buttons.
     if (pos.radius > THUMBSTICK_ADDITIONAL_DEADZONE_FOR_BUTTONS) {
-        uint8_t direction = thumbstick_get_direction(pos.angle, 50); // Fixed overlap.
+        uint8_t direction = thumbstick_get_direction(pos.angle, 0.5); // Fixed overlap.
         if      (direction == DIR4_MASK_LEFT)  self->left.virtual_press = true;
         else if (direction == DIR4_MASK_RIGHT) self->right.virtual_press = true;
         else if (direction == DIR4_MASK_UP)    self->up.virtual_press = true;
