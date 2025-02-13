@@ -16,6 +16,16 @@ static const char *const descriptor_string[] = {
     STRING_XINPUT
 };
 
+uint8_t const descriptor_report_kbm[] = {
+    TUD_HID_REPORT_DESC_KEYBOARD( HID_REPORT_ID(REPORT_KEYBOARD) ),
+    TUD_HID_REPORT_DESC_MOUSE_CUSTOM( HID_REPORT_ID(REPORT_MOUSE) ),
+};
+
+// Instanz 1: Gamepad
+uint8_t const descriptor_report_gamepad[] = {
+    TUD_HID_REPORT_DESC_GAMEPAD_CUSTOM( HID_REPORT_ID(REPORT_GAMEPAD) ),
+};
+
 uint8_t const descriptor_report_generic[] = {
     TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(REPORT_KEYBOARD)),
     TUD_HID_REPORT_DESC_MOUSE_CUSTOM(HID_REPORT_ID(REPORT_MOUSE)),
@@ -28,8 +38,11 @@ uint8_t const descriptor_report_xinput[] = {
 };
 
 uint8_t descriptor_configuration_generic[] = {
-    DESCRIPTOR_CONFIGURATION(2),
-    DESCRIPTOR_INTERFACE_HID(sizeof(descriptor_report_generic)),
+    DESCRIPTOR_CONFIGURATION(3),
+    // Interface 0: HID für Tastatur und Maus
+    DESCRIPTOR_INTERFACE_HID(sizeof(descriptor_report_kbm)),
+    // Interface 1: HID für Gamepad
+    DESCRIPTOR_INTERFACE_HID(sizeof(descriptor_report_gamepad)),
     DESCRIPTOR_INTERFACE_WEBUSB
 };
 
@@ -71,7 +84,13 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
 
 uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance) {
     debug_uart("USB: tud_hid_descriptor_report_cb\n");
-    if (config_get_protocol() == PROTOCOL_GENERIC) return descriptor_report_generic;
+    if (config_get_protocol() == PROTOCOL_GENERIC) {
+    // Instanz 0: Tastatur/Maus
+        if (instance == 0) return descriptor_report_kbm;
+        // Instanz 1: Gamepad
+        if (instance == 1) return descriptor_report_gamepad;
+        return descriptor_report_generic;
+    }
     else return descriptor_report_xinput;
 }
 

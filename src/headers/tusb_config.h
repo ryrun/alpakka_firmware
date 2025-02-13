@@ -50,8 +50,8 @@
 #define USB_UNIX_VENDOR  0x045E  // 360 controller vendor.
 #define USB_UNIX_PRODUCT 0x028E  // 360 controller product.
 
-#define USB_GENERIC_VENDOR  0x0170  // Input Labs.
-#define USB_GENERIC_PRODUCT 0xA09D  // Alpakka (HID complilant gamepad)
+#define USB_GENERIC_VENDOR  0x045E // 0x0170  // Input Labs.
+#define USB_GENERIC_PRODUCT 0x028E // 0xA09D  // Alpakka (HID complilant gamepad)
 
 #define DESCRIPTOR_DEVICE \
     0x12,    /* .bLength */\

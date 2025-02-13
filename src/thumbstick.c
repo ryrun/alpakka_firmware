@@ -7,6 +7,7 @@
 #include <pico/stdlib.h>
 #include <hardware/adc.h>
 #include "config.h"
+#include "ctrl.h"
 #include "pin.h"
 #include "button.h"
 #include "thumbstick.h"
