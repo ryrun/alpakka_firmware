@@ -22,10 +22,12 @@ void power_restart() {
 }
 
 void power_bootsel() {
-    if (loop_get_device_mode() == WIRELESS) {
-        warn("POWER: Unable to go into bootsel while wireless\n");
-        return;
-    }
+    #ifdef DEVICE_IS_ALPAKKA
+        if (loop_get_device_mode() == WIRELESS) {
+            warn("POWER: Unable to go into bootsel while wireless\n");
+            return;
+        }
+    #endif
     reset_usb_boot(0, 0);
 }
 

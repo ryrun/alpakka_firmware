@@ -255,7 +255,7 @@ void hid_mouse_move(int16_t x, int16_t y) {
 }
 
 void hid_gamepad_axis(GamepadAxis axis, double value) {
-    if ((value == gamepad_axis[axis]) && !synced_gamepad) return;
+    if ((value == 0) && synced_gamepad) return;
     gamepad_axis[axis] += value;  // Multiple inputs can be combined.
     synced_gamepad = false;
 }
@@ -407,14 +407,14 @@ void hid_reset_gamepad_axis() {
 bool hid_report_keyboard(bool wired) {
     KeyboardReport report = hid_get_keyboard_report();
     if (wired) tud_hid_report(REPORT_KEYBOARD, &report, sizeof(report));
-    else wireless_send(REPORT_KEYBOARD, &report, sizeof(report));
+    else wireless_send_hid(REPORT_KEYBOARD, &report, sizeof(report));
     synced_keyboard = true;
 }
 
 bool hid_report_mouse(bool wired) {
     MouseReport report = hid_get_mouse_report();
     if (wired) tud_hid_report(REPORT_MOUSE, &report, sizeof(report));
-    else wireless_send(REPORT_MOUSE, &report, sizeof(report));
+    else wireless_send_hid(REPORT_MOUSE, &report, sizeof(report));
     hid_reset_mouse();
     synced_mouse = true;
     priority_mouse = 0;
@@ -423,7 +423,7 @@ bool hid_report_mouse(bool wired) {
 bool hid_report_gamepad(bool wired) {
     GamepadReport report = hid_get_gamepad_report();
     if (wired) tud_hid_report(REPORT_GAMEPAD, &report, sizeof(report));
-    else wireless_send(REPORT_GAMEPAD, &report, sizeof(report));
+    else wireless_send_hid(REPORT_GAMEPAD, &report, sizeof(report));
     synced_gamepad = true;
     priority_gamepad = 0;
 }
@@ -431,7 +431,7 @@ bool hid_report_gamepad(bool wired) {
 bool hid_report_xinput(bool wired) {
     XInputReport report = hid_get_xinput_report();
     if (wired) xinput_send_report(&report);
-    else wireless_send(REPORT_XINPUT, &report, sizeof(report));
+    else wireless_send_hid(REPORT_XINPUT, &report, sizeof(report));
     synced_gamepad = true;
     priority_gamepad = 0;
 }
@@ -450,6 +450,7 @@ uint8_t hid_get_priority() {
         if (config_get_protocol() == PROTOCOL_GENERIC) return REPORT_GAMEPAD;
         else return REPORT_XINPUT;
     }
+    return 0;
 }
 
 bool hid_report_wired() {
@@ -485,6 +486,7 @@ bool hid_report_wireless() {
     if (device_to_report == REPORT_GAMEPAD) hid_report_gamepad(false);
     if (device_to_report == REPORT_XINPUT) hid_report_xinput(false);
     hid_reset_gamepad_axis();
+    return true;
 }
 
 void hid_report_dongle(uint8_t report_id, uint8_t* payload) {
