@@ -2,6 +2,7 @@
 // Copyright (C) 2022, Input Labs Oy.
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <pico/stdio.h>
 #include <pico/bootrom.h>
 #include <hardware/watchdog.h>
@@ -80,9 +81,21 @@ bool uart_rx_buffer_is_full() {
     return ((write_pos + 1) % UART_RX_BUFFER_SIZE) == read_pos;
 }
 
-bool uart_rx_buffer_put(uint8_t byte) {
+uint16_t uart_rx_buffer_available() {
+    if (write_pos >= read_pos) {
+        return write_pos - read_pos;
+    } else {
+        return UART_RX_BUFFER_SIZE - (read_pos - write_pos);
+    }
+}
+
+void uart_rx_buffer_consume(uint16_t len) {
+    read_pos = (read_pos + len) % UART_RX_BUFFER_SIZE;
+}
+
+bool uart_rx_buffer_putc(uint8_t byte) {
     if (uart_rx_buffer_is_full()) {
-        // warn("UART: RX buffer full\n");
+        warn("UART: RX buffer full\n");
         return false;
     }
     rx_buffer[write_pos] = byte;
@@ -90,16 +103,34 @@ bool uart_rx_buffer_put(uint8_t byte) {
     return true;
 }
 
-uint8_t uart_rx_buffer_get() {
-if (uart_rx_buffer_is_empty()) return false;
+uint8_t uart_rx_buffer_getc() {
     uint8_t byte = rx_buffer[read_pos];
-    read_pos = (read_pos + 1) % UART_RX_BUFFER_SIZE;
+    uart_rx_buffer_consume(1);
     return byte;
+}
+
+uint8_t uart_rx_buffer_peekc() {
+    return rx_buffer[read_pos];
+}
+
+void uart_rx_buffer_get(uint8_t *dest, uint16_t len) {
+    for(uint8_t i=0; i<len; i++) {
+        dest[i] = rx_buffer[read_pos + i];
+    }
+    uart_rx_buffer_consume(len);
+}
+
+bool uart_rx_buffer_match(uint8_t *pattern, uint8_t len) {
+    if (len > uart_rx_buffer_available()) return false;
+    for(uint8_t i=0; i<len; i++) {
+        if (rx_buffer[read_pos+i] != pattern[i]) return false;
+    }
+    return true;
 }
 
 void uart_rx_irq_callback() {
     while(uart_is_readable(ESP_UART)) {
         char c = uart_getc(ESP_UART);
-        uart_rx_buffer_put(c);
+        uart_rx_buffer_putc(c);
     }
 }

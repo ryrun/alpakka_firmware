@@ -59,6 +59,7 @@ uint8_t state_matrix[256] = {0,};
 int16_t mouse_x = 0;
 int16_t mouse_y = 0;
 double gamepad_axis[6] = {0,};
+double gamepad_axis_last[6] = {0,};
 
 void hid_matrix_reset(uint8_t keep) {
     for(uint8_t action=0; action<255; action++) {
@@ -255,9 +256,7 @@ void hid_mouse_move(int16_t x, int16_t y) {
 }
 
 void hid_gamepad_axis(GamepadAxis axis, double value) {
-    if ((value == gamepad_axis[axis]) && !synced_gamepad) return;
     gamepad_axis[axis] += value;  // Multiple inputs can be combined.
-    synced_gamepad = false;
 }
 
 MouseReport hid_get_mouse_report() {
@@ -396,25 +395,37 @@ void hid_reset_mouse() {
 void hid_reset_gamepad_axis() {
     // Gamepad axis values being reset so potentially unsent values are not
     // aggregated with the next cycle.
-    gamepad_axis[LX] = 0;
-    gamepad_axis[LY] = 0;
-    gamepad_axis[LZ] = 0;
-    gamepad_axis[RX] = 0;
-    gamepad_axis[RY] = 0;
-    gamepad_axis[RZ] = 0;
+    for(uint8_t i=0; i<6; i++) gamepad_axis[i] = 0;
+}
+
+void hid_set_gamepad_synced() {
+    for(uint8_t i=0; i<6; i++) gamepad_axis_last[i] = gamepad_axis[i];
+    synced_gamepad = true;
+    priority_gamepad = 0;
+}
+
+void hid_evaluate_gamepad_synced() {
+    // Only evaluate if wasn't already marked as unsynced (by buttons).
+    if (!synced_gamepad) return;
+    // Evaluate axis.
+    for(uint8_t i=0; i<6; i++) {
+        if (gamepad_axis[i] != gamepad_axis_last[i]) {
+            synced_gamepad = false;
+        }
+    }
 }
 
 bool hid_report_keyboard(bool wired) {
     KeyboardReport report = hid_get_keyboard_report();
     if (wired) tud_hid_report(REPORT_KEYBOARD, &report, sizeof(report));
-    else wireless_send(REPORT_KEYBOARD, &report, sizeof(report));
+    else wireless_send_hid(REPORT_KEYBOARD, &report, sizeof(report));
     synced_keyboard = true;
 }
 
 bool hid_report_mouse(bool wired) {
     MouseReport report = hid_get_mouse_report();
     if (wired) tud_hid_report(REPORT_MOUSE, &report, sizeof(report));
-    else wireless_send(REPORT_MOUSE, &report, sizeof(report));
+    else wireless_send_hid(REPORT_MOUSE, &report, sizeof(report));
     hid_reset_mouse();
     synced_mouse = true;
     priority_mouse = 0;
@@ -423,17 +434,15 @@ bool hid_report_mouse(bool wired) {
 bool hid_report_gamepad(bool wired) {
     GamepadReport report = hid_get_gamepad_report();
     if (wired) tud_hid_report(REPORT_GAMEPAD, &report, sizeof(report));
-    else wireless_send(REPORT_GAMEPAD, &report, sizeof(report));
-    synced_gamepad = true;
-    priority_gamepad = 0;
+    else wireless_send_hid(REPORT_GAMEPAD, &report, sizeof(report));
+    hid_set_gamepad_synced();
 }
 
 bool hid_report_xinput(bool wired) {
     XInputReport report = hid_get_xinput_report();
     if (wired) xinput_send_report(&report);
-    else wireless_send(REPORT_XINPUT, &report, sizeof(report));
-    synced_gamepad = true;
-    priority_gamepad = 0;
+    else wireless_send_hid(REPORT_XINPUT, &report, sizeof(report));
+    hid_set_gamepad_synced();
 }
 
 uint8_t hid_get_priority() {
@@ -441,6 +450,7 @@ uint8_t hid_get_priority() {
     // priority ratio and how long they have been queueing.
     // For example thumbstick movement may be queued for some cycles if there
     // is a lot of mouse data being sent.
+    hid_evaluate_gamepad_synced(); // Special case because accumulative absolute axis.
     if (!synced_mouse) priority_mouse += 1 * HID_REPORT_PRIORITY_RATIO;
     if (!synced_gamepad) priority_gamepad += 1;
     // Evaluate.
@@ -450,6 +460,7 @@ uint8_t hid_get_priority() {
         if (config_get_protocol() == PROTOCOL_GENERIC) return REPORT_GAMEPAD;
         else return REPORT_XINPUT;
     }
+    return 0;
 }
 
 bool hid_report_wired() {
@@ -485,6 +496,7 @@ bool hid_report_wireless() {
     if (device_to_report == REPORT_GAMEPAD) hid_report_gamepad(false);
     if (device_to_report == REPORT_XINPUT) hid_report_xinput(false);
     hid_reset_gamepad_axis();
+    return true;
 }
 
 void hid_report_dongle(uint8_t report_id, uint8_t* payload) {

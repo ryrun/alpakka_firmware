@@ -7,4 +7,4 @@ void wireless_init(bool dongle);
 void wireless_controller_task();
 void wireless_dongle_task();
 void wireless_set_uart_data_mode(bool mode);
-void wireless_send(uint8_t report_id, void *packet, uint8_t len);
+void wireless_send_hid(uint8_t report_id, void *packet, uint8_t len);
