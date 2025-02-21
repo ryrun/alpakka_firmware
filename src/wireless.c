@@ -19,10 +19,9 @@
 static bool uart_data_mode = false;
 
 void wireless_send_hid(uint8_t report_id, void *payload, uint8_t len) {
-    uint8_t message[40] = {UART_CONTROL_BYTES, AT_HID, 0,};
-    message[4] = report_id;
+    uint8_t message[36] = {UART_CONTROL_BYTES, AT_HID, report_id,};
     memcpy(&message[5], payload, len);
-    uart_write_blocking(ESP_UART, message, 5+len);  // 3 control + 1 AT + 1 reportid.
+    uart_write_blocking(ESP_UART, message, 36);
 }
 
 static void cross_logging() {
@@ -104,7 +103,7 @@ void wireless_dongle_task() {
                 }
             }
             // Get AT command.
-            else if (i < 4) {
+            else if (i == 3) {
                 if (c >= AT_HID && c <= AT_BATTERY) {
                     command = c;
                     i += 1;
@@ -121,17 +120,14 @@ void wireless_dongle_task() {
                 if (command==AT_HID && i==4+32) {
                     hid_report_dongle(payload[0], &payload[1]);
                     i = 0;
-                    continue;
                 }
-                if (command==AT_WEBUSB && i==4+64) {
+                else if (command==AT_WEBUSB && i==4+64) {
                     // hid_report_dongle(payload[0], &payload[1]);
                     i = 0;
-                    continue;
                 }
-                if (command==AT_BATTERY && i==4+4) {
-                    info("Battery: %i %i %i %i\n", payload[0], payload[1], payload[2], payload[3]);
+                else if (command==AT_BATTERY && i==4+4) {
+                    // info("Battery: %i %i %i %i\n", payload[0], payload[1], payload[2], payload[3]);
                     i = 0;
-                    continue;
                 }
             }
         }
