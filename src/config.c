@@ -330,6 +330,7 @@ void config_tune(bool direction) {
     else if (config_tune_mode == PROC_TUNE_TOUCH_SENS) {
         config_set_touch_sens_preset(constrain(config_cache.sens_touch + value, 0, 4), true);
     }
+    config_cache_synced = false;
     config_tune_update_leds();
 }
 
@@ -419,6 +420,7 @@ void config_set_protocol(uint8_t preset) {
 void config_set_touch_sens_preset(uint8_t preset, bool notify_webusb) {
     config_cache.sens_touch = preset;
     touch_load_from_config();
+    touch_update_auto_ratio();
     if (notify_webusb) webusb_set_pending_config_share(SENS_TOUCH);
     info("Config: Touch sensitivity preset %i\n", preset);
 }

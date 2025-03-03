@@ -79,8 +79,7 @@ uint8_t touch_get_elapsed() {
     gpio_put(PIN_TOUCH_OUT, polarity_mode);
     while(gpio_get(PIN_TOUCH_IN) != polarity_mode) {
         if ((time_us_32() - timer_start) > TOUCH_TIMEOUT) {
-            timedout = true;
-            break;
+            return TOUCH_TIMEOUT;
         }
     }
     // Request change and measure.
@@ -95,10 +94,8 @@ uint8_t touch_get_elapsed() {
     // Request settle for next cycle.
     gpio_put(PIN_TOUCH_OUT, polarity_mode);
     // Calculate elapsed (ignore settling time).
-    uint32_t elapsed;
-    if (!timedout) elapsed = time_us_32() - timer_settled;
-    else elapsed = TOUCH_TIMEOUT;
-    return elapsed;
+    if (timedout) return TOUCH_TIMEOUT;
+    else return time_us_32() - timer_settled;
 }
 
 // Take as many samples as possible within the available time (timeout).
@@ -130,9 +127,6 @@ void touch_update_auto_ratio() {
         if (sens_from_config == -1) threshold_ratio = TOUCH_AUTO_RATIO_WIRELESS_PRESET1;
         if (sens_from_config == -2) threshold_ratio = TOUCH_AUTO_RATIO_WIRELESS_PRESET2;
         if (sens_from_config == -3) threshold_ratio = TOUCH_AUTO_RATIO_WIRELESS_PRESET3;
-    }
-    if (threshold_ratio > 0) {
-        info("Touch: threshold_ratio=%0.2f\n", threshold_ratio);
     }
 }
 
@@ -171,7 +165,8 @@ bool touch_status() {
         static uint32_t log_last_ts = 0;
         if (time_us_32() > (log_last_ts + (TOUCH_DEBUG_FREQ * 1000))) {
             log_last_ts = time_us_32();
-            info("%.1f / %.1f\n", smoothed, threshold);
+            float ratio = sens_from_config < 0 ? threshold_ratio : 0;
+            info("e=%.1f t=%.1f r=%.2f\n", elapsed, threshold, ratio);
         }
     }
     // Debounce check (prioritize stay up to avoid microcuts).
@@ -188,7 +183,8 @@ bool touch_status() {
     // Debug log triggered by state change.
     if (engaged != engaged_prev) {
         if (logging_has_mask(LOG_TOUCH_SENS)) {
-            info("%.1f / %.1f", smoothed, threshold);
+            float ratio = sens_from_config < 0 ? threshold_ratio : 0;
+            info("e=%.1f t=%.1f r=%.2f", elapsed, threshold, ratio);
             if (engaged) info(" TOUCH\n");
             else info(" LIFT\n");
         }
