@@ -49,7 +49,7 @@ float thumbstick_adc_smoothed(uint8_t pin) {
     // Determine factor, apply threshold.
     float factor = ADC_SMOOTH_THRESHOLD - fabs(value - smoothed[channel]);
     // Scale and ignore negative factor.
-    factor - max(0, factor * ADC_SMOOTH_MAX);
+    factor = max(0, factor * ADC_SMOOTH_MAX);
     // Do rolling average.
     value = smooth(smoothed[channel], value, factor);
     // Update rolling value and return.
