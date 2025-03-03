@@ -238,6 +238,13 @@ void config_print() {
     );
 }
 
+void config_print_minimal() {
+    info("NVM: dump\n");
+    info("  config_version=%i\n", config_cache.config_version);
+    info("  protocol=%i\n", config_cache.protocol);
+    info("  log_modes level=%i mask=%i\n", config_cache.log_level, config_cache.log_mask);
+}
+
 void config_set_profile(uint8_t profile) {
     if (profile == config_cache.profile) return;
     config_cache.profile = profile;
@@ -622,9 +629,13 @@ void config_init() {
         warn("NVM config not found or incompatible, writing default instead\n");
         config_write_init();
     }
-    config_init_profiles_from_nvm();
-    config_print();
-    config_alert_if_not_calibrated();
+    #ifdef DEVICE_IS_ALPAKKA
+        config_init_profiles_from_nvm();
+        config_print();
+        config_alert_if_not_calibrated();
+    #else
+        config_print_minimal();
+    #endif
     logging_load_from_config();
 }
 

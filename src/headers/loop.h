@@ -6,12 +6,13 @@
 
 #define LABEL_CONTROLLER "Alpakka controller"
 #define LABEL_DONGLE     "Wireless dongle   "
-#define USB_WAIT_FOR_INIT_MS 1000
+#define USB_WAIT_FOR_INIT_MS 1000  // 1 second.
+#define USB_DONGLE_CHECK_US 2000000  // 2 seconds.
 
 typedef enum {
     WIRED,
     WIRELESS,
-    FAKESLEEP,
+    INACTIVE,
 } DeviceMode;
 
 uint64_t has_system_clock();
