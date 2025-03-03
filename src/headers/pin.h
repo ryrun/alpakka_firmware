@@ -19,6 +19,7 @@ Pin numbers from 200 to 215 are IO Expander 2, from pin 0 to pin 15.
 
 // Pico.
 #ifdef DEVICE_ALPAKKA_V0
+    #define PIN_FUNC 0
     #define PIN_LED_UP 2
     #define PIN_LED_LEFT 3
     #define PIN_LED_DOWN 4
@@ -71,7 +72,9 @@ Pin numbers from 200 to 215 are IO Expander 2, from pin 0 to pin 15.
 
 // Marmota.
 #ifdef DEVICE_HAS_MARMOTA
+    #define PIN_FUNC 2
     #define PIN_LED_BOARD 3
+    #define PIN_TOUCH_OUT 4
     #define PIN_SPI_CS1 5
     #define PIN_SPI_CS0 6
     #define PIN_LED_LEFT 7
@@ -81,7 +84,7 @@ Pin numbers from 200 to 215 are IO Expander 2, from pin 0 to pin 15.
     #define PIN_ROTARY_B 11
     #define PIN_ROTARY_A 12
     #define PIN_TOUCH_IN 13
-    #define PIN_TOUCH_OUT 14
+    #define PIN_TOUCH_REF 14
     #define PIN_BATT_STAT_1 15
     #define PIN_SPI_RX 16
     #define PIN_ESP_BOOT 17
@@ -95,8 +98,8 @@ Pin numbers from 200 to 215 are IO Expander 2, from pin 0 to pin 15.
     #define PIN_ESP_ENABLE 25
     #define PIN_THUMBSTICK_RY 26
     #define PIN_THUMBSTICK_RX 27
-    #define PIN_THUMBSTICK_LX 28
-    #define PIN_THUMBSTICK_LY 29
+    #define PIN_THUMBSTICK_LX 29
+    #define PIN_THUMBSTICK_LY 28
     // Expanders.
     #define PIN_SELECT_1 114
     #define PIN_SELECT_2 110
