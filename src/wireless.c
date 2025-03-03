@@ -129,6 +129,9 @@ void wireless_dongle_task() {
                     // info("Battery: %i %i %i %i\n", payload[0], payload[1], payload[2], payload[3]);
                     i = 0;
                 }
+                else if (i==4+64) {
+                    i = 0;
+                }
             }
         }
     }

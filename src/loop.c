@@ -60,6 +60,15 @@ static void title(char *label) {
     info("║ %s ║\n"         , label);
     info("╚====================╝\n");
     info("Firmware version: %s\n", VERSION);
+    #if defined DEVICE_ALPAKKA_V0
+        info("Compilation target: Alpakka v0\n");
+    #elif defined DEVICE_ALPAKKA_V1
+        info("Compilation target: Alpakka v1\n");
+    #elif defined DEVICE_DONGLE
+        info("Compilation target: Dongle\n");
+    #elif defined DEVICE_LLAMA
+        info("Compilation target: LLAMA\n");
+    #endif
 }
 
 static void set_wired() {
@@ -74,6 +83,13 @@ static void set_wireless() {
     device_mode = WIRELESS;
     wireless_set_uart_data_mode(true);
     touch_update_auto_ratio();
+}
+
+static void set_inactive() {
+    info("LOOP: Inactive\n");
+    device_mode = INACTIVE;
+    gpio_put(PIN_LED_BOARD, false);
+    esp_enable(false);
 }
 
 static void battery_stat_init() {
@@ -144,7 +160,7 @@ void loop_dongle_init() {
     tusb_init();
     usb_wait_for_init(-1);  // Negative number = no timeout.
     // wait_for_system_clock();
-    bus_init();
+    // bus_init();
     hid_init();
     wireless_init(true);
     set_wireless();  // Dongle is always in wireless mode.
@@ -177,13 +193,28 @@ void loop_controller_task() {
 }
 
 void loop_dongle_task() {
-    wireless_dongle_task();
-    tud_task();
-    if (tud_ready()) {
-        webusb_read();
-        webusb_flush();
+    static uint32_t last = 0;
+    uint32_t now = time_us_32();
+    if (device_mode == WIRELESS) {
+        config_sync();
+        wireless_dongle_task();
+        tud_task();
+        if (tud_ready()) {
+            webusb_read();
+            webusb_flush();
+        }
+        uart_listen_serial();
+        if (now > (last + USB_DONGLE_CHECK_US)) {
+            last = time_us_32();
+            if (!usb_is_connected()) set_inactive();
+        }
     }
-    uart_listen_serial();
+    if (device_mode == INACTIVE) {
+        if (now > (last + USB_DONGLE_CHECK_US)) {
+            last = time_us_32();
+            if (usb_is_connected()) power_restart();
+        }
+    }
 }
 
 void loop_llama_init() {
