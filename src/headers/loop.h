@@ -3,6 +3,7 @@
 
 #pragma once
 #include <stdint.h>
+#include <stdbool.h>
 
 #define LABEL_CONTROLLER "Alpakka controller"
 #define LABEL_DONGLE     "Wireless dongle   "
@@ -20,6 +21,8 @@ uint64_t get_system_clock();
 void set_system_clock(uint64_t time);
 
 DeviceMode loop_get_device_mode();
+void loop_set_battery_low(bool state);
+
 void loop_controller_init();
 void loop_dongle_init();
 void loop_llama_init();

@@ -35,6 +35,7 @@ uint8_t pcb_gen = 255;
 // Problems.
 bool problem_calibration = false;
 bool problem_gyro = false;
+bool problem_battery_low = false;
 
 
 void config_load() {
@@ -532,16 +533,27 @@ void config_set_problem_gyro(bool state) {
     led_show();
 }
 
+void config_set_problem_battery_low(bool state) {
+    if (state == problem_battery_low) return;
+    problem_battery_low = state;
+    led_show();
+}
+
 void config_ignore_problems() {
     if (!config_problems_are_pending()) return;
     warn("User requested to ignore problems\n");
     problem_calibration = false;
     problem_gyro = false;
+    problem_battery_low = false;
     led_show();
 }
 
 bool config_problems_are_pending() {
-    return problem_calibration || problem_gyro;
+    return (
+        problem_calibration ||
+        problem_gyro ||
+        problem_battery_low
+    );
 }
 
 void config_alert_if_not_calibrated() {

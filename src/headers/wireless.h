@@ -3,7 +3,9 @@
 
 #pragma once
 
-void wireless_init(bool dongle);
+#define BATTERY_LOW_THRESHOLD 2900
+
+void wireless_init();
 void wireless_controller_task();
 void wireless_dongle_task();
 void wireless_set_uart_data_mode(bool mode);

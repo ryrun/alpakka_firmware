@@ -170,5 +170,6 @@ void config_profile_overwrite(uint8_t indexTo, int8_t indexFrom);
 // Problems.
 void config_set_problem_calibration(bool state);
 void config_set_problem_gyro(bool state);
+void config_set_problem_battery_low(bool state);
 void config_ignore_problems();
 bool config_problems_are_pending();

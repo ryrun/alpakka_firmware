@@ -23,10 +23,15 @@
 #include "power.h"
 
 static DeviceMode device_mode = WIRED;
+static bool battery_low = false;
 static uint64_t system_clock = 0;
 
 DeviceMode loop_get_device_mode() {
     return device_mode;
+}
+
+void loop_set_battery_low(bool state) {
+    battery_low = state;
 }
 
 uint64_t has_system_clock() {
@@ -88,7 +93,7 @@ static void set_wireless() {
 static void set_inactive() {
     info("LOOP: Inactive\n");
     device_mode = INACTIVE;
-    gpio_put(PIN_LED_BOARD, false);
+    led_board_set(false);
     esp_enable(false);
 }
 
@@ -101,23 +106,26 @@ static void battery_stat_init() {
 }
 
 static void board_led() {
-    #ifdef DEVICE_HAS_MARMOTA
+    #ifdef DEVICE_IS_ALPAKKA
         static uint8_t i = 0;
         static bool blink = false;
         i++;
         if (i == 100) {
             i = 0;
-            bool stat1 = gpio_get(PIN_BATT_STAT_1);
-            if (!stat1) {
-                if (device_mode == WIRED) {
-                    gpio_put(PIN_LED_BOARD, true);
+            if (device_mode == WIRED) {
+                if (!gpio_get(PIN_BATT_STAT_1)) {
+                    led_board_set(true);  // Led on indicates battery is charging.
+                } else {
+                    led_board_set(false);
                 }
-                // if (device_mode == WIRELESS) {  // TODO: redo with analog voltage read.
-                //     blink = !blink;
-                //     gpio_put(PIN_LED_BOARD, blink);
-                // }
-            } else {
-                gpio_put(PIN_LED_BOARD, false);
+            }
+            if (device_mode == WIRELESS) {
+                if (battery_low) {
+                    blink = !blink;
+                    led_board_set(blink);  // Blinking led if battery is low.
+                } else {
+                    led_board_set(false);
+                }
             }
         }
     #endif
@@ -141,7 +149,7 @@ void loop_controller_init() {
     imu_init();
     profile_init();
     battery_stat_init();
-    wireless_init(false);
+    wireless_init();
     if (usb) {
         set_wired();
     } else {
@@ -162,8 +170,9 @@ void loop_dongle_init() {
     // wait_for_system_clock();
     // bus_init();
     hid_init();
-    wireless_init(true);
+    wireless_init();
     set_wireless();  // Dongle is always in wireless mode.
+    led_board_set(true);
     loop_run();
 }
 
@@ -220,7 +229,7 @@ void loop_dongle_task() {
 void loop_llama_init() {
     stdio_uart_init();
     stdio_init_all();
-    wireless_init(true);
+    wireless_init();
     esp_flash();
 }
 
