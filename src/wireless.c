@@ -16,14 +16,10 @@
 #include "common.h"
 #include "uart.h"
 #include "esp.h"
+#include "ctrl.h"
+#include "webusb.h"
 
 static bool uart_data_mode = false;
-
-void wireless_send_hid(uint8_t report_id, void *payload, uint8_t len) {
-    uint8_t message[36] = {UART_CONTROL_BYTES, AT_HID, report_id,};
-    memcpy(&message[5], payload, len);
-    uart_write_blocking(ESP_UART, message, 36);
-}
 
 void wireless_set_uart_data_mode(bool mode) {
     info("RF: data_mode=%i\n", mode);
@@ -55,6 +51,19 @@ void wireless_init() {
         gpio_set_function(PIN_UART1_TX, GPIO_FUNC_UART);
         gpio_set_function(PIN_UART1_RX, GPIO_FUNC_UART);
     #endif
+}
+
+void wireless_send_hid(uint8_t report_id, void *payload, uint8_t len) {
+    uint8_t message[36] = {UART_CONTROL_BYTES, AT_HID, report_id,};
+    memcpy(&message[5], payload, len);
+    uart_write_blocking(ESP_UART, message, 36);
+}
+
+void wireless_send_webusb(Ctrl ctrl) {
+    uint8_t message[68] = {UART_CONTROL_BYTES, AT_WEBUSB,};
+    memcpy(&message[4], (uint8_t*)&ctrl, 64);
+    printf("SEND WEBUSB\n");
+    uart_write_blocking(ESP_UART, message, 68);
 }
 
 void wireless_uart_commands() {
@@ -91,10 +100,14 @@ void wireless_uart_commands() {
             if (command==AT_HID && i==4+32) {
                 hid_report_dongle(payload[0], &payload[1]);
                 i = 0;
+                command = 0;
             }
             else if (command==AT_WEBUSB && i==4+64) {
-                // hid_report_dongle(payload[0], &payload[1]);
+                Ctrl ctrl = {0,};
+                memcpy(&ctrl, payload, 64);
+                webusb_transfer_wired(ctrl);
                 i = 0;
+                command = 0;
             }
             else if (command==AT_BATTERY && i==4+4) {
                 #ifdef DEVICE_ALPAKKA_V1
@@ -111,9 +124,7 @@ void wireless_uart_commands() {
                     }
                 #endif
                 i = 0;
-            }
-            else if (i==4+64) {
-                i = 0;
+                command = 0;
             }
         }
     }

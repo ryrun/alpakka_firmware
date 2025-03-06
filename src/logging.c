@@ -63,15 +63,8 @@ void logging_init() {
 void write(char *msg, va_list args) {
     char formatted[256] = {0,};
     vsnprintf(formatted, 256, msg, args);
-    // UART.
-    printf(formatted);
-    // WebUSB.
-    #if defined DEVICE_IS_ALPAKKA
-        if (loop_get_device_mode() == WIRED) webusb_write(formatted);
-    #elif defined DEVICE_DONGLE
-        // if (loop_get_device_mode() == WIRED) webusb_write(formatted);
-        webusb_write(formatted);
-    #endif
+    printf(formatted);  // Serial.
+    webusb_write(formatted);  // WebUSB.
 }
 
 void info(char *msg, ...) {

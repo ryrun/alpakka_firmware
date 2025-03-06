@@ -14,6 +14,8 @@
 #include "common.h"
 #include "logging.h"
 #include "power.h"
+#include "loop.h"
+#include "wireless.h"
 
 char webusb_buffer[WEBUSB_BUFFER_SIZE] = {0,};
 uint16_t webusb_ptr_in = 0;
@@ -43,7 +45,7 @@ void webusb_flush_force() {
     }
 }
 
-bool webusb_transfer(Ctrl ctrl) {
+bool webusb_transfer_wired(Ctrl ctrl) {
     // Check if TinyUSB device is ready (connected).
     if (!tud_ready()) return false;
     // Check if USB endpoint is free.
@@ -55,6 +57,20 @@ bool webusb_transfer(Ctrl ctrl) {
     // Release USB endpoint.
     usbd_edpt_release(0, ADDR_WEBUSB_IN);
     return success;
+}
+
+bool webusb_transfer(Ctrl ctrl) {
+    #if defined DEVICE_IS_ALPAKKA
+        if (loop_get_device_mode() == WIRED) {
+            return webusb_transfer_wired(ctrl);
+        }
+        if (loop_get_device_mode() == WIRELESS) {
+            wireless_send_webusb(ctrl);
+            return true;
+        }
+    #elif defined DEVICE_DONGLE
+        return webusb_transfer_wired(ctrl);
+    #endif
 }
 
 bool webusb_flush() {
