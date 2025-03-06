@@ -57,14 +57,6 @@ void wireless_init() {
     #endif
 }
 
-void wireless_cross_logging() {
-    // Redirect incomming ESP UART logging to main UART.
-    while(uart_is_readable(ESP_UART)) {
-        char c = uart_getc(ESP_UART);
-        info("%c", c);
-    }
-}
-
 void wireless_uart_commands() {
     static uint8_t i = 0;
     static uint8_t command = 0;
@@ -129,12 +121,10 @@ void wireless_uart_commands() {
 
 void wireless_controller_task() {
     hid_report_wireless();
-    // if (!uart_data_mode) wireless_cross_logging();
     wireless_uart_commands();
 }
 
 void wireless_dongle_task() {
     // led_task();
-    if (!uart_data_mode) wireless_cross_logging();
-    else wireless_uart_commands();
+    wireless_uart_commands();
 }
