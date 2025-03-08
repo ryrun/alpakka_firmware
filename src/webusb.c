@@ -14,6 +14,8 @@
 #include "common.h"
 #include "logging.h"
 #include "power.h"
+#include "loop.h"
+#include "wireless.h"
 
 char webusb_buffer[WEBUSB_BUFFER_SIZE] = {0,};
 uint16_t webusb_ptr_in = 0;
@@ -43,7 +45,7 @@ void webusb_flush_force() {
     }
 }
 
-bool webusb_transfer(Ctrl ctrl) {
+bool webusb_transfer_wired(Ctrl ctrl) {
     // Check if TinyUSB device is ready (connected).
     if (!tud_ready()) return false;
     // Check if USB endpoint is free.
@@ -55,6 +57,20 @@ bool webusb_transfer(Ctrl ctrl) {
     // Release USB endpoint.
     usbd_edpt_release(0, ADDR_WEBUSB_IN);
     return success;
+}
+
+bool webusb_transfer(Ctrl ctrl) {
+    #if defined DEVICE_IS_ALPAKKA
+        if (loop_get_device_mode() == WIRED) {
+            return webusb_transfer_wired(ctrl);
+        }
+        if (loop_get_device_mode() == WIRELESS) {
+            wireless_send_webusb(ctrl);
+            return true;
+        }
+    #elif defined DEVICE_DONGLE
+        return webusb_transfer_wired(ctrl);
+    #endif
 }
 
 bool webusb_flush() {
@@ -172,16 +188,8 @@ void webusb_handle_section_set(uint8_t profileIndex, uint8_t sectionIndex, uint8
     webusb_pending_section_share = sectionIndex;
 }
 
-void webusb_read() {
-    // Parse data coming from the app.
-    if (!tud_ready() || usbd_edpt_busy(0, ADDR_WEBUSB_OUT)) return;
-    // Using static to ensure the variable lives long enough in memory to be
-    // referenced by the transfer underlying mechanisms.
-    static Ctrl ctrl;
-    usbd_edpt_claim(0, ADDR_WEBUSB_OUT);
-    usbd_edpt_xfer(0, ADDR_WEBUSB_OUT, (uint8_t*)&ctrl, 64);
-    usbd_edpt_release(0, ADDR_WEBUSB_OUT);
-    // Handle incomming message.
+// Handle incomming message.
+void webusb_handle(Ctrl ctrl) {
     if (ctrl.message_type == PROC) webusb_handle_proc(ctrl.payload[0]);
     if (ctrl.message_type == STATUS_GET) webusb_handle_status_get();
     if (ctrl.message_type == STATUS_SET) webusb_handle_status_set(ctrl.payload);
@@ -206,6 +214,25 @@ void webusb_read() {
     }
     if (ctrl.message_type == PROFILE_OVERWRITE) {
         config_profile_overwrite(ctrl.payload[0], ctrl.payload[1]);
+    }
+}
+
+void webusb_read() {
+    // Parse data coming from the app.
+    if (!tud_ready() || usbd_edpt_busy(0, ADDR_WEBUSB_OUT)) return;
+    // Using static to ensure the variable lives long enough in memory to be
+    // referenced by the transfer underlying mechanisms.
+    static Ctrl ctrl;
+    usbd_edpt_claim(0, ADDR_WEBUSB_OUT);
+    usbd_edpt_xfer(0, ADDR_WEBUSB_OUT, (uint8_t*)&ctrl, 64);
+    usbd_edpt_release(0, ADDR_WEBUSB_OUT);
+    // Wireless switch.
+    if (ctrl.protocol_flags == CTRL_FLAG_WIRELESS) {
+        // Redirect to wireless controller.
+        wireless_send_webusb(ctrl);
+    } else {
+        // Handle locally.
+        webusb_handle(ctrl);
     }
 }
 

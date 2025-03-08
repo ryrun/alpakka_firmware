@@ -16,7 +16,7 @@ Ctrl ctrl_empty() {
     // by the other end, but it is needed to kickstart the communication.
     // So we will be sending this bogus message first.
     Ctrl ctrl = {
-        .protocol_version = CTRL_PROTOCOL_VERSION,
+        .protocol_flags = CTRL_FLAG_NONE,
         .device_id = ALPAKKA,
         .message_type = 0,
         .len = 0
@@ -26,7 +26,7 @@ Ctrl ctrl_empty() {
 
 Ctrl ctrl_log(uint8_t* offset_ptr, uint8_t len) {
     Ctrl ctrl = {
-        .protocol_version = CTRL_PROTOCOL_VERSION,
+        .protocol_flags = CTRL_FLAG_NONE,
         .device_id = ALPAKKA,
         .message_type = LOG,
         .len=len
@@ -39,7 +39,7 @@ Ctrl ctrl_log(uint8_t* offset_ptr, uint8_t len) {
 
 Ctrl ctrl_status_share() {
     Ctrl ctrl = {
-        .protocol_version = CTRL_PROTOCOL_VERSION,
+        .protocol_flags = CTRL_FLAG_NONE,
         .device_id = ALPAKKA,
         .message_type = STATUS_SHARE,
         .len = 3
@@ -104,7 +104,7 @@ void ctrl_config_set(Ctrl_cfg_type key, uint8_t preset, uint8_t values[5]) {
 Ctrl ctrl_config_share(uint8_t index) {
     Config *config = config_read();
     Ctrl ctrl = {
-        .protocol_version = CTRL_PROTOCOL_VERSION,
+        .protocol_flags = CTRL_FLAG_NONE,
         .device_id = ALPAKKA,
         .message_type = CONFIG_SHARE,
         .len = 7
@@ -156,7 +156,7 @@ Ctrl ctrl_config_share(uint8_t index) {
 
 Ctrl ctrl_section_share(uint8_t profile_index, uint8_t section_index) {
     Ctrl ctrl = {
-        .protocol_version = CTRL_PROTOCOL_VERSION,
+        .protocol_flags = CTRL_FLAG_NONE,
         .device_id = ALPAKKA,
         .message_type = SECTION_SHARE,
         .len = 60

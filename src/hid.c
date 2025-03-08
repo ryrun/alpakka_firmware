@@ -489,13 +489,13 @@ bool hid_report_wired() {
 bool hid_report_wireless() {
     if (!hid_allow_communication) return true;
     uint8_t device_to_report = hid_get_priority();
-    // webusb_read();
-    // webusb_flush();
     if (device_to_report == REPORT_KEYBOARD) hid_report_keyboard(false);
     if (device_to_report == REPORT_MOUSE) hid_report_mouse(false);
     if (device_to_report == REPORT_GAMEPAD) hid_report_gamepad(false);
     if (device_to_report == REPORT_XINPUT) hid_report_xinput(false);
     hid_reset_gamepad_axis();
+    // webusb_read();
+    webusb_flush();
     return true;
 }
 
