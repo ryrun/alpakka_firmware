@@ -60,9 +60,9 @@ void wireless_send_hid(uint8_t report_id, void *payload, uint8_t len) {
 }
 
 void wireless_send_webusb(Ctrl ctrl) {
+    ctrl.protocol_flags = CTRL_FLAG_WIRELESS;
     uint8_t message[68] = {UART_CONTROL_BYTES, AT_WEBUSB,};
     memcpy(&message[4], (uint8_t*)&ctrl, 64);
-    printf("SEND WEBUSB\n");
     uart_write_blocking(ESP_UART, message, 68);
 }
 
@@ -105,7 +105,15 @@ void wireless_uart_commands() {
             else if (command==AT_WEBUSB && i==4+64) {
                 Ctrl ctrl = {0,};
                 memcpy(&ctrl, payload, 64);
-                webusb_transfer_wired(ctrl);
+                #ifdef DEVICE_DONGLE
+                    // Ctrl message from controller, gets read at dongle uart,
+                    // and sent to the USB.
+                    webusb_transfer_wired(ctrl);
+                #else
+                    // Ctrl message from dongle, gets read at controller uart,
+                    // and is handled as if received via USB.
+                    webusb_handle(ctrl);
+                #endif
                 i = 0;
                 command = 0;
             }

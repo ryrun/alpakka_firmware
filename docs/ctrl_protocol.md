@@ -20,11 +20,12 @@ Padding zeros to complete the 64 bytes may be used. Therefore the protocol avoid
 | - | - | - | - | - |
 | Protocol version | Device Id | Message type | Payload size | Payload
 
-### Protocol version
+### Protocol flags
 
 | Key | Index |
 | - | - |
-| VERSION 1 | 1 |
+| NONE | 1 |
+| WIRELESS | 2 |
 
 ### Device id
 

@@ -4,12 +4,16 @@
 #pragma once
 #include "common.h"
 
-#define CTRL_PROTOCOL_VERSION 1
 #define CTRL_MSG_SIZE 64
 #define CTRL_NON_PAYLOAD_SIZE 4
 #define CTRL_MAX_PAYLOAD_SIZE (CTRL_MSG_SIZE - CTRL_NON_PAYLOAD_SIZE)
 
-typedef enum Ctrl_device_enum {
+typedef enum _Ctrl_protocol_flags {
+    CTRL_FLAG_NONE = 1,
+    CTRL_FLAG_WIRELESS,
+} Ctrl_protocol_flags;
+
+typedef enum _Ctrl_device {
     ALPAKKA = 1,
     KAPYBARA,
 } Ctrl_device;
@@ -107,8 +111,8 @@ typedef enum CtrlSectionType_enum {
 } CtrlSectionType;
 
 typedef struct _Ctrl {
-    uint8_t protocol_version;
-    uint8_t device_id;
+    Ctrl_protocol_flags protocol_flags;
+    Ctrl_device device_id;
     Ctrl_msg_type message_type;
     uint8_t len;
     uint8_t payload[CTRL_MAX_PAYLOAD_SIZE];

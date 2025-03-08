@@ -116,11 +116,13 @@ void config_sync() {
         config_write();
     }
     // Sync profiles.
-    for(uint8_t i=0; i<NVM_PROFILE_SLOTS; i++) {
-        if (!config_profile_cache_synced[i]) {
-            config_profile_write(i);
+    #ifdef DEVICE_IS_ALPAKKA
+        for(uint8_t i=0; i<NVM_PROFILE_SLOTS; i++) {
+            if (!config_profile_cache_synced[i]) {
+                config_profile_write(i);
+            }
         }
-    }
+    #endif
 }
 
 void config_write_init() {
