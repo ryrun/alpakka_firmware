@@ -50,7 +50,6 @@ There are 2 modes of operation:
 
 uint8_t polarity_mode = 0;
 int8_t sens_from_config = 0;
-float threshold_ratio = 0;
 float baseline = 0;
 
 void touch_load_from_config() {
@@ -112,28 +111,28 @@ float touch_get_elapsed_multisample() {
     return total / samples;
 }
 
-void touch_update_auto_ratio() {
+float touch_get_threshold_ratio() {
     // When the touch sensitivity is negative it means the touch detection is
     // in "dynamic" mode.
     // When the controller is in wireless mode (working on battery) the return
     // path is much sorter and the timing is different; so the ratio has to be
     // adjusted when the mode changes from wired to wireless (and viceversa).
     if (loop_get_device_mode() == WIRED) {
-        if (sens_from_config == -1) threshold_ratio = TOUCH_AUTO_RATIO_WIRED_PRESET1;
-        if (sens_from_config == -2) threshold_ratio = TOUCH_AUTO_RATIO_WIRED_PRESET2;
-        if (sens_from_config == -3) threshold_ratio = TOUCH_AUTO_RATIO_WIRED_PRESET3;
+        if (sens_from_config == -1) return TOUCH_AUTO_RATIO_WIRED_PRESET1;
+        if (sens_from_config == -2) return TOUCH_AUTO_RATIO_WIRED_PRESET2;
+        if (sens_from_config == -3) return TOUCH_AUTO_RATIO_WIRED_PRESET3;
     }
     if (loop_get_device_mode() == WIRELESS) {
-        if (sens_from_config == -1) threshold_ratio = TOUCH_AUTO_RATIO_WIRELESS_PRESET1;
-        if (sens_from_config == -2) threshold_ratio = TOUCH_AUTO_RATIO_WIRELESS_PRESET2;
-        if (sens_from_config == -3) threshold_ratio = TOUCH_AUTO_RATIO_WIRELESS_PRESET3;
+        if (sens_from_config == -1) return TOUCH_AUTO_RATIO_WIRELESS_PRESET1;
+        if (sens_from_config == -2) return TOUCH_AUTO_RATIO_WIRELESS_PRESET2;
+        if (sens_from_config == -3) return TOUCH_AUTO_RATIO_WIRELESS_PRESET3;
     }
 }
 
 // Calculate dynamic threshold.
-float touch_get_auto_threshold(float elapsed) {
+float touch_get_auto_threshold(float elapsed, float ratio) {
     // Calculate threshold based on current baseline and factor.
-    float threshold = baseline * threshold_ratio;
+    float threshold = baseline * ratio;
     // Update baseline (with smoothing) if the surface is considered disengaged.
     bool engaged = elapsed >= threshold;
     if (!engaged) {
@@ -153,10 +152,11 @@ bool touch_status() {
     float smoothed = (elapsed + elapsed_prev) / 2;
     elapsed_prev = elapsed;
     // Determine threshold.
+    float threshold_ratio = touch_get_threshold_ratio();
     float threshold = (
         sens_from_config > 0 ?
         sens_from_config / 10.0 :
-        touch_get_auto_threshold(smoothed)
+        touch_get_auto_threshold(smoothed, threshold_ratio)
     );
     // Determine if the surface is considered engaged.
     bool engaged = smoothed >= threshold;

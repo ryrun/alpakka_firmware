@@ -134,7 +134,7 @@ void config_write_init() {
         .protocol = 0,
         .sens_mouse = 0,
         .sens_touch = 1,
-        .deadzone = 0,
+        .deadzone = 1,
         .vibration = 0,
         .offset_ts_lx = 0,
         .offset_ts_ly = 0,
@@ -167,8 +167,8 @@ void config_write_init() {
     config_cache.sens_touch_values[0] = -1;  // Auto preset 1.
     config_cache.sens_touch_values[1] = -2;  // Auto preset 2.
     config_cache.sens_touch_values[2] = -3;  // Auto preset 3.
-    config_cache.sens_touch_values[3] = 100;  // 10.0
-    config_cache.sens_touch_values[4] = 50;  // 5.0
+    config_cache.sens_touch_values[3] = 120;  // 12.0
+    config_cache.sens_touch_values[4] = 60;  // 6.0
     config_write();
 }
 
@@ -430,7 +430,6 @@ void config_set_protocol(uint8_t preset) {
 void config_set_touch_sens_preset(uint8_t preset, bool notify_webusb) {
     config_cache.sens_touch = preset;
     touch_load_from_config();
-    touch_update_auto_ratio();
     if (notify_webusb) webusb_set_pending_config_share(SENS_TOUCH);
     info("Config: Touch sensitivity preset %i\n", preset);
 }

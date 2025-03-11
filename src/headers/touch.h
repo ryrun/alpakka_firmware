@@ -18,9 +18,9 @@
 #define TOUCH_AUTO_RATIO_WIRED_PRESET3 1.25
 
 // Dynamic threshold algorithm tuning (Wireless).
-#define TOUCH_AUTO_RATIO_WIRELESS_PRESET1 1.30
-#define TOUCH_AUTO_RATIO_WIRELESS_PRESET2 1.25
-#define TOUCH_AUTO_RATIO_WIRELESS_PRESET3 1.20
+#define TOUCH_AUTO_RATIO_WIRELESS_PRESET1 1.25
+#define TOUCH_AUTO_RATIO_WIRELESS_PRESET2 1.20
+#define TOUCH_AUTO_RATIO_WIRELESS_PRESET3 1.15
 
 // Smooting of the dynamic threshold (not the sampling).
 #define TOUCH_AUTO_SMOOTH  (CFG_TICK_FREQUENCY)  // 1 second.
@@ -33,5 +33,4 @@
 
 void touch_init();
 void touch_load_from_config();
-void touch_update_auto_ratio();
 bool touch_status();
