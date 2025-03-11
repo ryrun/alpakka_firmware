@@ -512,8 +512,12 @@ void hid_report_dongle(uint8_t report_id, uint8_t* payload) {
                 tud_hid_report(REPORT_MOUSE, payload, sizeof(MouseReport));
             }
         }
-        // TODO: generic gamepad.
-        else if (report_id == REPORT_XINPUT) {
+        if (report_id == REPORT_GAMEPAD) {
+            if (tud_hid_ready()) {
+                tud_hid_report(REPORT_GAMEPAD, payload, sizeof(GamepadReport));
+            }
+        }
+        if (report_id == REPORT_XINPUT) {
             xinput_send_report((XInputReport*)payload);
         }
     }
