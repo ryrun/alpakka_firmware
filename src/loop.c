@@ -95,16 +95,8 @@ static void set_inactive() {
     esp_enable(false);
 }
 
-static void battery_stat_init() {
-    #ifdef DEVICE_HAS_MARMOTA
-        gpio_init(PIN_BATT_STAT_1);
-        gpio_pull_up(PIN_BATT_STAT_1);
-        gpio_set_dir(PIN_BATT_STAT_1, GPIO_IN);
-    #endif
-}
-
 static void board_led() {
-    #ifdef DEVICE_IS_ALPAKKA
+    #ifdef DEVICE_ALPAKKA_V1
         static uint8_t i = 0;
         static bool blink = false;
         i++;
@@ -146,7 +138,7 @@ void loop_controller_init() {
     rotary_init();
     imu_init();
     profile_init();
-    battery_stat_init();
+    power_gpio_init();
     wireless_init();
     if (usb) {
         set_wired();
