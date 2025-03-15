@@ -10,6 +10,7 @@
 #include <hardware/xosc.h>
 #include <hardware/regs/io_bank0.h>
 #include "pin.h"
+#include "config.h"
 #include "led.h"
 #include "esp.h"
 #include "imu.h"
@@ -54,7 +55,8 @@ void power_dormant() {
     esp_enable(false);
     imu_power_off();
     // Turn off leds.
-    led_board_set(false);  // USB connector LED.
+    led_board_set(false);  // Core board LED.
+    config_ignore_problems();  // Do not blink LEDs for problems anymore.
     led_idle_mask(0b0000);  // Frontal 4 LEDs.
     led_set_mode(LED_MODE_IDLE);
     // Ensure home button is released (after shortcut press).

@@ -4,7 +4,7 @@
 #pragma once
 #include "ctrl.h"
 
-#define BATTERY_LOW_THRESHOLD 2900
+#define BATTERY_LOW_THRESHOLD 2810
 
 void wireless_init();
 void wireless_controller_task();
