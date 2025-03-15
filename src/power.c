@@ -16,6 +16,17 @@
 #include "loop.h"
 #include "logging.h"
 
+void power_gpio_init() {
+    #ifdef DEVICE_HAS_MARMOTA
+        gpio_init(PIN_BATT_STAT_1);
+        gpio_pull_up(PIN_BATT_STAT_1);
+        gpio_set_dir(PIN_BATT_STAT_1, GPIO_IN);
+        gpio_init(PIN_DC_POWER_SAVE);
+        gpio_set_dir(PIN_DC_POWER_SAVE, GPIO_OUT);
+        gpio_put(PIN_DC_POWER_SAVE, true);  // Power saving disabled by default.
+    #endif
+}
+
 void power_restart() {
     watchdog_enable(1, false);  // Reboot after 1 millisecond.
     sleep_ms(10);  // Stall the exexution to avoid resetting the timer.
@@ -31,8 +42,15 @@ void power_bootsel() {
     reset_usb_boot(0, 0);
 }
 
+void power_dc_power_save(bool value) {
+    #ifdef DEVICE_HAS_MARMOTA
+        gpio_put(PIN_DC_POWER_SAVE, !value);  // down = power saving ON.
+    #endif
+}
+
 void power_dormant() {
     // Turn off ESP and IMUs.
+    power_dc_power_save(true);
     esp_enable(false);
     imu_power_off();
     // Turn off leds.

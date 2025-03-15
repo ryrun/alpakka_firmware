@@ -3,6 +3,7 @@
 
 #pragma once
 
+void power_gpio_init();
 void power_restart();
 void power_bootsel();
 void power_dormant();
