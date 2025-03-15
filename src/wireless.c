@@ -119,9 +119,14 @@ void wireless_uart_commands() {
             }
             else if (command==AT_BATTERY && i==4+4) {
                 #ifdef DEVICE_ALPAKKA_V1
+                    // Convert to 32 bit.
                     uint32_t battery_level = 0;
                     memcpy(&battery_level, payload, 4);
-                    // info("BATT %lu\n", battery_level);
+                    // Optional logging.
+                    if (logging_has_mask(LOG_WIRELESS)) {
+                        float linear = ((float)battery_level - 2700) / 650;
+                        info("RF: Battery at %0.f%% (%lu)\n", linear*100, battery_level);
+                    }
                     if (battery_level < BATTERY_LOW_THRESHOLD) {
                         loop_set_battery_low(true);
                         static bool battery_low_was_triggered = false;
@@ -129,6 +134,8 @@ void wireless_uart_commands() {
                             config_set_problem_battery_low(true);
                             battery_low_was_triggered = true;
                         }
+                    } else {
+                        loop_set_battery_low(false);
                     }
                 #endif
                 i = 0;
