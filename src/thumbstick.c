@@ -39,23 +39,22 @@ float thumbstick_adc(uint8_t pin) {
     return value * THUMBSTICK_BASELINE_SATURATION;
 }
 
-float thumbstick_adc_smoothed(uint8_t pin) {
-    // Dynamic smooting depending on how big the diff to previous samples are:
-    // Small diff -> Max smooth.
-    // Bigger diff -> Progressively less smooting.
-    // Diff over threshold -> No smoothing.
-    uint8_t channel = pin - 26;
-    float value = thumbstick_adc(pin);
-    // Determine factor, apply threshold.
-    float factor = ADC_SMOOTH_THRESHOLD - fabs(value - smoothed[channel]);
-    // Scale and ignore negative factor.
-    factor = max(0, factor * ADC_SMOOTH_MAX);
-    // Do rolling average.
-    value = smooth(smoothed[channel], value, factor);
-    // Update rolling value and return.
-    smoothed[channel] = value;
-    return value;
-}
+// float thumbstick_adc_smoothed(uint8_t pin) {
+//     // Dynamic smooting depending on how big the diff to previous samples are:
+//     // Small diff -> Max smooth.
+//     // Bigger diff -> Progressively less smooting.
+//     // Diff over threshold -> No smoothing.
+//     uint8_t channel = pin - 26;
+//     float value = thumbstick_adc(pin);
+//     // Determine factor..
+//     float diff = fabs(value - smoothed[channel]);
+//     float factor = 1 - sramp(0, diff, ADC_SMOOTH_THRESHOLD);
+//     // Do rolling average.
+//     value = smooth(smoothed[channel], value, factor*ADC_SMOOTH_MAX);
+//     // Update rolling value and return.
+//     smoothed[channel] = value;
+//     return value;
+// }
 
 void thumbstick_update_deadzone() {
     uint8_t preset = config_get_deadzone_preset();
@@ -453,8 +452,8 @@ void Thumbstick__report(Thumbstick *self) {
     // Do not report if not calibrated.
     if (offset_x == 0 && offset_y == 0) return;
     // Get values from ADC.
-    float x = thumbstick_adc_smoothed(self->pin_x) - offset_x;
-    float y = thumbstick_adc_smoothed(self->pin_y) - offset_y;
+    float x = thumbstick_adc(self->pin_x) - offset_x;
+    float y = thumbstick_adc(self->pin_y) - offset_y;
     x /= self->saturation;
     y /= self->saturation;
     x = constrain(x, -1, 1) * (self->invert_x? -1 : 1);
