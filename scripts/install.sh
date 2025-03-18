@@ -90,8 +90,8 @@ echo "Building Picotool..."
 export PICO_SDK_PATH=`pwd`/../pico-sdk
 mkdir build
 cd build
-cmake ..
-make
+cmake -DCMAKE_INSTALL_PREFIX=./bin -DPICOTOOL_FLAT_INSTALL=1 ..
+make install
 cd ../..
 
 # Done.
