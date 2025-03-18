@@ -9,6 +9,10 @@ SDK_TAG=2.1.0
 EXTRAS_URL=https://github.com/raspberrypi/pico-extras.git
 EXTRAS_TAG=sdk-2.1.0
 
+# Pico tool.
+PICOTOOL_URL=https://github.com/raspberrypi/picotool.git
+PICOTOOL_TAG=v2.1.0
+
 # ESP serial flasher
 ESPSF_URL=https://github.com/espressif/esp-serial-flasher
 ESPSF_TAG=v1.6.2
@@ -76,6 +80,19 @@ echo "Configuring ESP Serial Flasher..."
 git submodule update --init
 python3 ../../scripts/esp_flasher_patch.py
 cd ..
+
+# Picotool (pico-sdk depends on it now).
+echo "Downloading Picotool..."
+git clone $PICOTOOL_URL
+cd picotool
+git checkout --quiet $PICOTOOL_TAG_TAG
+echo "Building Picotool..."
+export PICO_SDK_PATH=`pwd`/../pico-sdk
+mkdir build
+cd build
+cmake ..
+make
+cd ../..
 
 # Done.
 echo "Dependencies installed"
