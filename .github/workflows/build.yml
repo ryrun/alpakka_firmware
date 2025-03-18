@@ -29,7 +29,7 @@ jobs:
         with:
           path: deps/
           # Unique identifier by concatenation.
-          key: pico-sdk_${{ env.SDK_TAG }}_${{ env.ARM_FILENAME_LINUX_X86_64 }}
+          key: pico-sdk_${{ env.SDK_TAG }}_${{ env.ARM_FILENAME_LINUX_X86_64 }}_v4
 
       - name: Dependencies from internet
         if: steps.cache-deps.outputs.cache-hit != 'true'
@@ -69,10 +69,12 @@ jobs:
           Commit:
           ${GITHUB_SHA}
 
-          Checksum:
-          \$ shasum <filename>
+          Checksums:
+          \$ shasum alpakka_pico_${VERSION}.uf2
           $(cat alpakka_pico_${VERSION}.uf2 | shasum | head -c 40)
+          \$ shasum alpakka_marmota_${VERSION}.uf2
           $(cat alpakka_marmota_${VERSION}.uf2 | shasum | head -c 40)
+          \$ shasum dongle_marmota_${VERSION}.uf2
           $(cat dongle_marmota_${VERSION}.uf2 | shasum | head -c 40)
 
           Job:
