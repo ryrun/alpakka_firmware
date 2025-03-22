@@ -389,10 +389,10 @@ void hid_xinput_report() {
     int8_t buttons_0 = 0;
     int8_t buttons_1 = 0;
     for(int i=0; i<8; i++) {
-        buttons_0 += state_matrix[GAMEPAD_INDEX + i] << i;
+        buttons_0 += !!state_matrix[GAMEPAD_INDEX + i] << i;
     }
     for(int i=0; i<8; i++) {
-        buttons_1 += state_matrix[GAMEPAD_INDEX + i + 8] << i;
+        buttons_1 += !!state_matrix[GAMEPAD_INDEX + i + 8] << i;
     }
     // Adjust range from [-1,1] to [-32767,32767].
     int16_t lx_report = hid_axis(gamepad_lx, GAMEPAD_AXIS_LX, GAMEPAD_AXIS_LX_NEG) * BIT_15;
