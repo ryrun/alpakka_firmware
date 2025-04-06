@@ -83,9 +83,11 @@ static void set_wired() {
 }
 
 static void set_wireless() {
-    info("LOOP: Wireless\n");
-    device_mode = WIRELESS;
-    wireless_set_uart_data_mode(true);
+    #ifdef DEVICE_HAS_MARMOTA
+        info("LOOP: Wireless\n");
+        device_mode = WIRELESS;
+        wireless_set_uart_data_mode(true);
+    #endif
 }
 
 static void set_inactive() {
