@@ -83,9 +83,11 @@ static void set_wired() {
 }
 
 static void set_wireless() {
-    info("LOOP: Wireless\n");
-    device_mode = WIRELESS;
-    wireless_set_uart_data_mode(true);
+    #ifdef DEVICE_HAS_MARMOTA
+        info("LOOP: Wireless\n");
+        device_mode = WIRELESS;
+        wireless_set_uart_data_mode(true);
+    #endif
 }
 
 static void set_inactive() {
@@ -129,7 +131,11 @@ void loop_controller_init() {
     title(LABEL_CONTROLLER);
     config_init();
     tusb_init();
-    bool usb = usb_wait_for_init(USB_WAIT_FOR_INIT_MS);
+    #if defined DEVICE_ALPAKKA_V0
+        bool usb = usb_wait_for_init(-1);  // Negative number = no timeout.
+    #else
+        bool usb = usb_wait_for_init(USB_WAIT_FOR_INIT_MS);
+    #endif
     // wait_for_system_clock();
     bus_init();
     hid_init();
