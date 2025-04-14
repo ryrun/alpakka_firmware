@@ -461,6 +461,15 @@ void Thumbstick__report(Thumbstick *self) {
     // Get correct deadzone.
     float deadzone = self->deadzone_override ? self->deadzone : config_deadzone;
     deadzone /= self->saturation;
+    // Precompute absolute values
+    float absX = fabs(x);
+    float absY = fabs(y);
+    // Apply motion restriction zone
+    if (absX > absY && absY < THUMBSTICK_SNAP_THRESHOLD) {
+        y = 0.0;
+    } else if (absY > absX && absX < THUMBSTICK_SNAP_THRESHOLD) {
+        x = 0.0;
+    }
     // Calculate trigonometry.
     float angle = atan2(x, -y) * (180 / M_PI);
     float radius = sqrt(powf(x, 2) + powf(y, 2));
