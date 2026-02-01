@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - my_v1_firmware
   # Manual trigger on UI.
   workflow_dispatch:
 
