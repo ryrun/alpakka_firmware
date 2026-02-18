@@ -14,14 +14,13 @@
 
 bool Button__is_pressed(Button *self) {
     if (self->pin == PIN_NONE) return false;
-    // Virtual buttons.
-    else if (self->pin == PIN_VIRTUAL) {
-        if (self->virtual_press) {
-            self->virtual_press = false;
-            return true;
-        } else {
-            return false;
-        }
+    // Virtual press.
+    else if (self->virtual_press) {
+        self->virtual_press = false;
+        return true;  // Both real and virtual buttons can emulate a press.
+    }
+    else if (self->pin == PIN_VIRTUAL && !self->virtual_press) {
+        return false;  // Virtual buttons don't evaluate further.
     }
     // Buttons connected directly to Pico.
     else if (is_between(self->pin, PIN_GROUP_BOARD, PIN_GROUP_BOARD_END)) {
