@@ -176,7 +176,7 @@ void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t ind
         (bool)ctrl_thumbstick.push_auto_toggle,
         ctrl_thumbstick.sens_mouse,
         ctrl_thumbstick.sens_scroll,
-        ctrl_thumbstick.sens_y_ratio  / 100.0,
+        ctrl_thumbstick.sens_xy_ratio  / 100.0,
         ctrl_thumbstick.accel_curve > 0 ? ctrl_thumbstick.accel_curve / 100.0 : 1.0
     );
     if (ctrl_thumbstick.mode == THUMBSTICK_MODE_4DIR) {
@@ -354,12 +354,13 @@ void Thumbstick__report_8dir(Thumbstick *self, ThumbstickPosition pos) {
 
 void Thumbstick__report_push_auto_toggle(Thumbstick *self, ThumbstickPosition pos) {
     /*
-    CENTER -> EDGE -+-> PRESS (ready) -> RELEASE (^engaged) -+-> CENTER (disengaged)
-                    ^                                        |
-                    |             [press again]              |
-                    +----------------------------------------+
+    CENTER -> EDGE -+-> PUSH (ready) -> RELEASE (^engaged) -+-> CENTER (disengaged)
+                    ^                                       |
+                    |             [push again]              |
+                    +---------------------------------------+
 
-    "Ready" in this context means "toggle is ready to be flipped at next release".
+    "Ready" in this context means:
+    "button is ready to be toggled at next button release".
     */
     bool is_pressed = self->push.is_pressed(&self->push);
     // Conditions.
@@ -575,7 +576,7 @@ Thumbstick Thumbstick_ (
     bool push_auto_toggle,
     uint8_t sens_mouse,
     uint8_t sens_scroll,
-    float sens_y_ratio,
+    float sens_xy_ratio,
     float accel_curve
 ) {
     Thumbstick thumbstick;
@@ -611,7 +612,7 @@ Thumbstick Thumbstick_ (
     thumbstick.push_auto_toggle = push_auto_toggle;
     thumbstick.sens_mouse = sens_mouse;
     thumbstick.sens_scroll = sens_scroll;
-    thumbstick.sens_y_ratio = sens_y_ratio;
+    thumbstick.sens_xy_ratio = sens_xy_ratio;
     thumbstick.accel_curve = accel_curve;
     return thumbstick;
 }

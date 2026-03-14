@@ -85,7 +85,7 @@ struct Thumbstick_struct {
     bool push_auto_toggle;
     uint8_t sens_mouse;
     uint8_t sens_scroll;
-    float sens_y_ratio;
+    float sens_xy_ratio;
     float accel_curve;
     Button left;
     Button right;
@@ -121,7 +121,7 @@ Thumbstick Thumbstick_ (
     bool push_auto_toggle,
     uint8_t sens_mouse,
     uint8_t sens_scroll,
-    float sens_y_ratio,
+    float sens_xy_ratio,
     float accel_curve
 );
 

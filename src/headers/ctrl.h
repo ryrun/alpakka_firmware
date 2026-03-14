@@ -168,7 +168,7 @@ typedef struct __packed _CtrlThumbstick {
     uint8_t push_auto_toggle;
     uint8_t sens_mouse;
     uint8_t sens_scroll;
-    uint8_t sens_y_ratio;
+    uint8_t sens_xy_ratio;
     uint8_t accel_curve;
     uint8_t _padding[45];
 } CtrlThumbstick;
