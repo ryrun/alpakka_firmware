@@ -8,6 +8,8 @@
 #define CTRL_NON_PAYLOAD_SIZE 4
 #define CTRL_MAX_PAYLOAD_SIZE (CTRL_MSG_SIZE - CTRL_NON_PAYLOAD_SIZE)
 
+#define CTRL_STICK_SENS_MOUSE_STEP 100
+
 typedef enum _Ctrl_protocol_flags {
     CTRL_FLAG_NONE = 1,
     CTRL_FLAG_WIRELESS,
@@ -158,7 +160,7 @@ typedef struct __packed _CtrlRotary {
 typedef struct __packed _CtrlThumbstick {
     // Must be packed (58 bytes).
     uint8_t mode;
-    uint8_t distance_mode;
+    uint8_t radial_mode;
     uint8_t deadzone;
     uint8_t overlap;
     uint8_t deadzone_override;

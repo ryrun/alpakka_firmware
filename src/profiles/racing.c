@@ -120,7 +120,7 @@ void config_profile_default_racing(CtrlProfile *profile){
     // Thumbstick (left).
     profile->sections[SECTION_LSTICK_SETTINGS].thumbstick = (CtrlThumbstick){
         .mode=THUMBSTICK_MODE_4DIR,
-        .distance_mode=THUMBSTICK_DISTANCE_RADIAL,
+        .radial_mode=true,
         .saturation=100,
         .overlap=80,
     };

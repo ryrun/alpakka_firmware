@@ -119,19 +119,6 @@ void thumbstick_init() {
     daisy_y = Button_(PIN_Y, NORMAL, none, none, none);
 }
 
-void thumbstick_report_axis(uint8_t axis, float value) {
-    if      (axis == GAMEPAD_AXIS_LX)     hid_gamepad_axis(LX, value);
-    else if (axis == GAMEPAD_AXIS_LY)     hid_gamepad_axis(LY, value);
-    else if (axis == GAMEPAD_AXIS_RX)     hid_gamepad_axis(RX, value);
-    else if (axis == GAMEPAD_AXIS_RY)     hid_gamepad_axis(RY, value);
-    else if (axis == GAMEPAD_AXIS_LX_NEG) hid_gamepad_axis(LX, -value);
-    else if (axis == GAMEPAD_AXIS_LY_NEG) hid_gamepad_axis(LY, -value);
-    else if (axis == GAMEPAD_AXIS_RX_NEG) hid_gamepad_axis(RX, -value);
-    else if (axis == GAMEPAD_AXIS_RY_NEG) hid_gamepad_axis(RY, -value);
-    else if (axis == GAMEPAD_AXIS_LZ)     hid_gamepad_axis(LZ, value);
-    else if (axis == GAMEPAD_AXIS_RZ)     hid_gamepad_axis(RZ, value);
-}
-
 uint8_t thumbstick_get_direction(float angle, float overlap) {
     float a = 45 * (1 - overlap);
     float b = 180 - a;
@@ -166,7 +153,7 @@ void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t ind
         index==0 ? false : true,
         index==0 ? false : false,
         ctrl_thumbstick.mode,
-        ctrl_thumbstick.distance_mode,
+        ctrl_thumbstick.radial_mode,
         ctrl_thumbstick.deadzone_override,
         ctrl_thumbstick.deadzone / 100.0,
         ctrl_thumbstick.antideadzone / 100.0,
@@ -281,7 +268,7 @@ void Thumbstick__config_8dir(
     self->push = push;
 }
 
-void Thumbstick__report_4dir_axial(Thumbstick *self, ThumbstickPosition pos) {
+void Thumbstick__report_4dir(Thumbstick *self, ThumbstickPosition pos, bool radial) {
     // Evaluate virtual buttons.
     if (pos.radius > THUMBSTICK_ADDITIONAL_DEADZONE_FOR_BUTTONS) {
         if (pos.radius < self->outer_threshold) self->inner.virtual_press = true;
@@ -292,19 +279,11 @@ void Thumbstick__report_4dir_axial(Thumbstick *self, ThumbstickPosition pos) {
         if (direction & DIR4_MASK_UP)    self->up.virtual_press = true;
         if (direction & DIR4_MASK_DOWN)  self->down.virtual_press = true;
     }
-    // Report directional virtual buttons or axis.
-    //// Left.
-    if (!hid_is_axis(self->left.actions[0])) self->left.report(&self->left);
-    else thumbstick_report_axis(self->left.actions[0], -constrain(pos.x, -1, 0));
-    //// Right.
-    if (!hid_is_axis(self->right.actions[0])) self->right.report(&self->right);
-    else thumbstick_report_axis(self->right.actions[0], constrain(pos.x, 0, 1));
-    //// Up.
-    if (!hid_is_axis(self->up.actions[0])) self->up.report(&self->up);
-    else thumbstick_report_axis(self->up.actions[0], -constrain(pos.y, -1, 0));
-    //// Down.
-    if (!hid_is_axis(self->down.actions[0])) self->down.report(&self->down);
-    else thumbstick_report_axis(self->down.actions[0], constrain(pos.y, 0, 1));
+    // Evaluate and report actions.
+    self->evaluate_axis(self, &(self->left), -constrain((radial ? pos.radius : pos.x), -1, 0));
+    self->evaluate_axis(self, &(self->right), constrain((radial ? pos.radius : pos.x),  0, 1));
+    self->evaluate_axis(self, &(self->up),   -constrain((radial ? pos.radius : pos.y), -1, 0));
+    self->evaluate_axis(self, &(self->down),  constrain((radial ? pos.radius : pos.y),  0, 1));
     // Report inner and outer.
     self->inner.report(&self->inner);
     self->outer.report(&self->outer);
@@ -313,16 +292,6 @@ void Thumbstick__report_4dir_axial(Thumbstick *self, ThumbstickPosition pos) {
         self->report_push_auto_toggle(self, pos);
     }
     // Report push.
-    self->push.report(&self->push);
-}
-
-
-void Thumbstick__report_4dir_radial(Thumbstick *self, ThumbstickPosition pos) {
-    uint8_t direction = thumbstick_get_direction(pos.angle, self->overlap);
-    thumbstick_report_axis(self->left.actions[0],  (direction & DIR4_MASK_LEFT)  ? pos.radius : 0);
-    thumbstick_report_axis(self->right.actions[0], (direction & DIR4_MASK_RIGHT) ? pos.radius : 0);
-    thumbstick_report_axis(self->up.actions[0],    (direction & DIR4_MASK_UP)    ? pos.radius : 0);
-    thumbstick_report_axis(self->down.actions[0],  (direction & DIR4_MASK_DOWN)  ? pos.radius : 0);
     self->push.report(&self->push);
 }
 
@@ -350,6 +319,43 @@ void Thumbstick__report_8dir(Thumbstick *self, ThumbstickPosition pos) {
     self->dr.report(&self->dr);
     // Report push.
     self->push.report(&self->push);
+}
+
+void Thumbstick__evaluate_axis(Thumbstick *self, Button *direction, float value) {
+    for(uint8_t i=0; i<4; i++) {
+        uint8_t action = direction->actions[i];
+        if (action == KEY_NONE) break;
+        if (!hid_is_axis(action)) {
+            direction->report(direction);
+        } else {
+            self->report_axis(self, action, value);
+        }
+    }
+}
+
+void Thumbstick__report_axis(Thumbstick *self, uint8_t axis, float value) {
+    if (value == 0) return;
+    // Gamepad.
+    if      (axis == GAMEPAD_AXIS_LX)     hid_gamepad_axis(LX, value);
+    else if (axis == GAMEPAD_AXIS_LY)     hid_gamepad_axis(LY, value);
+    else if (axis == GAMEPAD_AXIS_RX)     hid_gamepad_axis(RX, value);
+    else if (axis == GAMEPAD_AXIS_RY)     hid_gamepad_axis(RY, value);
+    else if (axis == GAMEPAD_AXIS_LX_NEG) hid_gamepad_axis(LX, -value);
+    else if (axis == GAMEPAD_AXIS_LY_NEG) hid_gamepad_axis(LY, -value);
+    else if (axis == GAMEPAD_AXIS_RX_NEG) hid_gamepad_axis(RX, -value);
+    else if (axis == GAMEPAD_AXIS_RY_NEG) hid_gamepad_axis(RY, -value);
+    else if (axis == GAMEPAD_AXIS_LZ)     hid_gamepad_axis(LZ, value);
+    else if (axis == GAMEPAD_AXIS_RZ)     hid_gamepad_axis(RZ, value);
+    // Mouse move.
+    float mouse_value = value * self->sens_mouse / CFG_TICK_FREQUENCY * CTRL_STICK_SENS_MOUSE_STEP;
+    if      (axis == MOUSE_X)     hid_mouse_move( mouse_value, 0);
+    else if (axis == MOUSE_X_NEG) hid_mouse_move(-mouse_value, 0);
+    else if (axis == MOUSE_Y)     hid_mouse_move(0,  mouse_value);
+    else if (axis == MOUSE_Y_NEG) hid_mouse_move(0, -mouse_value);
+    // Mouse scroll.
+    float scroll_value = value * self->sens_scroll / CFG_TICK_FREQUENCY;
+    if      (axis == MOUSE_SCROLL_UP)   hid_mouse_scroll(0,  scroll_value);
+    else if (axis == MOUSE_SCROLL_DOWN) hid_mouse_scroll(0, -scroll_value);
 }
 
 void Thumbstick__report_push_auto_toggle(Thumbstick *self, ThumbstickPosition pos) {
@@ -532,12 +538,7 @@ void Thumbstick__report(Thumbstick *self) {
     ThumbstickPosition pos = {x, y, angle, radius};
     // Report.
     if (self->mode == THUMBSTICK_MODE_4DIR) {
-        if (self->distance_mode == THUMBSTICK_DISTANCE_AXIAL) {
-            self->report_4dir_axial(self, pos);
-        }
-        if (self->distance_mode == THUMBSTICK_DISTANCE_RADIAL) {
-            self->report_4dir_radial(self, pos);
-        }
+        self->report_4dir(self, pos, self->radial_mode);
     }
     else if (self->mode == THUMBSTICK_MODE_8DIR) {
         self->report_8dir(self, pos);
@@ -566,7 +567,7 @@ Thumbstick Thumbstick_ (
     bool invert_x,
     bool invert_y,
     ThumbstickMode mode,
-    ThumbstickDistance distance_mode,
+    bool radial_mode,
     bool deadzone_override,
     float deadzone,
     float antideadzone,
@@ -582,11 +583,12 @@ Thumbstick Thumbstick_ (
     Thumbstick thumbstick;
     // Methods.
     thumbstick.report = Thumbstick__report;
-    thumbstick.report_4dir_axial = Thumbstick__report_4dir_axial;
-    thumbstick.report_4dir_radial = Thumbstick__report_4dir_radial;
+    thumbstick.report_4dir = Thumbstick__report_4dir;
     thumbstick.report_8dir = Thumbstick__report_8dir;
     thumbstick.report_push_auto_toggle = Thumbstick__report_push_auto_toggle;
     thumbstick.report_alphanumeric = Thumbstick__report_alphanumeric;
+    thumbstick.report_axis = Thumbstick__report_axis;
+    thumbstick.evaluate_axis = Thumbstick__evaluate_axis;
     thumbstick.reset = Thumbstick__reset;
     thumbstick.config_4dir = Thumbstick__config_4dir;
     thumbstick.config_8dir = Thumbstick__config_8dir;
@@ -601,7 +603,7 @@ Thumbstick Thumbstick_ (
     thumbstick.invert_x = invert_x;
     thumbstick.invert_y = invert_y;
     thumbstick.mode = mode;
-    thumbstick.distance_mode = distance_mode;
+    thumbstick.radial_mode = radial_mode;
     thumbstick.deadzone_override = deadzone_override;
     thumbstick.deadzone = deadzone;
     thumbstick.antideadzone = antideadzone;

@@ -70,8 +70,10 @@ uint16_t alarms = 0;
 alarm_pool_t *alarm_pool;
 
 uint8_t state_matrix[256] = {0,};
-int16_t mouse_x = 0;
-int16_t mouse_y = 0;
+double mouse_x = 0;
+double mouse_y = 0;
+double mouse_scroll_x = 0;
+double mouse_scroll_y = 0;
 double gamepad_axis[6] = {0,};
 double gamepad_axis_last[6] = {0,};
 
@@ -278,13 +280,28 @@ void hid_macro(uint8_t index) {
     }
 }
 
-bool hid_is_axis(uint8_t key) {
-    return is_between(key, GAMEPAD_AXIS_INDEX, PROC_INDEX-1);
+bool hid_is_axis(uint8_t action) {
+    return hid_is_mouse_axis(action) || hid_is_gamepad_axis(action);
 }
 
-void hid_mouse_move(int16_t x, int16_t y) {
+bool hid_is_mouse_axis(uint8_t action) {
+    return is_between(action, MOUSE_SCROLL_UP, MOUSE_Y_NEG);
+}
+
+bool hid_is_gamepad_axis(uint8_t action) {
+    return is_between(action, GAMEPAD_AXIS_INDEX, PROC_INDEX-1);
+}
+
+void hid_mouse_move(double x, double y) {
     mouse_x += x;
     mouse_y += y;
+    synced_mouse = false;
+    profile_set_reported_inputs(true);
+}
+
+void hid_mouse_scroll(double x, double y) {
+    mouse_scroll_x += x;
+    mouse_scroll_y += y;
     synced_mouse = false;
     profile_set_reported_inputs(true);
 }
@@ -300,9 +317,20 @@ MouseReport hid_get_mouse_report() {
     for(int i=0; i<5; i++) {
         buttons += state_matrix[MOUSE_INDEX + i] << i;
     }
-    uint8_t scroll = state_matrix[MOUSE_SCROLL_UP] - state_matrix[MOUSE_SCROLL_DOWN];
+    mouse_scroll_y += state_matrix[MOUSE_SCROLL_UP] - state_matrix[MOUSE_SCROLL_DOWN];
+    // Manage remainders.
+    double mod_x = 0;
+    double mod_y = 0;
+    double mod_scroll_y = 0;
+    mouse_x = modf(mouse_x, &mod_x);
+    mouse_y = modf(mouse_y, &mod_y);
+    mouse_scroll_y = modf(mouse_scroll_y, &mod_scroll_y);
+    // info("%f\n", mod_scroll_y);
+    // Reset.
+    state_matrix[MOUSE_SCROLL_UP] = 0;
+    state_matrix[MOUSE_SCROLL_DOWN] = 0;
     // Create report.
-    MouseReport report = {buttons, mouse_x, mouse_y, scroll, 0};
+    MouseReport report = {buttons, (int16_t)mod_x, (int16_t)mod_y, (int8_t)mod_scroll_y, 0};
     return report;
 }
 
@@ -424,13 +452,6 @@ XInputReport hid_get_xinput_report() {
     return report;
 }
 
-void hid_reset_mouse() {
-    mouse_x = 0;
-    mouse_y = 0;
-    state_matrix[MOUSE_SCROLL_UP] = 0;
-    state_matrix[MOUSE_SCROLL_DOWN] = 0;
-}
-
 void hid_reset_gamepad_axis() {
     // Gamepad axis values being reset so potentially unsent values are not
     // aggregated with the next cycle.
@@ -466,8 +487,12 @@ void hid_report_mouse(bool wired) {
     MouseReport report = hid_get_mouse_report();
     if (wired) tud_hid_report(REPORT_MOUSE, &report, sizeof(report));
     else wireless_send_hid(REPORT_MOUSE, &report, sizeof(report));
-    hid_reset_mouse();
-    synced_mouse = true;
+    bool under_zero = (
+        fabs(mouse_x) < 1 &&
+        fabs(mouse_y) < 1 &&
+        fabs(mouse_scroll_y) < 1
+    );
+    if (under_zero) synced_mouse = true;
     priority_mouse = 0;
     last_report_mouse = report;
 }
