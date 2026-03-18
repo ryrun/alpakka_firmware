@@ -52,14 +52,14 @@ typedef enum Dir8_enum {
 typedef struct Thumbstick_struct Thumbstick;
 struct Thumbstick_struct {
     void (*report) (Thumbstick *self);
-    void (*report_4dir) (Thumbstick *self, ThumbstickPosition pos, bool radial);
+    void (*report_4dir) (Thumbstick *self, ThumbstickPosition pos, float raw_radius);
+    void (*report_4dir_dir) (Thumbstick *self, Button *direction, float value);
+    void (*report_4dir_axis) (Thumbstick *self, uint8_t axis, float value);
     void (*report_8dir) (Thumbstick *self, ThumbstickPosition pos);
     void (*report_push_auto_toggle) (Thumbstick *self, ThumbstickPosition pos);
     void (*report_alphanumeric) (Thumbstick *self, ThumbstickPosition pos);
     void (*report_glyphstick) (Thumbstick *self, Glyph input);
     void (*report_daisywheel) (Thumbstick *self, Dir8 dir);
-    void (*report_axis) (Thumbstick *self, uint8_t axis, float value);
-    void (*evaluate_axis) (Thumbstick *self, Button *direction, float value);
     void (*reset) (Thumbstick *self);
     void (*config_4dir) (Thumbstick *self, Button left, Button right, Button up, Button down, Button push, Button inner, Button outer);
     void (*config_8dir) (Thumbstick *self, Button left, Button right, Button up, Button down, Button ul, Button ur, Button dl, Button dr, Button push);

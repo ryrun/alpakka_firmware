@@ -66,5 +66,13 @@ void print_array(uint8_t *array, uint8_t len);
 // Input MAX: Upper part of the range, that will result in +1.
 #define ramp(x, min, max)  constrain( 2 * ((x-min) / (max-min)) - 1, -1, 1)
 
+// Variant of the Schlick bias easing function tuned for input acceleration.
+// Takes a normalized value from 0 to 1.
+// Takes an acceleration factor normalized -1 to 1.
+// The response is mirrored around the diagonal, and has equal behavior for
+// positive and negative factors.
+// Named "Felix" in memory of my father.
+#define felix_curve(x, k)  ((x*k+x) / (2*x*k-k+1))
+
 void print_array(uint8_t *array, uint8_t len);
 uint8_t bitmask_set(uint8_t bitmask, uint8_t flag, bool value);
