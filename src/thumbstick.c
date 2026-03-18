@@ -356,9 +356,13 @@ void Thumbstick__report_4dir_axis(Thumbstick *self, uint8_t axis, float value) {
     }
 }
 
-void Thumbstick__report_8dir( Thumbstick *self, ThumbstickPosition pos) {
+void Thumbstick__report_8dir(
+    Thumbstick *self,
+    ThumbstickPosition pos,
+    float raw_radius
+) {
     // Evaluate virtual buttons.
-    if (pos.radius > THUMBSTICK_ADDITIONAL_DEADZONE_FOR_BUTTONS) {
+    if (raw_radius > self->deadzone + THUMBSTICK_ADDITIONAL_DEADZONE_FOR_BUTTONS) {
         uint8_t direction = thumbstick_get_direction(pos.angle, 0.5); // Fixed overlap.
         if      (direction == DIR4_MASK_LEFT)  self->left.virtual_press = true;
         else if (direction == DIR4_MASK_RIGHT) self->right.virtual_press = true;
@@ -553,8 +557,9 @@ void Thumbstick__report(Thumbstick *self) {
     float radius = sqrt(powf(x, 2) + powf(y, 2));
     radius = ramp_low(radius, deadzone);  // Deadzone.
     radius = ramp_inv(radius, self->antideadzone);  // Antideadzone.
-    radius = felix_curve(radius, self->accel_curve);  // Acceleration.
     radius = constrain(radius, 0, 1);
+    radius = felix_curve(radius, self->accel_curve);  // Acceleration.
+    if (raw_radius < deadzone) radius = 0;
     x = sin(radians(angle)) * radius;
     y = -cos(radians(angle)) * radius;
     y = constrain(y * self->sens_xy_ratio, -1, 1);
@@ -564,7 +569,7 @@ void Thumbstick__report(Thumbstick *self) {
         self->report_4dir(self, pos, raw_radius);
     }
     else if (self->mode == THUMBSTICK_MODE_8DIR) {
-        self->report_8dir(self, pos);
+        self->report_8dir(self, pos, raw_radius);
     }
     else if (self->mode == THUMBSTICK_MODE_ALPHANUMERIC) {
         self->report_alphanumeric(self, pos);

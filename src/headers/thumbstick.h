@@ -55,7 +55,7 @@ struct Thumbstick_struct {
     void (*report_4dir) (Thumbstick *self, ThumbstickPosition pos, float raw_radius);
     void (*report_4dir_dir) (Thumbstick *self, Button *direction, float value);
     void (*report_4dir_axis) (Thumbstick *self, uint8_t axis, float value);
-    void (*report_8dir) (Thumbstick *self, ThumbstickPosition pos);
+    void (*report_8dir) (Thumbstick *self, ThumbstickPosition pos, float raw_radius);
     void (*report_push_auto_toggle) (Thumbstick *self, ThumbstickPosition pos);
     void (*report_alphanumeric) (Thumbstick *self, ThumbstickPosition pos);
     void (*report_glyphstick) (Thumbstick *self, Glyph input);
