@@ -325,7 +325,6 @@ MouseReport hid_get_mouse_report() {
     mouse_x = modf(mouse_x, &mod_x);
     mouse_y = modf(mouse_y, &mod_y);
     mouse_scroll_y = modf(mouse_scroll_y, &mod_scroll_y);
-    // info("%f\n", mod_scroll_y);
     // Reset.
     state_matrix[MOUSE_SCROLL_UP] = 0;
     state_matrix[MOUSE_SCROLL_DOWN] = 0;

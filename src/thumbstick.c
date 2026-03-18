@@ -307,6 +307,12 @@ void Thumbstick__report_4dir(
 }
 
 void Thumbstick__report_4dir_dir(Thumbstick *self, Button *direction, float value) {
+    /*
+    For the given direction, iterate over its defined actions and report values,
+    either as an axis, or via the (virtual) button report system.
+    Note that the button report system must be called only once, since it will
+    call 'press_multiple' down the line (for all actions, but ignoring axis).
+    */
     bool buttons_already_reported = false;
     for(uint8_t i=0; i<4; i++) {
         uint8_t action = direction->actions[i];
