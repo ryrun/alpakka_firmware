@@ -486,12 +486,12 @@ void hid_report_mouse(bool wired) {
     MouseReport report = hid_get_mouse_report();
     if (wired) tud_hid_report(REPORT_MOUSE, &report, sizeof(report));
     else wireless_send_hid(REPORT_MOUSE, &report, sizeof(report));
-    bool under_zero = (
+    bool under_one = (
         fabs(mouse_x) < 1 &&
         fabs(mouse_y) < 1 &&
         fabs(mouse_scroll_y) < 1
     );
-    if (under_zero) synced_mouse = true;
+    if (under_one) synced_mouse = true;
     priority_mouse = 0;
     last_report_mouse = report;
 }
