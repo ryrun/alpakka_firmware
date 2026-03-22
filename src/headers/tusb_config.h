@@ -16,7 +16,7 @@
 #define CFG_TUD_VENDOR_RX_BUFSIZE 64
 #define CFG_TUD_VENDOR_TX_BUFSIZE 64
 
-#define CFG_TUD_HID 1
+#define CFG_TUD_HID 2
 #define CFG_TUD_CDC 0
 #define CFG_TUD_MSC 0
 #define CFG_TUD_MIDI 0
@@ -184,9 +184,8 @@
     0x00, 0x00               /* Reserved */
 
 #define MS_OS_COMPATIDS_ALL \
-    MS_OS_COMPATIDS(64, 2), \
-    MS_OS_COMPATIDS_WINUSB, \
-    MS_OS_COMPATIDS_XUSB
+    MS_OS_COMPATIDS(40, 1), \
+    MS_OS_COMPATIDS_WINUSB
 
 #define MS_OS_COMPATIDS_GENERIC \
     MS_OS_COMPATIDS(40, 1), \
