@@ -390,54 +390,36 @@ GamepadReport hid_get_gamepad_report() {
 }
 
 XInputReport hid_get_xinput_report() {
-    uint8_t buttons_0 = 0;
-    uint8_t buttons_1 = 0;
-    uint8_t buttons_2 = 0;
-    uint8_t dpad = XINPUT_DPAD_RELEASED;
-    bool up = !!state_matrix[GAMEPAD_UP];
-    bool down = !!state_matrix[GAMEPAD_DOWN];
-    bool left = !!state_matrix[GAMEPAD_LEFT];
-    bool right = !!state_matrix[GAMEPAD_RIGHT];
-    if (up && right) dpad = XINPUT_DPAD_UP_RIGHT;
-    else if (right && down) dpad = XINPUT_DPAD_DOWN_RIGHT;
-    else if (down && left) dpad = XINPUT_DPAD_DOWN_LEFT;
-    else if (left && up) dpad = XINPUT_DPAD_UP_LEFT;
-    else if (up) dpad = XINPUT_DPAD_UP;
-    else if (right) dpad = XINPUT_DPAD_RIGHT;
-    else if (down) dpad = XINPUT_DPAD_DOWN;
-    else if (left) dpad = XINPUT_DPAD_LEFT;
-    // DS4 layout.
-    buttons_0 |= dpad;
-    buttons_0 |= (!!state_matrix[GAMEPAD_X]) << 4;      // Square.
-    buttons_0 |= (!!state_matrix[GAMEPAD_A]) << 5;      // Cross.
-    buttons_0 |= (!!state_matrix[GAMEPAD_B]) << 6;      // Circle.
-    buttons_0 |= (!!state_matrix[GAMEPAD_Y]) << 7;      // Triangle.
-    buttons_1 |= (!!state_matrix[GAMEPAD_L1]) << 0;     // L1.
-    buttons_1 |= (!!state_matrix[GAMEPAD_R1]) << 1;     // R1.
-    buttons_1 |= (!!state_matrix[GAMEPAD_L3]) << 6;     // L3.
-    buttons_1 |= (!!state_matrix[GAMEPAD_R3]) << 7;     // R3.
-    buttons_1 |= (!!state_matrix[GAMEPAD_SELECT]) << 4; // Share.
-    buttons_1 |= (!!state_matrix[GAMEPAD_START]) << 5;  // Options.
-    buttons_2 |= (!!state_matrix[GAMEPAD_HOME]) << 0;   // PS button.
-    // Adjust range from [-1,1] to [0,255].
-    uint8_t lx_report = ((hid_axis(gamepad_axis[LX], GAMEPAD_AXIS_LX, GAMEPAD_AXIS_LX_NEG) + 1) / 2) * BIT_8;
-    uint8_t ly_report = ((-hid_axis(gamepad_axis[LY], GAMEPAD_AXIS_LY, GAMEPAD_AXIS_LY_NEG) + 1) / 2) * BIT_8;
-    uint8_t rx_report = ((hid_axis(gamepad_axis[RX], GAMEPAD_AXIS_RX, GAMEPAD_AXIS_RX_NEG) + 1) / 2) * BIT_8;
-    uint8_t ry_report = ((-hid_axis(gamepad_axis[RY], GAMEPAD_AXIS_RY, GAMEPAD_AXIS_RY_NEG) + 1) / 2) * BIT_8;
-    uint8_t lz_report = hid_axis(gamepad_axis[LZ], GAMEPAD_AXIS_LZ, 0) * BIT_8;
-    uint8_t rz_report = hid_axis(gamepad_axis[RZ], GAMEPAD_AXIS_RZ, 0) * BIT_8;
+    int8_t buttons_0 = 0;
+    int8_t buttons_1 = 0;
+    // Button bitmask.
+    // Any value bigger than 1 consolidates to 1 (with !!).
+    for(int i=0; i<8; i++) {
+        buttons_0 += (!!state_matrix[GAMEPAD_INDEX + i]) << i;
+    }
+    for(int i=0; i<8; i++) {
+        buttons_1 += (!!state_matrix[GAMEPAD_INDEX + i + 8]) << i;
+    }
+    // Adjust range from [-1,1] to [-32767,32767].
+    int16_t lx_report = hid_axis(gamepad_axis[LX], GAMEPAD_AXIS_LX, GAMEPAD_AXIS_LX_NEG) * BIT_15;
+    int16_t ly_report = hid_axis(gamepad_axis[LY], GAMEPAD_AXIS_LY, GAMEPAD_AXIS_LY_NEG) * BIT_15;
+    int16_t rx_report = hid_axis(gamepad_axis[RX], GAMEPAD_AXIS_RX, GAMEPAD_AXIS_RX_NEG) * BIT_15;
+    int16_t ry_report = hid_axis(gamepad_axis[RY], GAMEPAD_AXIS_RY, GAMEPAD_AXIS_RY_NEG) * BIT_15;
+    // Adjust range from [0,1] to [0,255].
+    uint16_t lz_report = hid_axis(gamepad_axis[LZ], GAMEPAD_AXIS_LZ, 0) * BIT_8;
+    uint16_t rz_report = hid_axis(gamepad_axis[RZ], GAMEPAD_AXIS_RZ, 0) * BIT_8;
     XInputReport report = {
-        .report_id   = 1,
-        .lx          = lx_report,
-        .ly          = ly_report,
-        .rx          = rx_report,
-        .ry          = ry_report,
+        .report_id   = 0,
+        .report_size = XINPUT_REPORT_SIZE,
         .buttons_0   = buttons_0,
         .buttons_1   = buttons_1,
-        .buttons_2   = buttons_2,
         .lz          = lz_report,
         .rz          = rz_report,
-        .reserved    = {0,}
+        .lx          = lx_report,
+        .ly          = -ly_report,
+        .rx          = rx_report,
+        .ry          = -ry_report,
+        .reserved    = {0, 0, 0, 0, 0, 0}
     };
     return report;
 }
