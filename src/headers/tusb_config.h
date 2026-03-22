@@ -41,7 +41,7 @@
 #define STRING_VERSION_ALPAKKA_V1 "v1"
 #define STRING_VERSION_DONGLE_V1 "v1"
 
-#define STRING_HID "HID"
+#define STRING_HID "SWITCH_PRO"
 #define STRING_WEBUSB "WEBUSB"
 #define STRING_XINPUT "XINPUT_GENERIC_CONTROLLER"
 
@@ -54,9 +54,9 @@
 #define USB_UNIX_VENDOR  0x045E  // 360 controller vendor.
 #define USB_UNIX_PRODUCT 0x028E  // 360 controller product.
 
-#define USB_GENERIC_VENDOR  0x0170  // Input Labs.
-#define USB_GENERIC_PRODUCT_ALPAKKA 0xAC80  // Alpakka (HID complilant gamepad)
-#define USB_GENERIC_PRODUCT_DONGLE  0xDC80  // Dongle (HID complilant gamepad)
+#define USB_GENERIC_VENDOR  0x057E  // Nintendo.
+#define USB_GENERIC_PRODUCT_ALPAKKA 0x2009  // Pro Controller.
+#define USB_GENERIC_PRODUCT_DONGLE  0x2009  // Pro Controller.
 
 #define USB_TEST_VENDOR  0x0170  // Input Labs.
 #define USB_TEST_PRODUCT 0xFF00  // Test.
