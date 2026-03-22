@@ -26,9 +26,11 @@ static const char *const descriptor_string[] = {
 };
 
 uint8_t const descriptor_report_generic[] = {
+    // Keep gamepad as the first top-level HID collection so strict hosts can
+    // identify it as a controller before parsing keyboard/mouse collections.
+    TUD_HID_REPORT_DESC_GAMEPAD_CUSTOM(HID_REPORT_ID(REPORT_GAMEPAD)),
     TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(REPORT_KEYBOARD)),
     TUD_HID_REPORT_DESC_MOUSE_CUSTOM(HID_REPORT_ID(REPORT_MOUSE)),
-    TUD_HID_REPORT_DESC_GAMEPAD_CUSTOM(HID_REPORT_ID(REPORT_GAMEPAD)),
 };
 
 uint8_t descriptor_configuration_generic[] = {
