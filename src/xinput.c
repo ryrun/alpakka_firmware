@@ -10,6 +10,15 @@
 const uint8_t ep_in[] = {DESCRIPTOR_ENDPOINT_XINPUT_IN};
 const uint8_t ep_out[] = {DESCRIPTOR_ENDPOINT_XINPUT_OUT};
 
+static uint8_t xinput_out_buffer[64] = {0,};
+
+static void xinput_arm_out_endpoint(void) {
+    if (usbd_edpt_busy(0, ADDR_XINPUT_OUT)) return;
+    usbd_edpt_claim(0, ADDR_XINPUT_OUT);
+    usbd_edpt_xfer(0, ADDR_XINPUT_OUT, xinput_out_buffer, sizeof(xinput_out_buffer));
+    usbd_edpt_release(0, ADDR_XINPUT_OUT);
+}
+
 static void xinput_init(void) {}
 
 static void xinput_reset(uint8_t rhport) {}
@@ -28,9 +37,9 @@ static uint16_t xinput_open(
     if (itf_desc->iInterface == 0) {
         usbd_edpt_open(rhport, (tusb_desc_endpoint_t const *)ep_in);
         usbd_edpt_open(rhport, (tusb_desc_endpoint_t const *)ep_out);
+        xinput_arm_out_endpoint();
         return (
             sizeof(tusb_desc_interface_t) +
-            16 +
             (sizeof(tusb_desc_endpoint_t) * 2)
         );
     }
@@ -52,7 +61,11 @@ static bool xinput_xfer_cb(
     xfer_result_t result,
     uint32_t xferred_bytes
 ) {
-    // printf("xinput_xfer_cb\n");
+    if (ep_addr == ADDR_XINPUT_OUT && result == XFER_RESULT_SUCCESS) {
+        // Host-to-device packets (rumble/LED/control) are acknowledged,
+        // then OUT transfer is armed again to keep communication alive.
+        xinput_arm_out_endpoint();
+    }
     return true;
 }
 

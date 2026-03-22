@@ -43,16 +43,16 @@
 
 #define STRING_HID "HID"
 #define STRING_WEBUSB "WEBUSB"
-#define STRING_XINPUT "XINPUT_GENERIC_CONTROLLER"
+#define STRING_XINPUT "XBOX_WIRELESS_CONTROLLER"
 
-#define MS_OS_VENDOR 0x17
+#define MS_OS_VENDOR 0x90
 
-#define USB_WIN_VENDOR  0x0170  // Input Labs.
-#define USB_WIN_PRODUCT_ALPAKKA 0xAA80  // Alpakka (Xinput)
-#define USB_WIN_PRODUCT_DONGLE  0xDA80  // Dongle (Xinput)
+#define USB_WIN_VENDOR  0x045E  // Microsoft.
+#define USB_WIN_PRODUCT_ALPAKKA 0x02EA  // Xbox One S Controller.
+#define USB_WIN_PRODUCT_DONGLE  0x02EA  // Xbox One S Controller.
 
-#define USB_UNIX_VENDOR  0x045E  // 360 controller vendor.
-#define USB_UNIX_PRODUCT 0x028E  // 360 controller product.
+#define USB_UNIX_VENDOR  0x045E  // Microsoft.
+#define USB_UNIX_PRODUCT 0x02EA  // Xbox One S Controller.
 
 #define USB_GENERIC_VENDOR  0x0170  // Input Labs.
 #define USB_GENERIC_PRODUCT_ALPAKKA 0xAC80  // Alpakka (HID complilant gamepad)
@@ -122,12 +122,9 @@
     0x00,        /* bAlternateSetting */\
     0x02,        /* bNumEndpoints */\
     0xFF,        /* bInterfaceClass */\
-    0x5D,        /* bInterfaceSubClass */\
-    0x01,        /* bInterfaceProtocol */\
+    0x47,        /* bInterfaceSubClass: Xbox GIP */\
+    0xD0,        /* bInterfaceProtocol: Xbox GIP */\
     0x00,        /* iInterface */\
-    /* Undocumented */\
-    0x10, 0x21, 0x10, 0x01, 0x01, 0x24, 0x81, 0x14, \
-    0x03, 0x00, 0x03, 0x13, 0x02, 0x00, 0x03, 0x00, \
     /* Endpoints */\
     DESCRIPTOR_ENDPOINT_XINPUT_IN, \
     DESCRIPTOR_ENDPOINT_XINPUT_OUT
@@ -137,7 +134,7 @@
     0x05,            /* bDescriptorType: endpoint */\
     ADDR_XINPUT_IN,  /* bEndpointAddress */\
     0x03,            /* bmAttributes */\
-    0x20, 0x00,      /* wMaxPacketSize */\
+    0x40, 0x00,      /* wMaxPacketSize */\
     0x04             /* bInterval */\
 
 #define DESCRIPTOR_ENDPOINT_XINPUT_OUT \
@@ -145,8 +142,8 @@
     0x05,             /* bDescriptorType: endpoint */\
     ADDR_XINPUT_OUT,  /* bEndpointAddress */\
     0x03,             /* bmAttributes */\
-    0x20, 0x00,       /* wMaxPacketSize */\
-    0x08              /* bInterval */
+    0x40, 0x00,       /* wMaxPacketSize */\
+    0x04              /* bInterval */
 
 #define MS_OS_DESCRIPTOR \
     0x12,                    /* Length */\
@@ -179,7 +176,7 @@
 #define MS_OS_COMPATIDS_XUSB \
     ITF_XINPUT,              /* Interface index */\
     0x01,                    /* Reserved */\
-    'X' , 'U' , 'S' , 'B',   /* Compat ID */\
+    'X' , 'G' , 'I' , 'P',   /* Compat ID */\
     '1' , '0' , 0x00, 0x00,  \
     0x00, 0x00, 0x00, 0x00,  /* Sub-compat ID. */\
     0x00, 0x00, 0x00, 0x00,  \
