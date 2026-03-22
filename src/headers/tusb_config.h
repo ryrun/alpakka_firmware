@@ -16,7 +16,7 @@
 #define CFG_TUD_VENDOR_RX_BUFSIZE 64
 #define CFG_TUD_VENDOR_TX_BUFSIZE 64
 
-#define CFG_TUD_HID 1
+#define CFG_TUD_HID 2
 #define CFG_TUD_CDC 0
 #define CFG_TUD_MSC 0
 #define CFG_TUD_MIDI 0
@@ -43,16 +43,16 @@
 
 #define STRING_HID "HID"
 #define STRING_WEBUSB "WEBUSB"
-#define STRING_XINPUT "XINPUT_GENERIC_CONTROLLER"
+#define STRING_XINPUT "PLAYSTATION_COMPATIBLE_GAMEPAD"
 
 #define MS_OS_VENDOR 0x17
 
-#define USB_WIN_VENDOR  0x0170  // Input Labs.
-#define USB_WIN_PRODUCT_ALPAKKA 0xAA80  // Alpakka (Xinput)
-#define USB_WIN_PRODUCT_DONGLE  0xDA80  // Dongle (Xinput)
+#define USB_WIN_VENDOR  0x054C  // Sony.
+#define USB_WIN_PRODUCT_ALPAKKA 0x09CC  // Wireless Controller (DS4 v2).
+#define USB_WIN_PRODUCT_DONGLE  0x09CC  // Wireless Controller (DS4 v2).
 
-#define USB_UNIX_VENDOR  0x045E  // 360 controller vendor.
-#define USB_UNIX_PRODUCT 0x028E  // 360 controller product.
+#define USB_UNIX_VENDOR  0x054C  // Sony.
+#define USB_UNIX_PRODUCT 0x09CC  // Wireless Controller (DS4 v2).
 
 #define USB_GENERIC_VENDOR  0x0170  // Input Labs.
 #define USB_GENERIC_PRODUCT_ALPAKKA 0xAC80  // Alpakka (HID complilant gamepad)
@@ -115,22 +115,16 @@
         64                /* Size */\
     )
 
-#define DESCRIPTOR_INTERFACE_XINPUT \
-    0x09,        /* bLength */\
-    0x04,        /* bDescriptorType: interface */\
-    ITF_XINPUT,  /* bInterfaceNumber */\
-    0x00,        /* bAlternateSetting */\
-    0x02,        /* bNumEndpoints */\
-    0xFF,        /* bInterfaceClass */\
-    0x5D,        /* bInterfaceSubClass */\
-    0x01,        /* bInterfaceProtocol */\
-    0x00,        /* iInterface */\
-    /* Undocumented */\
-    0x10, 0x21, 0x10, 0x01, 0x01, 0x24, 0x81, 0x14, \
-    0x03, 0x00, 0x03, 0x13, 0x02, 0x00, 0x03, 0x00, \
-    /* Endpoints */\
-    DESCRIPTOR_ENDPOINT_XINPUT_IN, \
-    DESCRIPTOR_ENDPOINT_XINPUT_OUT
+#define DESCRIPTOR_INTERFACE_XINPUT(report_size) \
+    TUD_HID_DESCRIPTOR( \
+        ITF_XINPUT,             /* Interface index */\
+        ITF_XINPUT + 4,         /* String index */\
+        HID_ITF_PROTOCOL_NONE,  /* Boot protocol */\
+        report_size,            /* Report descriptor length */\
+        ADDR_XINPUT_IN,         /* Interface address */\
+        64,                     /* Endpoint buffer size */\
+        1                       /* Interface interval (ms) */\
+    )
 
 #define DESCRIPTOR_ENDPOINT_XINPUT_IN \
     0x07,            /* bLength */\
@@ -187,9 +181,8 @@
     0x00, 0x00               /* Reserved */
 
 #define MS_OS_COMPATIDS_ALL \
-    MS_OS_COMPATIDS(64, 2), \
-    MS_OS_COMPATIDS_WINUSB, \
-    MS_OS_COMPATIDS_XUSB
+    MS_OS_COMPATIDS(40, 1), \
+    MS_OS_COMPATIDS_WINUSB
 
 #define MS_OS_COMPATIDS_GENERIC \
     MS_OS_COMPATIDS(40, 1), \
