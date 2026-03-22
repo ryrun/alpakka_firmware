@@ -92,10 +92,16 @@ uint8_t const *tud_descriptor_device_cb() {
         #elif defined DEVICE_DONGLE
             descriptor_device.idProduct = USB_WIN_PRODUCT_DONGLE;
         #endif
+        descriptor_device.bDeviceClass = 0xFF;
+        descriptor_device.bDeviceSubClass = 0x47;
+        descriptor_device.bDeviceProtocol = 0xD0;
     }
     if (config_get_protocol() == PROTOCOL_XINPUT_UNIX) {
         descriptor_device.idVendor = USB_UNIX_VENDOR;
         descriptor_device.idProduct = USB_UNIX_PRODUCT;
+        descriptor_device.bDeviceClass = 0xFF;
+        descriptor_device.bDeviceSubClass = 0x47;
+        descriptor_device.bDeviceProtocol = 0xD0;
     }
     if (config_get_protocol() == PROTOCOL_GENERIC) {
         descriptor_device.idVendor = USB_GENERIC_VENDOR;
@@ -104,6 +110,9 @@ uint8_t const *tud_descriptor_device_cb() {
         #elif defined DEVICE_DONGLE
             descriptor_device.idProduct = USB_GENERIC_PRODUCT_DONGLE;
         #endif
+        descriptor_device.bDeviceClass = 0x00;
+        descriptor_device.bDeviceSubClass = 0x00;
+        descriptor_device.bDeviceProtocol = 0x00;
     }
     return (uint8_t const *) &descriptor_device;
 }

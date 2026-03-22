@@ -43,16 +43,16 @@
 
 #define STRING_HID "HID"
 #define STRING_WEBUSB "WEBUSB"
-#define STRING_XINPUT "PLAYSTATION_COMPATIBLE_GAMEPAD"
+#define STRING_XINPUT "XBOX_WIRELESS_CONTROLLER"
 
-#define MS_OS_VENDOR 0x17
+#define MS_OS_VENDOR 0x90
 
-#define USB_WIN_VENDOR  0x054C  // Sony.
-#define USB_WIN_PRODUCT_ALPAKKA 0x09CC  // Wireless Controller (DS4 v2).
-#define USB_WIN_PRODUCT_DONGLE  0x09CC  // Wireless Controller (DS4 v2).
+#define USB_WIN_VENDOR  0x045E  // Microsoft.
+#define USB_WIN_PRODUCT_ALPAKKA 0x02EA  // Xbox One S Controller.
+#define USB_WIN_PRODUCT_DONGLE  0x02EA  // Xbox One S Controller.
 
-#define USB_UNIX_VENDOR  0x054C  // Sony.
-#define USB_UNIX_PRODUCT 0x09CC  // Wireless Controller (DS4 v2).
+#define USB_UNIX_VENDOR  0x045E  // Microsoft.
+#define USB_UNIX_PRODUCT 0x02EA  // Xbox One S Controller.
 
 #define USB_GENERIC_VENDOR  0x0170  // Input Labs.
 #define USB_GENERIC_PRODUCT_ALPAKKA 0xAC80  // Alpakka (HID complilant gamepad)
@@ -115,23 +115,26 @@
         64                /* Size */\
     )
 
-#define DESCRIPTOR_INTERFACE_XINPUT(report_size) \
-    TUD_HID_DESCRIPTOR( \
-        ITF_XINPUT,             /* Interface index */\
-        ITF_XINPUT + 4,         /* String index */\
-        HID_ITF_PROTOCOL_NONE,  /* Boot protocol */\
-        report_size,            /* Report descriptor length */\
-        ADDR_XINPUT_IN,         /* Interface address */\
-        64,                     /* Endpoint buffer size */\
-        1                       /* Interface interval (ms) */\
-    )
+#define DESCRIPTOR_INTERFACE_XINPUT \
+    0x09,        /* bLength */\
+    0x04,        /* bDescriptorType: interface */\
+    ITF_XINPUT,  /* bInterfaceNumber */\
+    0x00,        /* bAlternateSetting */\
+    0x02,        /* bNumEndpoints */\
+    0xFF,        /* bInterfaceClass */\
+    0x47,        /* bInterfaceSubClass: Xbox GIP */\
+    0xD0,        /* bInterfaceProtocol: Xbox GIP */\
+    0x00,        /* iInterface */\
+    /* Endpoints */\
+    DESCRIPTOR_ENDPOINT_XINPUT_IN, \
+    DESCRIPTOR_ENDPOINT_XINPUT_OUT
 
 #define DESCRIPTOR_ENDPOINT_XINPUT_IN \
     0x07,            /* bLength */\
     0x05,            /* bDescriptorType: endpoint */\
     ADDR_XINPUT_IN,  /* bEndpointAddress */\
     0x03,            /* bmAttributes */\
-    0x20, 0x00,      /* wMaxPacketSize */\
+    0x40, 0x00,      /* wMaxPacketSize */\
     0x04             /* bInterval */\
 
 #define DESCRIPTOR_ENDPOINT_XINPUT_OUT \
@@ -139,8 +142,8 @@
     0x05,             /* bDescriptorType: endpoint */\
     ADDR_XINPUT_OUT,  /* bEndpointAddress */\
     0x03,             /* bmAttributes */\
-    0x20, 0x00,       /* wMaxPacketSize */\
-    0x08              /* bInterval */
+    0x40, 0x00,       /* wMaxPacketSize */\
+    0x04              /* bInterval */
 
 #define MS_OS_DESCRIPTOR \
     0x12,                    /* Length */\
@@ -173,7 +176,7 @@
 #define MS_OS_COMPATIDS_XUSB \
     ITF_XINPUT,              /* Interface index */\
     0x01,                    /* Reserved */\
-    'X' , 'U' , 'S' , 'B',   /* Compat ID */\
+    'X' , 'G' , 'I' , 'P',   /* Compat ID */\
     '1' , '0' , 0x00, 0x00,  \
     0x00, 0x00, 0x00, 0x00,  /* Sub-compat ID. */\
     0x00, 0x00, 0x00, 0x00,  \
