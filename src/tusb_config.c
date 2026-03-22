@@ -79,7 +79,7 @@ uint8_t descriptor_configuration_xinput[] = {
     DESCRIPTOR_CONFIGURATION(3),
     DESCRIPTOR_INTERFACE_HID(sizeof(descriptor_report_xinput)),
     DESCRIPTOR_INTERFACE_WEBUSB,
-    DESCRIPTOR_INTERFACE_XINPUT(sizeof(descriptor_report_ps))
+    DESCRIPTOR_INTERFACE_XINPUT
 };
 
 uint8_t const *tud_descriptor_device_cb() {

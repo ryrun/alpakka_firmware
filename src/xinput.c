@@ -2,6 +2,7 @@
 // Copyright (C) 2022, Input Labs Oy.
 
 #include <tusb.h>
+#include <device/usbd_pvt.h>
 #include "xinput.h"
 #include "tusb_config.h"
 #include "logging.h"
@@ -13,7 +14,7 @@ static uint8_t xinput_out_buffer[64] = {0,};
 
 static void xinput_arm_out_endpoint(void) {
     if (usbd_edpt_busy(0, ADDR_XINPUT_OUT)) return;
-    usbd_edpt_claim(0, ADDR_XINPUT_OUT);
+    if (!usbd_edpt_claim(0, ADDR_XINPUT_OUT)) return;
     usbd_edpt_xfer(0, ADDR_XINPUT_OUT, xinput_out_buffer, sizeof(xinput_out_buffer));
     usbd_edpt_release(0, ADDR_XINPUT_OUT);
 }
@@ -33,7 +34,7 @@ static uint16_t xinput_open(
         itf_desc->iInterface,
         max_len
     );
-    if (itf_desc->iInterface == 0) {
+    if (itf_desc->bInterfaceNumber == ITF_XINPUT) {
         usbd_edpt_open(rhport, (tusb_desc_endpoint_t const *)ep_in);
         usbd_edpt_open(rhport, (tusb_desc_endpoint_t const *)ep_out);
         xinput_arm_out_endpoint();
@@ -73,8 +74,7 @@ static usbd_class_driver_t const xinput_driver = {
     .reset           = xinput_reset,
     .open            = xinput_open,
     .control_xfer_cb = xinput_control_xfer_cb,
-    .xfer_cb         = xinput_xfer_cb,
-    .sof             = NULL
+    .xfer_cb         = xinput_xfer_cb
 };
 
 usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count) {
@@ -84,8 +84,11 @@ usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count) {
 
 bool xinput_send_report(XInputReport *report) {
     if (!tud_ready()) return false;
-    if (!tud_hid_n_ready(1)) return false;  // HID instance 1 = PlayStation-compatible gamepad.
-    return tud_hid_n_report(1, report->report_id, report, XINPUT_REPORT_SIZE);
+    if (usbd_edpt_busy(0, ADDR_XINPUT_IN)) return false;
+    if (!usbd_edpt_claim(0, ADDR_XINPUT_IN)) return false;
+    bool success = usbd_edpt_xfer(0, ADDR_XINPUT_IN, (uint8_t*)report, XINPUT_REPORT_SIZE);
+    usbd_edpt_release(0, ADDR_XINPUT_IN);
+    return success;
 }
 
 void xinput_receive_report() {}
