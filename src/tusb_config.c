@@ -22,8 +22,7 @@ static const char *const descriptor_string[] = {
         STRING_VERSION_DONGLE_V1,
     #endif
     STRING_HID,
-    STRING_WEBUSB,
-    STRING_XINPUT
+    STRING_WEBUSB
 };
 
 uint8_t const descriptor_report_generic[] = {
@@ -32,70 +31,38 @@ uint8_t const descriptor_report_generic[] = {
     TUD_HID_REPORT_DESC_GAMEPAD_CUSTOM(HID_REPORT_ID(REPORT_GAMEPAD)),
 };
 
-uint8_t const descriptor_report_xinput[] = {
-    TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(REPORT_KEYBOARD)),
-    TUD_HID_REPORT_DESC_MOUSE_CUSTOM(HID_REPORT_ID(REPORT_MOUSE)),
-};
-
 uint8_t descriptor_configuration_generic[] = {
     DESCRIPTOR_CONFIGURATION(2),
     DESCRIPTOR_INTERFACE_HID(sizeof(descriptor_report_generic)),
     DESCRIPTOR_INTERFACE_WEBUSB
 };
 
-uint8_t descriptor_configuration_xinput[] = {
-    DESCRIPTOR_CONFIGURATION(3),
-    DESCRIPTOR_INTERFACE_HID(sizeof(descriptor_report_xinput)),
-    DESCRIPTOR_INTERFACE_WEBUSB,
-    DESCRIPTOR_INTERFACE_XINPUT
-};
-
 uint8_t const *tud_descriptor_device_cb() {
     debug_uart("USB: tud_descriptor_device_cb\n");
     static tusb_desc_device_t descriptor_device = {DESCRIPTOR_DEVICE};
-    if (config_get_protocol() == PROTOCOL_XINPUT_WIN) {
-        descriptor_device.idVendor = USB_WIN_VENDOR;
-        #ifdef DEVICE_IS_ALPAKKA
-            descriptor_device.idProduct = USB_WIN_PRODUCT_ALPAKKA;
-        #elif defined DEVICE_DONGLE
-            descriptor_device.idProduct = USB_WIN_PRODUCT_DONGLE;
-        #endif
-    }
-    if (config_get_protocol() == PROTOCOL_XINPUT_UNIX) {
-        descriptor_device.idVendor = USB_UNIX_VENDOR;
-        descriptor_device.idProduct = USB_UNIX_PRODUCT;
-    }
-    if (config_get_protocol() == PROTOCOL_GENERIC) {
-        descriptor_device.idVendor = USB_GENERIC_VENDOR;
-        #ifdef DEVICE_IS_ALPAKKA
-            descriptor_device.idProduct = USB_GENERIC_PRODUCT_ALPAKKA;
-        #elif defined DEVICE_DONGLE
-            descriptor_device.idProduct = USB_GENERIC_PRODUCT_DONGLE;
-        #endif
-    }
+    descriptor_device.idVendor = USB_GENERIC_VENDOR;
+    #ifdef DEVICE_IS_ALPAKKA
+        descriptor_device.idProduct = USB_GENERIC_PRODUCT_ALPAKKA;
+    #elif defined DEVICE_DONGLE
+        descriptor_device.idProduct = USB_GENERIC_PRODUCT_DONGLE;
+    #endif
     return (uint8_t const *) &descriptor_device;
 }
 
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
     debug_uart("USB: tud_descriptor_configuration_cb index=0x%x\n", index);
-    if (config_get_protocol() == PROTOCOL_GENERIC) {
-        descriptor_configuration_generic[2] = sizeof(descriptor_configuration_generic);
-        return descriptor_configuration_generic;
-    } else {
-        descriptor_configuration_xinput[2] = sizeof(descriptor_configuration_xinput);
-        return descriptor_configuration_xinput;
-    }
+    descriptor_configuration_generic[2] = sizeof(descriptor_configuration_generic);
+    return descriptor_configuration_generic;
 }
 
 uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance) {
     debug_uart("USB: tud_hid_descriptor_report_cb\n");
-    if (config_get_protocol() == PROTOCOL_GENERIC) return descriptor_report_generic;
-    else return descriptor_report_xinput;
+    return descriptor_report_generic;
 }
 
 const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     debug_uart("USB: tud_descriptor_string_cb index=0x%x\n", index);
-    if (index == 0xEE && config_get_protocol() != PROTOCOL_XINPUT_UNIX) {
+    if (index == 0xEE) {
         static uint8_t msos[] = {MS_OS_DESCRIPTOR};
         return (uint16_t*)msos;
     }
@@ -129,21 +96,13 @@ const bool tud_vendor_control_xfer_cb(
         request->wIndex == 0x0004 &&
         request->bRequest == MS_OS_VENDOR
     ) {
-        if (config_get_protocol() == PROTOCOL_XINPUT_WIN) {
-            static uint8_t response[] = {MS_OS_COMPATIDS_ALL};
-            return tud_control_xfer(rhport, request, response, sizeof(response));
-        }
-        if (config_get_protocol() == PROTOCOL_GENERIC) {
-            static uint8_t response[] = {MS_OS_COMPATIDS_GENERIC};
-            return tud_control_xfer(rhport, request, response, sizeof(response));
-        }
-
+        static uint8_t response[] = {MS_OS_COMPATIDS_GENERIC};
+        return tud_control_xfer(rhport, request, response, sizeof(response));
     }
     // Extended properties.
     if (
         request->wIndex == 0x0005 &&
-        request->bRequest == MS_OS_VENDOR &&
-        config_get_protocol() != PROTOCOL_XINPUT_UNIX
+        request->bRequest == MS_OS_VENDOR
     ) {
         static uint8_t response[] = {MS_OS_PROPERTIES};
         return tud_control_xfer(rhport, request, response, sizeof(response));
