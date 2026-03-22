@@ -349,24 +349,47 @@ double hid_axis(
 GamepadReport hid_get_gamepad_report() {
     // Sorted so the most common assigned buttons are lower and easier to
     // identify in-game.
-    int32_t buttons = (
-        // Any value bigger than 1 consolidates to 1 (with !!).
-        ((!!state_matrix[GAMEPAD_A])      <<  0) +
-        ((!!state_matrix[GAMEPAD_B])      <<  1) +
-        ((!!state_matrix[GAMEPAD_X])      <<  2) +
-        ((!!state_matrix[GAMEPAD_Y])      <<  3) +
-        ((!!state_matrix[GAMEPAD_L1])     <<  4) +
-        ((!!state_matrix[GAMEPAD_R1])     <<  5) +
-        ((!!state_matrix[GAMEPAD_L3])     <<  6) +
-        ((!!state_matrix[GAMEPAD_R3])     <<  7) +
-        ((!!state_matrix[GAMEPAD_LEFT])   <<  8) +
-        ((!!state_matrix[GAMEPAD_RIGHT])  <<  9) +
-        ((!!state_matrix[GAMEPAD_UP])     << 10) +
-        ((!!state_matrix[GAMEPAD_DOWN])   << 11) +
-        ((!!state_matrix[GAMEPAD_SELECT]) << 12) +
-        ((!!state_matrix[GAMEPAD_START])  << 13) +
-        ((!!state_matrix[GAMEPAD_HOME])   << 14)
-    );
+    int32_t buttons = 0;
+    if (config_get_protocol() == PROTOCOL_GENERIC) {
+        // Nintendo layout: B/A/Y/X.
+        buttons = (
+            // Any value bigger than 1 consolidates to 1 (with !!).
+            ((!!state_matrix[GAMEPAD_B])      <<  0) +
+            ((!!state_matrix[GAMEPAD_A])      <<  1) +
+            ((!!state_matrix[GAMEPAD_Y])      <<  2) +
+            ((!!state_matrix[GAMEPAD_X])      <<  3) +
+            ((!!state_matrix[GAMEPAD_L1])     <<  4) +
+            ((!!state_matrix[GAMEPAD_R1])     <<  5) +
+            ((!!state_matrix[GAMEPAD_L3])     <<  6) +
+            ((!!state_matrix[GAMEPAD_R3])     <<  7) +
+            ((!!state_matrix[GAMEPAD_LEFT])   <<  8) +
+            ((!!state_matrix[GAMEPAD_RIGHT])  <<  9) +
+            ((!!state_matrix[GAMEPAD_UP])     << 10) +
+            ((!!state_matrix[GAMEPAD_DOWN])   << 11) +
+            ((!!state_matrix[GAMEPAD_SELECT]) << 12) +
+            ((!!state_matrix[GAMEPAD_START])  << 13) +
+            ((!!state_matrix[GAMEPAD_HOME])   << 14)
+        );
+    } else {
+        buttons = (
+            // Any value bigger than 1 consolidates to 1 (with !!).
+            ((!!state_matrix[GAMEPAD_A])      <<  0) +
+            ((!!state_matrix[GAMEPAD_B])      <<  1) +
+            ((!!state_matrix[GAMEPAD_X])      <<  2) +
+            ((!!state_matrix[GAMEPAD_Y])      <<  3) +
+            ((!!state_matrix[GAMEPAD_L1])     <<  4) +
+            ((!!state_matrix[GAMEPAD_R1])     <<  5) +
+            ((!!state_matrix[GAMEPAD_L3])     <<  6) +
+            ((!!state_matrix[GAMEPAD_R3])     <<  7) +
+            ((!!state_matrix[GAMEPAD_LEFT])   <<  8) +
+            ((!!state_matrix[GAMEPAD_RIGHT])  <<  9) +
+            ((!!state_matrix[GAMEPAD_UP])     << 10) +
+            ((!!state_matrix[GAMEPAD_DOWN])   << 11) +
+            ((!!state_matrix[GAMEPAD_SELECT]) << 12) +
+            ((!!state_matrix[GAMEPAD_START])  << 13) +
+            ((!!state_matrix[GAMEPAD_HOME])   << 14)
+        );
+    }
     // Adjust range from [-1,1] to [-32767,32767].
     int16_t lx_report = hid_axis(gamepad_axis[LX], GAMEPAD_AXIS_LX, GAMEPAD_AXIS_LX_NEG) * BIT_15;
     int16_t ly_report = hid_axis(gamepad_axis[LY], GAMEPAD_AXIS_LY, GAMEPAD_AXIS_LY_NEG) * BIT_15;
