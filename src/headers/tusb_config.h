@@ -43,16 +43,16 @@
 
 #define STRING_HID "HID"
 #define STRING_WEBUSB "WEBUSB"
-#define STRING_XINPUT "XINPUT_GENERIC_CONTROLLER"
+#define STRING_XINPUT "XBOX_ONE_CONTROLLER"
 
 #define MS_OS_VENDOR 0x17
 
-#define USB_WIN_VENDOR  0x0170  // Input Labs.
-#define USB_WIN_PRODUCT_ALPAKKA 0xAA80  // Alpakka (Xinput)
-#define USB_WIN_PRODUCT_DONGLE  0xDA80  // Dongle (Xinput)
+#define USB_WIN_VENDOR  0x045E  // Microsoft.
+#define USB_WIN_PRODUCT_ALPAKKA 0x02EA  // Xbox One S Controller (wired).
+#define USB_WIN_PRODUCT_DONGLE  0x02EA  // Xbox One S Controller (wired).
 
-#define USB_UNIX_VENDOR  0x045E  // 360 controller vendor.
-#define USB_UNIX_PRODUCT 0x028E  // 360 controller product.
+#define USB_UNIX_VENDOR  0x045E  // Microsoft.
+#define USB_UNIX_PRODUCT 0x02EA  // Xbox One S Controller (wired).
 
 #define USB_GENERIC_VENDOR  0x0170  // Input Labs.
 #define USB_GENERIC_PRODUCT_ALPAKKA 0xAC80  // Alpakka (HID complilant gamepad)
