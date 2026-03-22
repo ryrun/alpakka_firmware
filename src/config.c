@@ -130,7 +130,7 @@ void config_write_init() {
         .header = NVM_CONTROL_BYTE,
         .config_version = NVM_CONFIG_VERSION,
         .profile = 1,
-        .protocol = 0,
+        .protocol = PROTOCOL_GENERIC,
         .sens_mouse = 0,
         .sens_touch = 1,
         .deadzone = 1,
@@ -403,6 +403,9 @@ uint8_t config_get_pcb_gen() {
 }
 
 uint8_t config_get_protocol() {
+    if (config_cache.protocol != PROTOCOL_GENERIC) {
+        return PROTOCOL_GENERIC;
+    }
     return config_cache.protocol;
 }
 
@@ -419,6 +422,7 @@ uint8_t config_get_deadzone_preset() {
 }
 
 void config_set_protocol(uint8_t preset) {
+    preset = PROTOCOL_GENERIC;
     if (preset == config_cache.protocol) return;
     config_cache.protocol = preset;
     config_write();
@@ -637,6 +641,11 @@ void config_init() {
         warn("NVM config not found or incompatible, writing default instead\n");
         config_write_init();
     }
+    if (config_cache.protocol != PROTOCOL_GENERIC) {
+        warn("NVM protocol preset %i deprecated, forcing generic protocol\n", config_cache.protocol);
+        config_cache.protocol = PROTOCOL_GENERIC;
+        config_write();
+    }
     #ifdef DEVICE_IS_ALPAKKA
         config_init_profiles_from_nvm();
         config_print();
@@ -646,5 +655,4 @@ void config_init() {
     #endif
     logging_load_from_config();
 }
-
 
