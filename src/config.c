@@ -130,7 +130,7 @@ void config_write_init() {
         .header = NVM_CONTROL_BYTE,
         .config_version = NVM_CONFIG_VERSION,
         .profile = 1,
-        .protocol = 0,
+        .protocol = PROTOCOL_PLAYSTATION,
         .sens_mouse = 0,
         .sens_touch = 1,
         .deadzone = 1,
@@ -646,5 +646,4 @@ void config_init() {
     #endif
     logging_load_from_config();
 }
-
 

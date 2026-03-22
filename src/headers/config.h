@@ -65,7 +65,7 @@ typedef enum _Protocol {
     PROTOCOL_UNDEFINED = -1,
     PROTOCOL_XINPUT_WIN = 0,
     PROTOCOL_XINPUT_UNIX,
-    PROTOCOL_GENERIC,
+    PROTOCOL_PLAYSTATION,
 } Protocol;
 
 typedef enum _Problem {
@@ -185,4 +185,3 @@ void config_profile_overwrite(uint8_t indexTo, int8_t indexFrom);
 void config_set_problem(uint8_t flag, bool state);
 void config_ignore_problems();
 uint8_t config_get_problems();
-

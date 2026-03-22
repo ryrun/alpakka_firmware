@@ -554,14 +554,14 @@ ReportType hid_get_priority() {
     if (synced_keyboard && hid_should_replay(REPORT_KEYBOARD)) return REPORT_REPLAY_KEYBOARD;
     if (synced_mouse && hid_should_replay(REPORT_MOUSE)) return REPORT_REPLAY_MOUSE;
     if (synced_gamepad && hid_should_replay(REPORT_GAMEPAD)) {
-        if (config_get_protocol() == PROTOCOL_GENERIC) return REPORT_REPLAY_GAMEPAD;
+        if (config_get_protocol() == PROTOCOL_PLAYSTATION) return REPORT_REPLAY_GAMEPAD;
         else return REPORT_REPLAY_XINPUT;
     }
     // Evaluate keyboard / mouse / gamepad.
     if (!synced_keyboard) return REPORT_KEYBOARD;
     if (!synced_mouse && (priority_mouse > priority_gamepad)) return REPORT_MOUSE;
     if (!synced_gamepad) {
-        if (config_get_protocol() == PROTOCOL_GENERIC) return REPORT_GAMEPAD;
+        if (config_get_protocol() == PROTOCOL_PLAYSTATION) return REPORT_GAMEPAD;
         else return REPORT_XINPUT;
     }
     return 0;

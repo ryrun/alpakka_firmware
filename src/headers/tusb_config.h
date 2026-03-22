@@ -36,6 +36,7 @@
 
 #define STRING_PRODUCT_ALPAKKA "Alpakka"
 #define STRING_PRODUCT_DONGLE "Dongle"
+#define STRING_PRODUCT_PLAYSTATION "Wireless Controller"
 
 #define STRING_VERSION_ALPAKKA_V0 "v0"
 #define STRING_VERSION_ALPAKKA_V1 "v1"
@@ -54,9 +55,9 @@
 #define USB_UNIX_VENDOR  0x045E  // 360 controller vendor.
 #define USB_UNIX_PRODUCT 0x028E  // 360 controller product.
 
-#define USB_GENERIC_VENDOR  0x0170  // Input Labs.
-#define USB_GENERIC_PRODUCT_ALPAKKA 0xAC80  // Alpakka (HID complilant gamepad)
-#define USB_GENERIC_PRODUCT_DONGLE  0xDC80  // Dongle (HID complilant gamepad)
+#define USB_PLAYSTATION_VENDOR  0x054C  // Sony.
+#define USB_PLAYSTATION_PRODUCT_ALPAKKA 0x09CC  // DualShock 4 (CUH-ZCT2)
+#define USB_PLAYSTATION_PRODUCT_DONGLE  0x09CC  // DualShock 4 (CUH-ZCT2)
 
 #define USB_TEST_VENDOR  0x0170  // Input Labs.
 #define USB_TEST_PRODUCT 0xFF00  // Test.

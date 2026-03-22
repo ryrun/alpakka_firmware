@@ -65,12 +65,12 @@ uint8_t const *tud_descriptor_device_cb() {
         descriptor_device.idVendor = USB_UNIX_VENDOR;
         descriptor_device.idProduct = USB_UNIX_PRODUCT;
     }
-    if (config_get_protocol() == PROTOCOL_GENERIC) {
-        descriptor_device.idVendor = USB_GENERIC_VENDOR;
+    if (config_get_protocol() == PROTOCOL_PLAYSTATION) {
+        descriptor_device.idVendor = USB_PLAYSTATION_VENDOR;
         #ifdef DEVICE_IS_ALPAKKA
-            descriptor_device.idProduct = USB_GENERIC_PRODUCT_ALPAKKA;
+            descriptor_device.idProduct = USB_PLAYSTATION_PRODUCT_ALPAKKA;
         #elif defined DEVICE_DONGLE
-            descriptor_device.idProduct = USB_GENERIC_PRODUCT_DONGLE;
+            descriptor_device.idProduct = USB_PLAYSTATION_PRODUCT_DONGLE;
         #endif
     }
     return (uint8_t const *) &descriptor_device;
@@ -78,7 +78,7 @@ uint8_t const *tud_descriptor_device_cb() {
 
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
     debug_uart("USB: tud_descriptor_configuration_cb index=0x%x\n", index);
-    if (config_get_protocol() == PROTOCOL_GENERIC) {
+    if (config_get_protocol() == PROTOCOL_PLAYSTATION) {
         descriptor_configuration_generic[2] = sizeof(descriptor_configuration_generic);
         return descriptor_configuration_generic;
     } else {
@@ -89,7 +89,7 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
 
 uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance) {
     debug_uart("USB: tud_hid_descriptor_report_cb\n");
-    if (config_get_protocol() == PROTOCOL_GENERIC) return descriptor_report_generic;
+    if (config_get_protocol() == PROTOCOL_PLAYSTATION) return descriptor_report_generic;
     else return descriptor_report_xinput;
 }
 
@@ -104,6 +104,9 @@ const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     }
     static uint16_t response[64];
     const char *string = descriptor_string[index];
+    if (index == 2 && config_get_protocol() == PROTOCOL_PLAYSTATION) {
+        string = STRING_PRODUCT_PLAYSTATION;
+    }
     uint8_t i = 0;
     for (i=0; string[i]; i++) {
         response[i + 1] = string[i];
@@ -133,7 +136,7 @@ const bool tud_vendor_control_xfer_cb(
             static uint8_t response[] = {MS_OS_COMPATIDS_ALL};
             return tud_control_xfer(rhport, request, response, sizeof(response));
         }
-        if (config_get_protocol() == PROTOCOL_GENERIC) {
+        if (config_get_protocol() == PROTOCOL_PLAYSTATION) {
             static uint8_t response[] = {MS_OS_COMPATIDS_GENERIC};
             return tud_control_xfer(rhport, request, response, sizeof(response));
         }
