@@ -500,10 +500,18 @@ void hid_report_gamepad(bool wired) {
 
 void hid_report_xinput(bool wired) {
     XInputReport report = hid_get_xinput_report();
-    if (wired) xinput_send_report(&report);
-    else wireless_send_hid(REPORT_XINPUT, &report, sizeof(report));
-    hid_set_gamepad_synced();
-    last_report_xinput = report;
+    bool success = false;
+    if (wired) success = xinput_send_report(&report);
+    else {
+        wireless_send_hid(REPORT_XINPUT, &report, sizeof(report));
+        success = true;
+    }
+    // Keep gamepad marked as unsynced if XInput endpoint is not ready yet,
+    // so button and stick states are retried in the next cycle.
+    if (success) {
+        hid_set_gamepad_synced();
+        last_report_xinput = report;
+    }
 }
 
 void hid_replay_keyboard() {
