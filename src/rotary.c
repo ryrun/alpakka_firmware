@@ -20,11 +20,22 @@ void rotary_set_mode(uint8_t value) {
     rotary->mode = value;
 }
 
+int8_t rotary_get_recent_increment(Rotary *self, uint32_t window_us) {
+    if (!self->telemetry_increment) return 0;
+    if (time_us_32() > (self->telemetry_timestamp + window_us)) {
+        self->telemetry_increment = 0;
+        return 0;
+    }
+    return self->telemetry_increment;
+}
+
 void rotary_callback(uint gpio, uint32_t events) {
     Profile* profile = profile_get_active(false);
     Rotary* rotary = &(profile->rotary);
     rotary->timestamp = time_us_32();
     rotary->increment = gpio_get(PIN_ROTARY_A) ^ gpio_get(PIN_ROTARY_B) ? -1 : 1;
+    rotary->telemetry_increment = rotary->increment;
+    rotary->telemetry_timestamp = rotary->timestamp;
     rotary->pending = true;
 }
 
@@ -67,6 +78,8 @@ void Rotary__reset(Rotary *self) {
     self->pending = false;
     self->increment = 0;
     self->timestamp = 0;
+    self->telemetry_increment = 0;
+    self->telemetry_timestamp = 0;
     // self->mode = 0;
 }
 
@@ -89,5 +102,7 @@ Rotary Rotary_ () {
     rotary.mode = 0;
     rotary.increment = 0;
     rotary.timestamp = 0;
+    rotary.telemetry_increment = 0;
+    rotary.telemetry_timestamp = 0;
     return rotary;
 }

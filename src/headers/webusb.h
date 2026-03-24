@@ -14,3 +14,5 @@ void webusb_flush_force();
 void webusb_set_pending_config_share(bool value);
 bool webusb_transfer_wired(Ctrl ctrl);
 void webusb_handle(Ctrl ctrl);
+void webusb_input_stream_tick();
+bool webusb_get_input_stream_enabled();

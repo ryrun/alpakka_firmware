@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 #include <tusb.h>
 #include <device/usbd_pvt.h>
 #include "webusb.h"
@@ -16,6 +17,9 @@
 #include "power.h"
 #include "loop.h"
 #include "wireless.h"
+#include "thumbstick.h"
+#include "touch.h"
+#include "imu.h"
 
 uint8_t webusb_buffer[WEBUSB_BUFFER_SIZE] = {0,};
 uint16_t webusb_ptr_in = 0;
@@ -27,6 +31,112 @@ static bool webusb_pending_status_share = false;
 static uint8_t webusb_pending_config_share = 0;
 static uint8_t webusb_pending_profile_share = 0;
 static uint8_t webusb_pending_section_share = 0;
+static bool webusb_input_stream_enabled = false;
+static uint8_t webusb_input_stream_interval_ms = 16;
+static uint64_t webusb_input_stream_last_ts = 0;
+static bool webusb_pending_input_stream_share = false;
+static CtrlInputStream webusb_pending_input_stream = {0,};
+
+#define WEBUSB_INPUT_STREAM_INTERVAL_MS_MIN 8
+#define WEBUSB_INPUT_STREAM_INTERVAL_MS_MAX 50
+#define WEBUSB_INPUT_STREAM_ROTARY_WINDOW_US 120000
+
+static int8_t webusb_pack_axis(float value) {
+    value = constrain(value, -1, 1);
+    return (int8_t)(value * BIT_7);
+}
+
+static uint8_t webusb_pack_radius(float value) {
+    value = constrain(value, 0, 1);
+    return (uint8_t)(value * BIT_8);
+}
+
+static int16_t webusb_pack_gyro(double value) {
+    value = constrain(value, -32767, 32767);
+    return (int16_t)value;
+}
+
+static void webusb_input_stream_button_set(CtrlInputStream *input_stream, uint8_t bit, bool value) {
+    uint8_t index = bit / 8;
+    uint8_t mask = 1 << (bit % 8);
+    input_stream->buttons[index] = bitmask_set(input_stream->buttons[index], mask, value);
+}
+
+static CtrlInputStream webusb_input_stream_snapshot() {
+    CtrlInputStream input_stream = {0,};
+    Profile *profile = profile_get_active(false);
+    if (!profile) return input_stream;
+    ThumbstickPosition left = thumbstick_get_last_position(&(profile->left_thumbstick));
+    ThumbstickPosition right = thumbstick_get_last_position(&(profile->right_thumbstick));
+    Vector gyro = imu_get_last_gyro();
+    int8_t rotary = rotary_get_recent_increment(&(profile->rotary), WEBUSB_INPUT_STREAM_ROTARY_WINDOW_US);
+    bool touch = touch_status();
+
+    input_stream.sequence = webusb_pending_input_stream.sequence + 1;
+    input_stream.lx = webusb_pack_axis(left.x);
+    input_stream.ly = webusb_pack_axis(left.y);
+    input_stream.rx = webusb_pack_axis(right.x);
+    input_stream.ry = webusb_pack_axis(right.y);
+    input_stream.l_radius = webusb_pack_radius(left.radius);
+    input_stream.r_radius = webusb_pack_radius(right.radius);
+    input_stream.gyro_x = webusb_pack_gyro(gyro.x);
+    input_stream.gyro_y = webusb_pack_gyro(gyro.y);
+    input_stream.gyro_z = webusb_pack_gyro(gyro.z);
+    input_stream.rotary = rotary;
+    input_stream.profile_index = profile_get_active_index(false);
+
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_A, button_is_pressed_physical(&(profile->a)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_B, button_is_pressed_physical(&(profile->b)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_X, button_is_pressed_physical(&(profile->x)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_Y, button_is_pressed_physical(&(profile->y)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_DPAD_LEFT, button_is_pressed_physical(&(profile->dpad_left)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_DPAD_RIGHT, button_is_pressed_physical(&(profile->dpad_right)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_DPAD_UP, button_is_pressed_physical(&(profile->dpad_up)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_DPAD_DOWN, button_is_pressed_physical(&(profile->dpad_down)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_SELECT_1, button_is_pressed_physical(&(profile->select_1)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_START_1, button_is_pressed_physical(&(profile->start_1)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_SELECT_2, button_is_pressed_physical(&(profile->select_2)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_START_2, button_is_pressed_physical(&(profile->start_2)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_L1, button_is_pressed_physical(&(profile->l1)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_R1, button_is_pressed_physical(&(profile->r1)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_L2, button_is_pressed_physical(&(profile->l2)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_R2, button_is_pressed_physical(&(profile->r2)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_L4, button_is_pressed_physical(&(profile->l4)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_R4, button_is_pressed_physical(&(profile->r4)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_HOME, profile_home_button_pressed());
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_L3, button_is_pressed_physical(&(profile->left_thumbstick.push)));
+    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_R3, button_is_pressed_physical(&(profile->right_thumbstick.push)));
+
+    input_stream.flags = bitmask_set(input_stream.flags, CTRL_INPUT_FLAG_TOUCH, touch);
+    input_stream.flags = bitmask_set(input_stream.flags, CTRL_INPUT_FLAG_ROTARY, rotary != 0);
+    input_stream.flags = bitmask_set(input_stream.flags, CTRL_INPUT_FLAG_LEFT_MOVED, left.radius > 0.05);
+    input_stream.flags = bitmask_set(input_stream.flags, CTRL_INPUT_FLAG_RIGHT_MOVED, right.radius > 0.05);
+    input_stream.flags = bitmask_set(
+        input_stream.flags,
+        CTRL_INPUT_FLAG_GYRO_ACTIVE,
+        fabs(gyro.x) > 64 || fabs(gyro.y) > 64 || fabs(gyro.z) > 64
+    );
+    input_stream.flags = bitmask_set(input_stream.flags, CTRL_INPUT_FLAG_WIRED, loop_get_device_mode() == WIRED);
+    input_stream.flags = bitmask_set(input_stream.flags, CTRL_INPUT_FLAG_WIRELESS, loop_get_device_mode() == WIRELESS);
+
+    return input_stream;
+}
+
+bool webusb_get_input_stream_enabled() {
+    return webusb_input_stream_enabled;
+}
+
+void webusb_input_stream_tick() {
+    if (!webusb_input_stream_enabled) return;
+    if (loop_get_device_mode() != WIRED) return;
+    if (!tud_ready()) return;
+    uint64_t now = time_us_64();
+    uint64_t interval = (uint64_t)webusb_input_stream_interval_ms * 1000;
+    if (webusb_input_stream_last_ts && now < (webusb_input_stream_last_ts + interval)) return;
+    webusb_input_stream_last_ts = now;
+    webusb_pending_input_stream = webusb_input_stream_snapshot();
+    webusb_pending_input_stream_share = true;
+}
 
 void webusb_flush_force() {
     uint16_t i = 0;
@@ -81,7 +191,8 @@ bool webusb_flush() {
         !webusb_pending_status_share &&
         !webusb_pending_config_share &&
         !webusb_pending_profile_share &&
-        !webusb_pending_section_share
+        !webusb_pending_section_share &&
+        !webusb_pending_input_stream_share
     ) {
         return true;
     }
@@ -108,6 +219,10 @@ bool webusb_flush() {
             webusb_pending_profile_share = 0;
             webusb_pending_section_share = 0;
         }
+    } else if (webusb_pending_input_stream_share) {
+        ctrl = ctrl_input_stream_share(webusb_pending_input_stream);
+        bool sent = webusb_transfer(ctrl);
+        if (sent) webusb_pending_input_stream_share = false;
     } else {
         uint8_t len = constrain(webusb_ptr_in-webusb_ptr_out, 0, CTRL_MAX_PAYLOAD_SIZE);
         uint8_t *offset_ptr = webusb_buffer + webusb_ptr_out;
@@ -189,6 +304,19 @@ void webusb_handle_section_set(uint8_t profileIndex, uint8_t sectionIndex, uint8
     webusb_pending_section_share = sectionIndex;
 }
 
+void webusb_handle_input_stream_set(uint8_t enabled, uint8_t interval_ms) {
+    webusb_input_stream_enabled = enabled;
+    webusb_pending_input_stream_share = false;
+    webusb_input_stream_last_ts = 0;
+    if (interval_ms) {
+        webusb_input_stream_interval_ms = constrain(
+            interval_ms,
+            WEBUSB_INPUT_STREAM_INTERVAL_MS_MIN,
+            WEBUSB_INPUT_STREAM_INTERVAL_MS_MAX
+        );
+    }
+}
+
 // Handle incomming message.
 void webusb_handle(Ctrl ctrl) {
     if (ctrl.message_type == PROC) webusb_handle_proc(ctrl.payload[0]);
@@ -215,6 +343,10 @@ void webusb_handle(Ctrl ctrl) {
     }
     if (ctrl.message_type == PROFILE_OVERWRITE) {
         config_profile_overwrite(ctrl.payload[0], ctrl.payload[1]);
+    }
+    if (ctrl.message_type == INPUT_STREAM_SET && ctrl.len > 0) {
+        uint8_t interval_ms = ctrl.len > 1 ? ctrl.payload[1] : webusb_input_stream_interval_ms;
+        webusb_handle_input_stream_set(ctrl.payload[0], interval_ms);
     }
 }
 

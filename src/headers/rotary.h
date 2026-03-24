@@ -17,6 +17,8 @@ struct Rotary_struct {
     int8_t increment;
     int8_t mode;
     uint32_t timestamp;
+    int8_t telemetry_increment;
+    uint32_t telemetry_timestamp;
     // Memory allocation for 5 modes, 2 directions per mode, 4 actions per
     // direction.
     uint8_t actions[5][2][4];
@@ -26,3 +28,4 @@ Rotary Rotary_ ();
 
 void rotary_init();
 void rotary_set_mode(uint8_t value);
+int8_t rotary_get_recent_increment(Rotary *self, uint32_t window_us);

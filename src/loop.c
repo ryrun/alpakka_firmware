@@ -179,6 +179,7 @@ void loop_controller_task() {
     config_sync();
     // Gather values for input sources.
     profile_report_active();
+    webusb_input_stream_tick();
     // Report to the correct channel.
     if (device_mode == WIRED) {
         static uint64_t last_report_ts = 0;

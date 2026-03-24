@@ -56,3 +56,5 @@ Button Button_from_ctrl(
     uint8_t pin,
     CtrlSection section
 );
+
+bool button_is_pressed_physical(Button *self);

@@ -79,6 +79,7 @@ void profile_notify_protocol_changed(Protocol protocol);
 void profile_update_leds();
 void profile_enable_all(bool value);
 void profile_enable_abxy(bool value);
+bool profile_home_button_pressed();
 Profile* profile_get(uint8_t index);
 Profile* profile_get_active(bool strict);
 uint8_t profile_get_active_index(bool strict);

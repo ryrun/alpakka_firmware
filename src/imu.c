@@ -27,6 +27,7 @@ double offset_accel_0_z;
 double offset_accel_1_x;
 double offset_accel_1_y;
 double offset_accel_1_z;
+static Vector last_gyro = {0, 0, 0};
 
 void imu_channel_select() {
     Config *config = config_read();
@@ -142,7 +143,12 @@ Vector imu_read_gyro() {
     double x = (gyro0.x * weight_0) + (gyro1.x * weight_1 / 4);
     double y = (gyro0.y * weight_0) + (gyro1.y * weight_1 / 4);
     double z = (gyro0.z * weight_0) + (gyro1.z * weight_1 / 4);
-    return (Vector){x, y, z};
+    last_gyro = (Vector){x, y, z};
+    return last_gyro;
+}
+
+Vector imu_get_last_gyro() {
+    return last_gyro;
 }
 
 Vector imu_read_accel() {

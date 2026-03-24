@@ -228,6 +228,11 @@ void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t ind
     }
 }
 
+ThumbstickPosition thumbstick_get_last_position(Thumbstick *self) {
+    if (!self->has_last_position) return (ThumbstickPosition){0, 0, 0, 0};
+    return self->last_position;
+}
+
 // ============================================================================
 // Class.
 
@@ -447,7 +452,11 @@ void Thumbstick__report(Thumbstick *self) {
     float offset_x = self->index==0 ? offset_lx : offset_rx;
     float offset_y = self->index==0 ? offset_ly : offset_ry;
     // Do not report if not calibrated.
-    if (offset_x == 0 && offset_y == 0) return;
+    if (offset_x == 0 && offset_y == 0) {
+        self->last_position = (ThumbstickPosition){0, 0, 0, 0};
+        self->has_last_position = true;
+        return;
+    }
     // Get values from ADC.
     float x = thumbstick_adc_smoothed(self->pin_x) - offset_x;
     float y = thumbstick_adc_smoothed(self->pin_y) - offset_y;
@@ -480,6 +489,8 @@ void Thumbstick__report(Thumbstick *self) {
     x = sin(radians(angle)) * radius;
     y = -cos(radians(angle)) * radius;
     ThumbstickPosition pos = {x, y, angle, radius};
+    self->last_position = pos;
+    self->has_last_position = true;
     // Report.
     if (self->mode == THUMBSTICK_MODE_4DIR) {
         if (self->distance_mode == THUMBSTICK_DISTANCE_AXIAL) {
@@ -498,6 +509,8 @@ void Thumbstick__report(Thumbstick *self) {
 }
 
 void Thumbstick__reset(Thumbstick *self) {
+    self->last_position = (ThumbstickPosition){0, 0, 0, 0};
+    self->has_last_position = false;
     if (self->mode == THUMBSTICK_MODE_4DIR) {
         self->left.reset(&self->left);
         self->right.reset(&self->right);
@@ -551,5 +564,7 @@ Thumbstick Thumbstick_ (
     thumbstick.overlap = overlap;
     thumbstick.saturation = saturation;
     thumbstick.glyphstick_index = 0;
+    thumbstick.last_position = (ThumbstickPosition){0, 0, 0, 0};
+    thumbstick.has_last_position = false;
     return thumbstick;
 }

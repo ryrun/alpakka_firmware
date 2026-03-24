@@ -176,3 +176,14 @@ Ctrl ctrl_section_share(uint8_t profile_index, uint8_t section_index) {
     }
     return ctrl;
 }
+
+Ctrl ctrl_input_stream_share(CtrlInputStream input_stream) {
+    Ctrl ctrl = {
+        .protocol_flags = CTRL_FLAG_NONE,
+        .device_id = ALPAKKA,
+        .message_type = INPUT_STREAM_SHARE,
+        .len = sizeof(CtrlInputStream)
+    };
+    memcpy(ctrl.payload, &input_stream, sizeof(CtrlInputStream));
+    return ctrl;
+}

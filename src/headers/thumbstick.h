@@ -99,6 +99,8 @@ struct Thumbstick_struct {
     Actions glyphstick_actions[44];
     uint8_t glyphstick_index;
     Actions daisywheel[8][4];
+    ThumbstickPosition last_position;
+    bool has_last_position;
 };
 
 Thumbstick Thumbstick_ (
@@ -122,3 +124,4 @@ void thumbstick_calibrate();
 void thumbstick_update_deadzone();
 void thumbstick_update_smooth_samples();
 void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t index);
+ThumbstickPosition thumbstick_get_last_position(Thumbstick *self);

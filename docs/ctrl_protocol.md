@@ -50,6 +50,8 @@ STATUS_GET | 9
 STATUS_SET | 10
 STATUS_SHARE | 11
 PROFILE_OVERWRITE | 12
+INPUT_STREAM_SET | 13
+INPUT_STREAM_SHARE | 14
 
 ### Procedure index
 Procedure index as defined in [hid.h](/src/headers/hid.h).
@@ -185,6 +187,77 @@ Direction: `Controller` -> `App`
 | - | - | - | - | - |
 | Version | Device Id | Message type | Payload size | Payload
 |         |           | STATUS_SHARE | 3            | FW SEMANTIC VERSION
+
+## Input stream SET message
+Enable or disable the opportunistic physical-input stream.
+
+Direction: `Controller` <- `App`
+
+| Byte 0 | 1 | 2 | 3 | 4 | 5 |
+| - | - | - | - | - | - |
+| Version | Device Id | Message type | Payload size | Payload | Payload |
+|         |           | INPUT_STREAM_SET | 1-2 | ENABLED (0/1) | INTERVAL MS (optional, 8-50) |
+
+## Input stream SHARE message
+Send a compact snapshot of the current physical controller state.
+
+Direction: `Controller` -> `App`
+
+| Byte 0 | 1 | 2 | 3 | 4~22 |
+| - | - | - | - | - |
+| Version | Device Id | Message type | Payload size | Payload |
+|         |           | INPUT_STREAM_SHARE | 19 | `CtrlInputStream` |
+
+`CtrlInputStream` payload layout:
+
+| Byte | Meaning |
+| - | - |
+| 0 | Sequence |
+| 1..3 | 24-bit physical button bitmask |
+| 4 | Left stick X (`int8`, `-127..127`) |
+| 5 | Left stick Y (`int8`, `-127..127`) |
+| 6 | Right stick X (`int8`, `-127..127`) |
+| 7 | Right stick Y (`int8`, `-127..127`) |
+| 8 | Left stick radius (`uint8`, `0..255`) |
+| 9 | Right stick radius (`uint8`, `0..255`) |
+| 10..11 | Gyro X (`int16`) |
+| 12..13 | Gyro Y (`int16`) |
+| 14..15 | Gyro Z (`int16`) |
+| 16 | Recent rotary increment (`int8`) |
+| 17 | Flags |
+| 18 | Active profile index |
+
+Button bit assignments:
+- 0 `A`
+- 1 `B`
+- 2 `X`
+- 3 `Y`
+- 4 `DPAD_LEFT`
+- 5 `DPAD_RIGHT`
+- 6 `DPAD_UP`
+- 7 `DPAD_DOWN`
+- 8 `SELECT_1`
+- 9 `START_1`
+- 10 `SELECT_2`
+- 11 `START_2`
+- 12 `L1`
+- 13 `R1`
+- 14 `L2`
+- 15 `R2`
+- 16 `L4`
+- 17 `R4`
+- 18 `HOME`
+- 19 `L3`
+- 20 `R3`
+
+Flag bit assignments:
+- `1 << 0`: touch engaged
+- `1 << 1`: recent rotary activity
+- `1 << 2`: left stick moved
+- `1 << 3`: right stick moved
+- `1 << 4`: gyro active
+- `1 << 5`: wired mode
+- `1 << 6`: wireless mode
 
 ## Config GET message
 Request the current value of some specific configuration parameter.
