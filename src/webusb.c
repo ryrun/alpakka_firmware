@@ -56,6 +56,11 @@ static int16_t webusb_pack_gyro(double value) {
     return (int16_t)value;
 }
 
+static int16_t webusb_pack_accel(double value) {
+    value = constrain(value, -32767, 32767);
+    return (int16_t)value;
+}
+
 static ThumbstickPosition webusb_input_stream_get_right_position(Profile *profile) {
     #ifdef DEVICE_ALPAKKA_V0
         bool left = button_is_pressed_physical(&(profile->dhat.left));
@@ -92,7 +97,11 @@ static CtrlInputStream webusb_input_stream_snapshot() {
     if (!profile) return input_stream;
     ThumbstickPosition left = thumbstick_get_last_position(&(profile->left_thumbstick));
     ThumbstickPosition right = webusb_input_stream_get_right_position(profile);
-    Vector gyro = imu_get_last_gyro();
+    // Sample gyro explicitly for the stream so WebUSB keeps getting fresh
+    // angular velocity values even when the profile's gyro mapping is gated by
+    // touch or another engage condition.
+    Vector gyro = imu_read_gyro();
+    Vector accel = imu_read_accel();
     int8_t rotary = rotary_get_recent_increment(&(profile->rotary), WEBUSB_INPUT_STREAM_ROTARY_WINDOW_US);
     bool touch = touch_status();
 
@@ -106,6 +115,9 @@ static CtrlInputStream webusb_input_stream_snapshot() {
     input_stream.gyro_x = webusb_pack_gyro(gyro.x);
     input_stream.gyro_y = webusb_pack_gyro(gyro.y);
     input_stream.gyro_z = webusb_pack_gyro(gyro.z);
+    input_stream.accel_x = webusb_pack_accel(accel.x);
+    input_stream.accel_y = webusb_pack_accel(accel.y);
+    input_stream.accel_z = webusb_pack_accel(accel.z);
     input_stream.rotary = rotary;
     input_stream.profile_index = profile_get_active_index(false);
 
