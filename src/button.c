@@ -12,6 +12,23 @@
 #include "pin.h"
 #include "common.h"
 
+static bool button_is_pressed_pin(uint8_t pin) {
+    if (pin == PIN_NONE) return false;
+    // Buttons connected directly to Pico.
+    if (is_between(pin, PIN_GROUP_BOARD, PIN_GROUP_BOARD_END)) {
+        return !gpio_get(pin);
+    }
+    // Buttons connected to 1st IO expander.
+    if (is_between(pin, PIN_GROUP_IO_0, PIN_GROUP_IO_0_END)) {
+        return bus_i2c_io_cache_read(0, pin - PIN_GROUP_IO_0);
+    }
+    // Buttons connected to 2nd IO expander.
+    if (is_between(pin, PIN_GROUP_IO_1, PIN_GROUP_IO_1_END)) {
+        return bus_i2c_io_cache_read(1, pin - PIN_GROUP_IO_1);
+    }
+    return false;
+}
+
 bool Button__is_pressed(Button *self) {
     /*
     Method that determines if a button is currently pressed.
@@ -29,19 +46,12 @@ bool Button__is_pressed(Button *self) {
     else if (self->pin == PIN_VIRTUAL && !self->virtual_press) {
         return false;  // Virtual buttons don't evaluate further.
     }
-    // Buttons connected directly to RP GPIO.
-    else if (is_between(self->pin, PIN_GROUP_BOARD, PIN_GROUP_BOARD_END)) {
-        return !gpio_get(self->pin);
-    }
-    // Buttons connected to 1st IO expander.
-    else if (is_between(self->pin, PIN_GROUP_IO_0, PIN_GROUP_IO_0_END)) {
-        return bus_i2c_io_cache_read(0, self->pin - PIN_GROUP_IO_0);
-    }
-    // Buttons connected to 2nd IO expander.
-    else if (is_between(self->pin, PIN_GROUP_IO_1, PIN_GROUP_IO_1_END)) {
-        return bus_i2c_io_cache_read(1, self->pin - PIN_GROUP_IO_1);
-    }
-    return false;  // Prevent undefined behavior.
+    return button_is_pressed_pin(self->pin);
+}
+
+bool button_is_pressed_physical(Button *self) {
+    if (self->pin == PIN_VIRTUAL) return false;
+    return button_is_pressed_pin(self->pin);
 }
 
 void Button__report(Button *self) {

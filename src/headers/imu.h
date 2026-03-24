@@ -30,7 +30,7 @@
 void imu_init();
 void imu_power_off();
 Vector imu_read_gyro();
+Vector imu_get_last_gyro();
 Vector imu_read_accel();
 void imu_load_calibration();
 void imu_calibrate();
-

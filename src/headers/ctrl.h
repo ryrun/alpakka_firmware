@@ -36,6 +36,8 @@ typedef enum Ctrl_msg_type_enum {
     STATUS_SET,
     STATUS_SHARE,
     PROFILE_OVERWRITE,
+    INPUT_STREAM_SET,
+    INPUT_STREAM_SHARE,
 } Ctrl_msg_type;
 
 typedef enum Ctrl_cfg_type_enum {
@@ -123,6 +125,57 @@ typedef struct _Ctrl {
     uint8_t len;
     uint8_t payload[CTRL_MAX_PAYLOAD_SIZE];
 } Ctrl;
+
+typedef enum CtrlInputButtonBit_enum {
+    CTRL_INPUT_BUTTON_A,
+    CTRL_INPUT_BUTTON_B,
+    CTRL_INPUT_BUTTON_X,
+    CTRL_INPUT_BUTTON_Y,
+    CTRL_INPUT_BUTTON_DPAD_LEFT,
+    CTRL_INPUT_BUTTON_DPAD_RIGHT,
+    CTRL_INPUT_BUTTON_DPAD_UP,
+    CTRL_INPUT_BUTTON_DPAD_DOWN,
+    CTRL_INPUT_BUTTON_SELECT_1,
+    CTRL_INPUT_BUTTON_START_1,
+    CTRL_INPUT_BUTTON_SELECT_2,
+    CTRL_INPUT_BUTTON_START_2,
+    CTRL_INPUT_BUTTON_L1,
+    CTRL_INPUT_BUTTON_R1,
+    CTRL_INPUT_BUTTON_L2,
+    CTRL_INPUT_BUTTON_R2,
+    CTRL_INPUT_BUTTON_L4,
+    CTRL_INPUT_BUTTON_R4,
+    CTRL_INPUT_BUTTON_HOME,
+    CTRL_INPUT_BUTTON_L3,
+    CTRL_INPUT_BUTTON_R3,
+} CtrlInputButtonBit;
+
+typedef enum CtrlInputFlag_enum {
+    CTRL_INPUT_FLAG_TOUCH = 1 << 0,
+    CTRL_INPUT_FLAG_ROTARY = 1 << 1,
+    CTRL_INPUT_FLAG_LEFT_MOVED = 1 << 2,
+    CTRL_INPUT_FLAG_RIGHT_MOVED = 1 << 3,
+    CTRL_INPUT_FLAG_GYRO_ACTIVE = 1 << 4,
+    CTRL_INPUT_FLAG_WIRED = 1 << 5,
+    CTRL_INPUT_FLAG_WIRELESS = 1 << 6,
+} CtrlInputFlag;
+
+typedef struct __packed _CtrlInputStream {
+    uint8_t sequence;
+    uint8_t buttons[3];
+    int8_t lx;
+    int8_t ly;
+    int8_t rx;
+    int8_t ry;
+    uint8_t l_radius;
+    uint8_t r_radius;
+    int16_t gyro_x;
+    int16_t gyro_y;
+    int16_t gyro_z;
+    int8_t rotary;
+    uint8_t flags;
+    uint8_t profile_index;
+} CtrlInputStream;
 
 typedef struct __packed _CtrlProfileMeta {
     // Must be packed (58 bytes).
@@ -258,5 +311,6 @@ Ctrl ctrl_log(uint8_t* offset_ptr, uint8_t len);
 Ctrl ctrl_status_share();
 Ctrl ctrl_config_share(uint8_t index);
 Ctrl ctrl_section_share(uint8_t profile_index, uint8_t section_index);
+Ctrl ctrl_input_stream_share(CtrlInputStream input_stream);
 
 void ctrl_config_set(Ctrl_cfg_type key, uint8_t preset, uint8_t values[5]);

@@ -351,6 +351,10 @@ void profile_enable_abxy(bool value) {
     enabled_abxy = value;
 }
 
+bool profile_home_button_pressed() {
+    return button_is_pressed_physical(&home);
+}
+
 void profile_notify_protocol_changed(Protocol protocol) {
     hid_set_allow_communication(false);
     profile_protocol_was_changed = (int8_t)protocol;

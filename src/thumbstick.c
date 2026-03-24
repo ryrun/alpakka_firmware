@@ -232,6 +232,11 @@ void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t ind
     }
 }
 
+ThumbstickPosition thumbstick_get_last_position(Thumbstick *self) {
+    if (!self->has_last_position) return (ThumbstickPosition){0, 0, 0, 0};
+    return self->last_position;
+}
+
 // ============================================================================
 // Class.
 
@@ -239,7 +244,11 @@ void Thumbstick__report(Thumbstick *self) {
     float offset_x = self->index==0 ? offset_lx : offset_rx;
     float offset_y = self->index==0 ? offset_ly : offset_ry;
     // Do not report if not calibrated.
-    if (offset_x == 0 && offset_y == 0) return;
+    if (offset_x == 0 && offset_y == 0) {
+        self->last_position = (ThumbstickPosition){0, 0, 0, 0};
+        self->has_last_position = true;
+        return;
+    }
     // Get values from ADC.
     float raw_x = thumbstick_adc_smoothed(self->pin_x) - offset_x;
     float raw_y = thumbstick_adc_smoothed(self->pin_y) - offset_y;
@@ -268,6 +277,8 @@ void Thumbstick__report(Thumbstick *self) {
     y = -cos(radians(angle)) * radius;
     y = constrain(y * self->sens_xy_ratio, -1, 1);
     ThumbstickPosition pos = {x, y, angle, radius};
+    self->last_position = pos;
+    self->has_last_position = true;
     // Report.
     if (self->mode == THUMBSTICK_MODE_4DIR) {
         self->report_4dir(self, pos, raw_radius);
@@ -284,6 +295,8 @@ void Thumbstick__report(Thumbstick *self) {
 }
 
 void Thumbstick__reset(Thumbstick *self) {
+    self->last_position = (ThumbstickPosition){0, 0, 0, 0};
+    self->has_last_position = false;
     if (self->mode == THUMBSTICK_MODE_4DIR) {
         self->left.reset(&self->left);
         self->right.reset(&self->right);
@@ -372,5 +385,7 @@ Thumbstick Thumbstick_ (
     thumbstick.rot_smoothing = rot_smoothing;
     thumbstick.rot_flick_time = rot_flick_time;
     thumbstick.rot_keep_value = rot_keep_value;
+    thumbstick.last_position = (ThumbstickPosition){0, 0, 0, 0};
+    thumbstick.has_last_position = false;
     return thumbstick;
 }
