@@ -161,15 +161,25 @@ void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t ind
         ctrl_thumbstick.saturation / 100.0,
         ctrl_thumbstick.outer_threshold / 100.0,
         (bool)ctrl_thumbstick.push_auto_toggle,
-        ctrl_thumbstick.sens_mouse,
+        ctrl_thumbstick.sens_mouse * CTRL_STICK_SENS_MOUSE_FACTOR,
         ctrl_thumbstick.sens_scroll,
         ctrl_thumbstick.sens_xy_ratio / 100.0,
-        (int8_t)ctrl_thumbstick.accel_curve / 100.0
+        (int8_t)ctrl_thumbstick.accel_curve / 100.0,
+        ctrl_thumbstick.rot_entry_deadzone / 100.0,
+        (bool)ctrl_thumbstick.rot_anticlockwise,
+        (bool)ctrl_thumbstick.rot_absolute_mode,
+        (bool)ctrl_thumbstick.rot_rws_enabled,
+        ctrl_thumbstick.rot_rws * CTRL_STICK_RWS_FACTOR,
+        ctrl_thumbstick.rot_sens_axis * CTRL_STICK_SENS_AXIS_FACTOR
     );
     // Safe defaults.
     if (thumbstick->saturation == 0) thumbstick->saturation = 1.0;
     if (thumbstick->outer_threshold == 0) thumbstick->outer_threshold = 0.8;
     if (thumbstick->sens_xy_ratio == 0) thumbstick->sens_xy_ratio = 1.0;
+    if (thumbstick->rot_rws == 0) thumbstick->rot_rws = 4.0;
+    if (thumbstick->sens_mouse == 0) thumbstick->sens_mouse = 2000;
+    if (thumbstick->sens_scroll == 0) thumbstick->sens_scroll = 20;
+    if (thumbstick->rot_sens_axis == 0) thumbstick->rot_sens_axis = 100;
     // Modes config.
     if (ctrl_thumbstick.mode == THUMBSTICK_MODE_4DIR) {
         thumbstick->config_4dir(
@@ -344,7 +354,7 @@ void Thumbstick__report_4dir_axis(Thumbstick *self, uint8_t axis, float value) {
     }
     else if (hid_is_mouse_axis(axis)) {
         // Mouse move.
-        float mouse_value = value * self->sens_mouse / CFG_TICK_FREQUENCY * CTRL_STICK_SENS_MOUSE_STEP;
+        float mouse_value = value * self->sens_mouse / CFG_TICK_FREQUENCY;
         if      (axis == MOUSE_X)     hid_mouse_move( mouse_value, 0);
         else if (axis == MOUSE_X_NEG) hid_mouse_move(-mouse_value, 0);
         else if (axis == MOUSE_Y)     hid_mouse_move(0,  mouse_value);
@@ -384,6 +394,28 @@ void Thumbstick__report_8dir(
     self->dr.report(&self->dr);
     // Report push.
     self->push.report(&self->push);
+}
+
+void Thumbstick__report_rotation(
+    Thumbstick *self,
+    ThumbstickPosition pos,
+    float raw_radius
+) {
+    static float last_angle = 0;
+    static float angle_smooth = 0;
+    if (pos.radius == 0) {
+        last_angle = 0;
+        angle_smooth = 0;
+    } else {
+        if (angle_smooth == 0) angle_smooth = pos.angle;
+        float diff_angle = pos.angle - last_angle;
+        float angle = pos.angle - roundf(diff_angle / 360) * 360;  // Unwrap.
+        angle_smooth = smooth(angle_smooth, angle, 10);
+        float diff_angle_smooth = angle_smooth - last_angle;
+        last_angle = angle_smooth;
+        float mouse_value = diff_angle_smooth * self->sens_mouse / 360.0;
+        hid_mouse_move(mouse_value, 0);
+    }
 }
 
 void Thumbstick__report_push_auto_toggle(Thumbstick *self, ThumbstickPosition pos) {
@@ -571,6 +603,9 @@ void Thumbstick__report(Thumbstick *self) {
     else if (self->mode == THUMBSTICK_MODE_8DIR) {
         self->report_8dir(self, pos, raw_radius);
     }
+    else if (self->mode == THUMBSTICK_MODE_ROTATION) {
+        self->report_rotation(self, pos, raw_radius);
+    }
     else if (self->mode == THUMBSTICK_MODE_ALPHANUMERIC) {
         self->report_alphanumeric(self, pos);
     }
@@ -603,10 +638,16 @@ Thumbstick Thumbstick_ (
     float saturation,
     float outer_threshold,
     bool push_auto_toggle,
-    uint8_t sens_mouse,
-    uint8_t sens_scroll,
+    float sens_mouse,
+    float sens_scroll,
     float sens_xy_ratio,
-    float accel_curve
+    float accel_curve,
+    float rot_entry_deadzone,
+    bool rot_anticlockwise,
+    bool rot_absolute_mode,
+    bool rot_rws_enabled,
+    float rot_rws,
+    float rot_sens_axis
 ) {
     Thumbstick thumbstick;
     // Methods.
@@ -615,6 +656,7 @@ Thumbstick Thumbstick_ (
     thumbstick.report_4dir_dir = Thumbstick__report_4dir_dir;
     thumbstick.report_4dir_axis = Thumbstick__report_4dir_axis;
     thumbstick.report_8dir = Thumbstick__report_8dir;
+    thumbstick.report_rotation = Thumbstick__report_rotation;
     thumbstick.report_push_auto_toggle = Thumbstick__report_push_auto_toggle;
     thumbstick.report_alphanumeric = Thumbstick__report_alphanumeric;
     thumbstick.reset = Thumbstick__reset;
@@ -644,5 +686,11 @@ Thumbstick Thumbstick_ (
     thumbstick.sens_scroll = sens_scroll;
     thumbstick.sens_xy_ratio = sens_xy_ratio;
     thumbstick.accel_curve = accel_curve;
+    thumbstick.rot_entry_deadzone = rot_entry_deadzone;
+    thumbstick.rot_anticlockwise = rot_anticlockwise;
+    thumbstick.rot_absolute_mode = rot_absolute_mode;
+    thumbstick.rot_rws_enabled = rot_rws_enabled;
+    thumbstick.rot_rws = rot_rws;
+    thumbstick.rot_sens_axis = rot_sens_axis;
     return thumbstick;
 }

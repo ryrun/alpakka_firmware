@@ -8,7 +8,9 @@
 #define CTRL_NON_PAYLOAD_SIZE 4
 #define CTRL_MAX_PAYLOAD_SIZE (CTRL_MSG_SIZE - CTRL_NON_PAYLOAD_SIZE)
 
-#define CTRL_STICK_SENS_MOUSE_STEP 100
+#define CTRL_STICK_SENS_MOUSE_FACTOR 100
+#define CTRL_STICK_SENS_AXIS_FACTOR 10
+#define CTRL_STICK_RWS_FACTOR 20
 
 typedef enum _Ctrl_protocol_flags {
     CTRL_FLAG_NONE = 1,
@@ -172,7 +174,13 @@ typedef struct __packed _CtrlThumbstick {
     uint8_t sens_scroll;
     uint8_t sens_xy_ratio;
     uint8_t accel_curve;
-    uint8_t _padding[45];
+    uint8_t rot_entry_deadzone;
+    uint8_t rot_anticlockwise;
+    uint8_t rot_absolute_mode;
+    uint8_t rot_rws_enabled;
+    uint8_t rot_rws;
+    uint8_t rot_sens_axis;
+    uint8_t _padding[39];
 } CtrlThumbstick;
 
 typedef struct __packed _CtrlGlyph {

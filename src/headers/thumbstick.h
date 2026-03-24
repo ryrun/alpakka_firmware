@@ -13,6 +13,7 @@ typedef enum ThumbstickMode_enum {
     THUMBSTICK_MODE_4DIR,
     THUMBSTICK_MODE_ALPHANUMERIC,
     THUMBSTICK_MODE_8DIR,
+    THUMBSTICK_MODE_ROTATION,
 } ThumbstickMode;
 
 typedef struct ThumbstickPosition_struct {
@@ -56,6 +57,7 @@ struct Thumbstick_struct {
     void (*report_4dir_dir) (Thumbstick *self, Button *direction, float value);
     void (*report_4dir_axis) (Thumbstick *self, uint8_t axis, float value);
     void (*report_8dir) (Thumbstick *self, ThumbstickPosition pos, float raw_radius);
+    void (*report_rotation) (Thumbstick *self, ThumbstickPosition pos, float raw_radius);
     void (*report_push_auto_toggle) (Thumbstick *self, ThumbstickPosition pos);
     void (*report_alphanumeric) (Thumbstick *self, ThumbstickPosition pos);
     void (*report_glyphstick) (Thumbstick *self, Glyph input);
@@ -79,10 +81,16 @@ struct Thumbstick_struct {
     float saturation;
     float outer_threshold;
     bool push_auto_toggle;
-    uint8_t sens_mouse;
-    uint8_t sens_scroll;
+    float sens_mouse;
+    float sens_scroll;
     float sens_xy_ratio;
     float accel_curve;
+    float rot_entry_deadzone;
+    bool rot_anticlockwise;
+    bool rot_absolute_mode;
+    bool rot_rws_enabled;
+    float rot_rws;
+    float rot_sens_axis;
     Button left;
     Button right;
     Button up;
@@ -115,10 +123,16 @@ Thumbstick Thumbstick_ (
     float saturation,
     float outer_threshold,
     bool push_auto_toggle,
-    uint8_t sens_mouse,
-    uint8_t sens_scroll,
+    float sens_mouse,
+    float sens_scroll,
     float sens_xy_ratio,
-    float accel_curve
+    float accel_curve,
+    float rot_entry_deadzone,
+    bool rot_anticlockwise,
+    bool rot_absolute_mode,
+    bool rot_rws_enabled,
+    float rot_rws,
+    float rot_sens_axis
 );
 
 void thumbstick_init();
