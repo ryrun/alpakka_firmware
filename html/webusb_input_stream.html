@@ -735,6 +735,10 @@
                                 <strong>Pitch</strong>
                                 <div id="pose-pitch" class="mono">0.0 deg</div>
                             </div>
+                            <div class="meter">
+                                <strong>Roll</strong>
+                                <div id="pose-roll" class="mono">0.0 deg</div>
+                            </div>
                         </div>
                         <p class="pose-note" style="margin-top: 0.9rem">
                             3D pose uses browser-side gyro integration plus a
@@ -1043,6 +1047,7 @@
                 accelZ: document.getElementById("accel-z"),
                 poseYaw: document.getElementById("pose-yaw"),
                 posePitch: document.getElementById("pose-pitch"),
+                poseRoll: document.getElementById("pose-roll"),
                 gyroXBar: document.getElementById("gyro-x-bar"),
                 gyroYBar: document.getElementById("gyro-y-bar"),
                 gyroZBar: document.getElementById("gyro-z-bar"),
@@ -1079,7 +1084,18 @@
                 linkPrimed: false,
                 yawAngle: 0,
                 pitchAngle: 0,
+                rollAngle: 0,
                 activeColor: "#000000",
+                returnToResetThreshold: 35,
+                returnToResetFadeRange: 18,
+                returnToResetSinceTs: 0,
+                returnToResetFade: 0,
+                returnToResetFadeRate: 8,
+                returnToResetMinRate: 2,
+                returnToResetMaxRate: 3,
+                accelCorrectionGain: 1.8,
+                accelReferenceMagnitude: 4096,
+                accelTolerance: 0.35,
             };
 
             const buttonGrid = document.getElementById("button-grid");
@@ -1187,6 +1203,7 @@
                 if (!state.controllerGroup) return;
                 state.yawAngle = 0;
                 state.pitchAngle = 0;
+                state.rollAngle = 0;
                 state.controllerGroup.quaternion.identity();
             }
 
@@ -1264,8 +1281,83 @@
             function applyPoseState() {
                 if (!state.controllerGroup) return;
                 state.controllerGroup.quaternion.setFromEuler(
-                    new THREE.Euler(state.pitchAngle, state.yawAngle, 0, "YXZ"),
+                    new THREE.Euler(
+                        state.pitchAngle,
+                        state.yawAngle,
+                        state.rollAngle,
+                        "YXZ",
+                    ),
                 );
+            }
+
+            function wrapAngleDelta(angle) {
+                return Math.atan2(Math.sin(angle), Math.cos(angle));
+            }
+
+            function getAccelTiltEstimate() {
+                const ax = -state.latestAccel.x;
+                const ay = -state.latestAccel.y;
+                const az = -state.latestAccel.z;
+                const magnitude = Math.hypot(ax, ay, az);
+                if (!magnitude) return null;
+
+                const normalizedMagnitude =
+                    magnitude / state.accelReferenceMagnitude;
+                if (Math.abs(normalizedMagnitude - 1) > state.accelTolerance) {
+                    return null;
+                }
+
+                return {
+                    pitch: Math.atan2(ax, Math.hypot(ay, az)),
+                    roll: Math.atan2(ay, az),
+                };
+            }
+
+            function applyStillReturnToReset(now, delta, gyroMagnitude) {
+                const normalizedMotion = clamp(
+                    (gyroMagnitude - state.returnToResetThreshold) /
+                        state.returnToResetFadeRange,
+                    0,
+                    1,
+                );
+                const targetFade = 1 - normalizedMotion * normalizedMotion;
+                const fadeBlend =
+                    1 - Math.exp(-state.returnToResetFadeRate * delta);
+                state.returnToResetFade +=
+                    (targetFade - state.returnToResetFade) * fadeBlend;
+
+                if (targetFade <= 0 && state.returnToResetFade < 0.01) {
+                    state.returnToResetSinceTs = 0;
+                    state.returnToResetFade = 0;
+                    return;
+                }
+
+                if (!state.returnToResetSinceTs) {
+                    state.returnToResetSinceTs = now;
+                    return;
+                }
+
+                const distance = Math.max(
+                    Math.abs(wrapAngleDelta(-state.yawAngle)),
+                    Math.abs(wrapAngleDelta(-state.pitchAngle)),
+                    Math.abs(wrapAngleDelta(-state.rollAngle)),
+                );
+                const normalizedDistance = clamp(
+                    distance / THREE.MathUtils.degToRad(45),
+                    0,
+                    1,
+                );
+                const easedDistance = normalizedDistance ** 2;
+                const currentRate =
+                    state.returnToResetMinRate +
+                    (state.returnToResetMaxRate - state.returnToResetMinRate) *
+                        easedDistance;
+                const blend =
+                    (1 - Math.exp(-currentRate * delta)) *
+                    state.returnToResetFade;
+                state.yawAngle += wrapAngleDelta(-state.yawAngle) * blend;
+                state.pitchAngle += wrapAngleDelta(-state.pitchAngle) * blend;
+                state.rollAngle += wrapAngleDelta(-state.rollAngle) * blend;
             }
 
             function syncActiveColorFromInput() {
@@ -1421,21 +1513,37 @@
 
             function applyGyroToScene(delta) {
                 if (!state.controllerGroup) return;
-                const sampleAge = performance.now() - state.lastGyroSampleTs;
+                const now = performance.now();
+                const sampleAge = now - state.lastGyroSampleTs;
                 if (sampleAge >= 140) return;
                 let gyroX = state.latestGyro.x;
                 let gyroY = state.latestGyro.y;
+                let gyroZ = state.latestGyro.z;
                 if (Math.abs(gyroX) < state.gyroDeadzone) gyroX = 0;
                 if (Math.abs(gyroY) < state.gyroDeadzone) gyroY = 0;
-                if (!gyroX && !gyroY) {
-                    applyPoseState();
-                    return;
-                }
+                if (Math.abs(gyroZ) < state.gyroDeadzone) gyroZ = 0;
+                const gyroMagnitude = Math.hypot(gyroX, gyroY, gyroZ);
 
                 const yawScale = 0.00022;
                 const pitchScale = 0.00022;
+                const rollScale = 0.00022;
                 state.yawAngle -= gyroX * delta * yawScale;
                 state.pitchAngle -= gyroY * delta * pitchScale;
+                state.rollAngle += gyroZ * delta * rollScale;
+
+                const accelTilt = getAccelTiltEstimate();
+                if (accelTilt) {
+                    const correctionBlend =
+                        1 - Math.exp(-state.accelCorrectionGain * delta);
+                    state.pitchAngle +=
+                        wrapAngleDelta(accelTilt.pitch - state.pitchAngle) *
+                        correctionBlend;
+                    state.rollAngle +=
+                        wrapAngleDelta(accelTilt.roll - state.rollAngle) *
+                        correctionBlend;
+                }
+
+                applyStillReturnToReset(now, delta, gyroMagnitude);
                 applyPoseState();
             }
 
@@ -1447,8 +1555,10 @@
                 );
                 const yaw = THREE.MathUtils.radToDeg(euler.y);
                 const pitch = THREE.MathUtils.radToDeg(euler.x);
+                const roll = THREE.MathUtils.radToDeg(euler.z);
                 ui.poseYaw.textContent = `${yaw.toFixed(1)} deg`;
                 ui.posePitch.textContent = `${pitch.toFixed(1)} deg`;
+                ui.poseRoll.textContent = `${roll.toFixed(1)} deg`;
             }
 
             function animateScene(now) {
