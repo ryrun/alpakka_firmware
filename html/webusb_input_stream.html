@@ -178,7 +178,7 @@
                 position: absolute;
                 inset: 0;
                 overflow: hidden;
-                background: var(--key-green);
+                background: #000;
             }
 
             #scene-canvas {
@@ -479,48 +479,38 @@
                         <button id="disconnect" class="secondary" disabled>
                             Stop
                         </button>
+                        <div
+                            style="
+                                display: flex;
+                                gap: 0.6rem;
+                                flex-wrap: wrap;
+                                margin-left: 1.2rem;
+                            "
+                        >
+                            <button
+                                id="tab-3d-button"
+                                class="tab-button active"
+                                data-tab-target="tab-3d"
+                            >
+                                3D
+                            </button>
+                            <button
+                                id="tab-details-button"
+                                class="tab-button"
+                                data-tab-target="tab-details"
+                            >
+                                Details
+                            </button>
+                            <button
+                                id="tab-settings-button"
+                                class="tab-button"
+                                data-tab-target="tab-settings"
+                            >
+                                Settings
+                            </button>
+                        </div>
                     </div>
-                    <label
-                        >Interval ms
-                        <input
-                            id="interval"
-                            type="number"
-                            min="8"
-                            max="50"
-                            value="16"
-                    /></label>
                 </div>
-                <div class="stats">
-                    <span class="pill"
-                        >Profile <strong id="profile-index">-</strong></span
-                    >
-                    <span class="pill"
-                        >Seq <strong id="sequence">-</strong></span
-                    >
-                    <span class="pill"
-                        >Rate <strong id="fps">0 fps</strong></span
-                    >
-                    <span class="pill"
-                        >Mode <strong id="link-mode">-</strong></span
-                    >
-                </div>
-            </section>
-
-            <section class="tab-row">
-                <button
-                    id="tab-3d-button"
-                    class="tab-button active"
-                    data-tab-target="tab-3d"
-                >
-                    3D
-                </button>
-                <button
-                    id="tab-details-button"
-                    class="tab-button"
-                    data-tab-target="tab-details"
-                >
-                    Details
-                </button>
             </section>
 
             <section id="tab-3d" class="tab-panel active">
@@ -736,6 +726,16 @@
                                 <div id="accel-z" class="mono">0</div>
                             </div>
                         </div>
+                        <div class="meter-grid" style="margin-top: 0.8rem">
+                            <div class="meter">
+                                <strong>Yaw</strong>
+                                <div id="pose-yaw" class="mono">0.0 deg</div>
+                            </div>
+                            <div class="meter">
+                                <strong>Pitch</strong>
+                                <div id="pose-pitch" class="mono">0.0 deg</div>
+                            </div>
+                        </div>
                         <p class="pose-note" style="margin-top: 0.9rem">
                             3D pose uses browser-side gyro integration plus a
                             light accel correction. The firmware only streams
@@ -781,6 +781,172 @@
                     </section>
                 </section>
             </section>
+
+            <section id="tab-settings" class="tab-panel">
+                <section class="details-layout">
+                    <section class="panel">
+                        <h2>Model Offset</h2>
+                        <div
+                            style="
+                                margin-top: 1rem;
+                                display: flex;
+                                gap: 0.7rem;
+                                flex-wrap: wrap;
+                            "
+                        >
+                            <label
+                                >Offset X
+                                <input
+                                    id="model-offset-x"
+                                    type="number"
+                                    step="0.1"
+                                    value="0"
+                            /></label>
+                            <label
+                                >Offset Y
+                                <input
+                                    id="model-offset-y"
+                                    type="number"
+                                    step="0.1"
+                                    value="-1.55"
+                            /></label>
+                            <label
+                                >Offset Z
+                                <input
+                                    id="model-offset-z"
+                                    type="number"
+                                    step="0.1"
+                                    value="-2"
+                            /></label>
+                        </div>
+                        <div
+                            style="
+                                margin-top: 0.9rem;
+                                display: flex;
+                                gap: 0.7rem;
+                                flex-wrap: wrap;
+                            "
+                        >
+                            <label
+                                >Rot X
+                                <input
+                                    id="model-rot-x"
+                                    type="number"
+                                    step="1"
+                                    value="0"
+                            /></label>
+                            <label
+                                >Rot Y
+                                <input
+                                    id="model-rot-y"
+                                    type="number"
+                                    step="1"
+                                    value="0"
+                            /></label>
+                            <label
+                                >Rot Z
+                                <input
+                                    id="model-rot-z"
+                                    type="number"
+                                    step="1"
+                                    value="0"
+                            /></label>
+                        </div>
+                    </section>
+                    <section class="panel">
+                        <h2>Camera</h2>
+                        <div
+                            style="
+                                margin-top: 1rem;
+                                display: flex;
+                                gap: 0.7rem;
+                                flex-wrap: wrap;
+                            "
+                        >
+                            <label
+                                >Cam X
+                                <input
+                                    id="camera-x"
+                                    type="number"
+                                    step="0.1"
+                                    value="0"
+                            /></label>
+                            <label
+                                >Cam Y
+                                <input
+                                    id="camera-y"
+                                    type="number"
+                                    step="0.1"
+                                    value="12"
+                            /></label>
+                            <label
+                                >Cam Z
+                                <input
+                                    id="camera-z"
+                                    type="number"
+                                    step="0.1"
+                                    value="0"
+                            /></label>
+                            <label
+                                >Look X
+                                <input
+                                    id="camera-look-x"
+                                    type="number"
+                                    step="0.1"
+                                    value="0"
+                            /></label>
+                            <label
+                                >Look Y
+                                <input
+                                    id="camera-look-y"
+                                    type="number"
+                                    step="0.1"
+                                    value="-1.55"
+                            /></label>
+                            <label
+                                >Look Z
+                                <input
+                                    id="camera-look-z"
+                                    type="number"
+                                    step="0.1"
+                                    value="0"
+                            /></label>
+                        </div>
+                        <p class="pose-note" style="margin-top: 0.9rem">
+                            Use these values to tune the local viewer without
+                            re-exporting the model.
+                        </p>
+                    </section>
+                    <section class="panel">
+                        <h2>Highlight</h2>
+                        <div
+                            style="
+                                margin-top: 1rem;
+                                display: flex;
+                                gap: 0.7rem;
+                                flex-wrap: wrap;
+                            "
+                        >
+                            <label
+                                >Scene background
+                                <input
+                                    id="active-color"
+                                    type="color"
+                                    value="#000000"
+                            /></label>
+                            <label
+                                >Interval ms
+                                <input
+                                    id="interval"
+                                    type="number"
+                                    min="8"
+                                    max="50"
+                                    value="16"
+                            /></label>
+                        </div>
+                    </section>
+                </section>
+            </section>
         </main>
 
         <script type="importmap">
@@ -792,14 +958,16 @@
         </script>
         <script type="module">
             import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js";
-            import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/loaders/GLTFLoader.js";
+            import { MTLLoader } from "https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/loaders/MTLLoader.js";
+            import { OBJLoader } from "https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/loaders/OBJLoader.js";
 
             const CTRL_FLAG_NONE = 1;
             const DEVICE_ID_ALPAKKA = 1;
             const MSG_STATUS_GET = 9;
             const MSG_INPUT_STREAM_SET = 13;
             const MSG_INPUT_STREAM_SHARE = 14;
-            const MODEL_URL = "./alpakka.glb";
+            const MODEL_URL = "./alpakka.obj";
+            const MATERIAL_URL = "./alpakka.mtl";
 
             const INPUT_FLAGS = {
                 touch: 1 << 0,
@@ -843,12 +1011,21 @@
                 tabButtons: document.querySelectorAll("[data-tab-target]"),
                 tabPanels: document.querySelectorAll(".tab-panel"),
                 interval: document.getElementById("interval"),
+                modelOffsetX: document.getElementById("model-offset-x"),
+                modelOffsetY: document.getElementById("model-offset-y"),
+                modelOffsetZ: document.getElementById("model-offset-z"),
+                modelRotX: document.getElementById("model-rot-x"),
+                modelRotY: document.getElementById("model-rot-y"),
+                modelRotZ: document.getElementById("model-rot-z"),
+                cameraX: document.getElementById("camera-x"),
+                cameraY: document.getElementById("camera-y"),
+                cameraZ: document.getElementById("camera-z"),
+                cameraLookX: document.getElementById("camera-look-x"),
+                cameraLookY: document.getElementById("camera-look-y"),
+                cameraLookZ: document.getElementById("camera-look-z"),
+                activeColor: document.getElementById("active-color"),
                 statusDot: document.getElementById("status-dot"),
                 statusText: document.getElementById("status-text"),
-                profileIndex: document.getElementById("profile-index"),
-                sequence: document.getElementById("sequence"),
-                fps: document.getElementById("fps"),
-                linkMode: document.getElementById("link-mode"),
                 log: document.getElementById("log"),
                 sceneCanvas: document.getElementById("scene-canvas"),
                 controllerBody: document.getElementById("controller-body"),
@@ -864,6 +1041,8 @@
                 accelX: document.getElementById("accel-x"),
                 accelY: document.getElementById("accel-y"),
                 accelZ: document.getElementById("accel-z"),
+                poseYaw: document.getElementById("pose-yaw"),
+                posePitch: document.getElementById("pose-pitch"),
                 gyroXBar: document.getElementById("gyro-x-bar"),
                 gyroYBar: document.getElementById("gyro-y-bar"),
                 gyroZBar: document.getElementById("gyro-z-bar"),
@@ -874,6 +1053,7 @@
                 ifaceNumber: null,
                 inEndpoint: null,
                 outEndpoint: null,
+                openingDevice: false,
                 readLoopActive: false,
                 streamEnabled: false,
                 lastSequenceTs: 0,
@@ -885,14 +1065,25 @@
                 sceneButtons: new Map(),
                 sceneReady: false,
                 lastAnimationTs: 0,
+                animationFrameId: null,
+                sceneTabActive: false,
+                resizeHandler: null,
+                modelOffset: { x: 0, y: -1.55, z: -2 },
+                modelRotation: { x: 0, y: 0, z: 0 },
+                cameraPosition: { x: 0, y: 12, z: 0 },
+                cameraTarget: { x: 0, y: -1.55, z: 0 },
+                gyroDeadzone: 24,
                 latestGyro: { x: 0, y: 0, z: 0 },
                 latestAccel: { x: 0, y: 0, z: 0 },
                 lastGyroSampleTs: 0,
                 linkPrimed: false,
-                fpsSamples: [],
+                yawAngle: 0,
+                pitchAngle: 0,
+                activeColor: "#000000",
             };
 
             const buttonGrid = document.getElementById("button-grid");
+            const MAX_LOG_LINES = 200;
             BUTTONS.forEach((button, index) => {
                 const element = document.createElement("div");
                 element.className = "key";
@@ -905,7 +1096,15 @@
 
             function log(message) {
                 const time = new Date().toLocaleTimeString();
-                ui.log.textContent += `[${time}] ${message}\n`;
+                const nextLine = `[${time}] ${message}`;
+                const lines = ui.log.textContent
+                    ? ui.log.textContent.trimEnd().split("\n")
+                    : [];
+                lines.push(nextLine);
+                if (lines.length > MAX_LOG_LINES) {
+                    lines.splice(0, lines.length - MAX_LOG_LINES);
+                }
+                ui.log.textContent = `${lines.join("\n")}\n`;
                 ui.log.scrollTop = ui.log.scrollHeight;
             }
 
@@ -924,6 +1123,17 @@
                 ui.tabPanels.forEach((panel) => {
                     panel.classList.toggle("active", panel.id === targetId);
                 });
+                state.sceneTabActive = targetId === "tab-3d";
+                if (state.sceneTabActive) {
+                    state.lastAnimationTs = 0;
+                    if (state.sceneReady && state.animationFrameId == null) {
+                        state.animationFrameId =
+                            requestAnimationFrame(animateScene);
+                    }
+                } else if (state.animationFrameId != null) {
+                    cancelAnimationFrame(state.animationFrameId);
+                    state.animationFrameId = null;
+                }
             }
 
             function sleep(ms) {
@@ -964,12 +1174,8 @@
                     button.matrix.classList.toggle("active", active);
                     const sceneButton = state.sceneButtons.get(button.id);
                     if (sceneButton) {
-                        sceneButton.material.emissive.setHex(
-                            active ? 0x1aa36f : 0x000000,
-                        );
-                        sceneButton.material.color.setHex(
-                            active ? 0xd5fff0 : 0xf4eadf,
-                        );
+                        sceneButton.material.emissive.setHex(0x000000);
+                        sceneButton.material.color.setHex(0xf4eadf);
                         sceneButton.position.y = active
                             ? sceneButton.userData.baseY - 0.06
                             : sceneButton.userData.baseY;
@@ -979,17 +1185,9 @@
 
             function resetPose() {
                 if (!state.controllerGroup) return;
+                state.yawAngle = 0;
+                state.pitchAngle = 0;
                 state.controllerGroup.quaternion.identity();
-                state.latestGyro = { x: 0, y: 0, z: 0 };
-                state.latestAccel = { x: 0, y: 0, z: 0 };
-                state.lastGyroSampleTs = 0;
-            }
-
-            function accelToWorldUp() {
-                const accel = state.latestAccel;
-                const vector = new THREE.Vector3(-accel.x, -accel.y, -accel.z);
-                if (vector.lengthSq() < 1) return null;
-                return vector.normalize();
             }
 
             function fitModelToScene(object) {
@@ -1002,50 +1200,165 @@
                 const maxDim = Math.max(size.x, size.y, size.z) || 1;
                 const scale = 7.2 / maxDim;
                 object.scale.setScalar(scale);
-                object.rotation.x = -Math.PI / 2;
-                object.position.y = -0.15;
+                applyModelOffset(object);
+            }
+
+            function applyModelOffset(object = state.modelGroup) {
+                if (!object) return;
+                object.position.x = state.modelOffset.x;
+                object.position.y = state.modelOffset.y;
+                object.position.z = state.modelOffset.z;
+                object.rotation.set(
+                    THREE.MathUtils.degToRad(state.modelRotation.x),
+                    THREE.MathUtils.degToRad(state.modelRotation.y),
+                    THREE.MathUtils.degToRad(state.modelRotation.z),
+                );
+            }
+
+            function syncModelOffsetFromInputs() {
+                state.modelOffset.x =
+                    Number.parseFloat(ui.modelOffsetX.value) || 0;
+                state.modelOffset.y =
+                    Number.parseFloat(ui.modelOffsetY.value) || 0;
+                state.modelOffset.z =
+                    Number.parseFloat(ui.modelOffsetZ.value) || 0;
+                state.modelRotation.x =
+                    Number.parseFloat(ui.modelRotX.value) || 0;
+                state.modelRotation.y =
+                    Number.parseFloat(ui.modelRotY.value) || 0;
+                state.modelRotation.z =
+                    Number.parseFloat(ui.modelRotZ.value) || 0;
+                applyModelOffset();
+            }
+
+            function applyCameraSettings() {
+                if (!state.camera) return;
+                state.camera.position.set(
+                    state.cameraPosition.x,
+                    state.cameraPosition.y,
+                    state.cameraPosition.z,
+                );
+                state.camera.lookAt(
+                    state.cameraTarget.x,
+                    state.cameraTarget.y,
+                    state.cameraTarget.z,
+                );
+            }
+
+            function syncCameraFromInputs() {
+                state.cameraPosition.x =
+                    Number.parseFloat(ui.cameraX.value) || 0;
+                state.cameraPosition.y =
+                    Number.parseFloat(ui.cameraY.value) || 0;
+                state.cameraPosition.z =
+                    Number.parseFloat(ui.cameraZ.value) || 0;
+                state.cameraTarget.x =
+                    Number.parseFloat(ui.cameraLookX.value) || 0;
+                state.cameraTarget.y =
+                    Number.parseFloat(ui.cameraLookY.value) || 0;
+                state.cameraTarget.z =
+                    Number.parseFloat(ui.cameraLookZ.value) || 0;
+                applyCameraSettings();
+            }
+
+            function applyPoseState() {
+                if (!state.controllerGroup) return;
+                state.controllerGroup.quaternion.setFromEuler(
+                    new THREE.Euler(state.pitchAngle, state.yawAngle, 0, "YXZ"),
+                );
+            }
+
+            function syncActiveColorFromInput() {
+                state.activeColor = ui.activeColor.value || "#000000";
+                ui.sceneCanvas.parentElement.style.background =
+                    state.activeColor;
             }
 
             function loadGlbModel(parent) {
-                const loader = new GLTFLoader();
-                loader.load(
-                    MODEL_URL,
-                    (gltf) => {
-                        const model = gltf.scene || gltf.scenes?.[0];
-                        if (!model) {
-                            log("glb loaded without scene");
-                            return;
-                        }
-                        fitModelToScene(model);
-                        model.traverse((child) => {
-                            if (!child.isMesh) return;
-                            child.castShadow = false;
-                            child.receiveShadow = false;
-                            if (child.material) {
-                                child.material.roughness = Math.min(
-                                    1,
-                                    (child.material.roughness ?? 0.7) * 1.05,
+                const materialLoader = new MTLLoader();
+                materialLoader.load(
+                    MATERIAL_URL,
+                    (materials) => {
+                        materials.preload();
+                        const objectLoader = new OBJLoader();
+                        objectLoader.setMaterials(materials);
+                        objectLoader.load(
+                            MODEL_URL,
+                            (model) => {
+                                fitModelToScene(model);
+                                model.traverse((child) => {
+                                    if (!child.isMesh) return;
+                                    child.castShadow = false;
+                                    child.receiveShadow = false;
+                                });
+                                parent.add(model);
+                                state.modelGroup = model;
+                                log(`loaded alpakka.obj from ${MODEL_URL}`);
+                            },
+                            undefined,
+                            (error) => {
+                                log(
+                                    `obj load failed: ${error?.message || "unknown error"}`,
                                 );
-                                child.material.metalness = Math.max(
-                                    0,
-                                    (child.material.metalness ?? 0.1) * 0.9,
-                                );
-                            }
-                        });
-                        parent.add(model);
-                        state.modelGroup = model;
-                        log(`loaded alpakka.glb from ${MODEL_URL}`);
+                            },
+                        );
                     },
                     undefined,
                     (error) => {
                         log(
-                            `glb load failed: ${error?.message || "unknown error"}`,
+                            `mtl load failed: ${error?.message || "unknown error"}`,
                         );
                     },
                 );
             }
 
+            function disposeMaterial(material) {
+                if (!material) return;
+                for (const value of Object.values(material)) {
+                    if (value && typeof value === "object" && value.isTexture) {
+                        value.dispose();
+                    }
+                }
+                material.dispose();
+            }
+
+            function disposeThreeScene() {
+                if (state.animationFrameId != null) {
+                    cancelAnimationFrame(state.animationFrameId);
+                    state.animationFrameId = null;
+                }
+                if (state.resizeHandler) {
+                    window.removeEventListener("resize", state.resizeHandler);
+                    state.resizeHandler = null;
+                }
+                if (state.scene) {
+                    state.scene.traverse((child) => {
+                        if (child.geometry) {
+                            child.geometry.dispose();
+                        }
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(disposeMaterial);
+                        } else if (child.material) {
+                            disposeMaterial(child.material);
+                        }
+                    });
+                }
+                if (state.renderer) {
+                    state.renderer.dispose();
+                    state.renderer.forceContextLoss();
+                }
+                state.scene = null;
+                state.camera = null;
+                state.renderer = null;
+                state.controllerGroup = null;
+                state.modelGroup = null;
+                state.sceneButtons.clear();
+                state.sceneReady = false;
+                state.lastAnimationTs = 0;
+            }
+
             function initThreeScene() {
+                disposeThreeScene();
                 const renderer = new THREE.WebGLRenderer({
                     canvas: ui.sceneCanvas,
                     alpha: true,
@@ -1058,8 +1371,16 @@
                 const scene = new THREE.Scene();
 
                 const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
-                camera.position.set(0, 11.5, 0.3);
-                camera.lookAt(0, 0, 0);
+                camera.position.set(
+                    state.cameraPosition.x,
+                    state.cameraPosition.y,
+                    state.cameraPosition.z,
+                );
+                camera.lookAt(
+                    state.cameraTarget.x,
+                    state.cameraTarget.y,
+                    state.cameraTarget.z,
+                );
 
                 const ambient = new THREE.HemisphereLight(
                     0xfffcf7,
@@ -1075,18 +1396,6 @@
                 const rim = new THREE.DirectionalLight(0xffb37b, 0.55);
                 rim.position.set(-7, 4, -5);
                 scene.add(rim);
-
-                const shadow = new THREE.Mesh(
-                    new THREE.CircleGeometry(3.3, 48),
-                    new THREE.MeshBasicMaterial({
-                        color: 0x071019,
-                        transparent: true,
-                        opacity: 0.2,
-                    }),
-                );
-                shadow.rotation.x = -Math.PI / 2;
-                shadow.position.y = -0.78;
-                scene.add(shadow);
 
                 const controllerGroup = new THREE.Group();
                 scene.add(controllerGroup);
@@ -1105,75 +1414,59 @@
                 state.renderer = renderer;
                 state.controllerGroup = controllerGroup;
                 state.sceneReady = true;
+                state.resizeHandler = resizeScene;
                 resizeScene();
-                window.addEventListener("resize", resizeScene);
+                window.addEventListener("resize", state.resizeHandler);
             }
 
             function applyGyroToScene(delta) {
                 if (!state.controllerGroup) return;
                 const sampleAge = performance.now() - state.lastGyroSampleTs;
-                const sampleActive = sampleAge < 140;
-                const gx = sampleActive ? state.latestGyro.x : 0;
-                const gy = sampleActive ? state.latestGyro.y : 0;
-                const gz = sampleActive ? state.latestGyro.z : 0;
-                if (!gx && !gy && !gz) return;
+                if (sampleAge >= 140) return;
+                let gyroX = state.latestGyro.x;
+                let gyroY = state.latestGyro.y;
+                if (Math.abs(gyroX) < state.gyroDeadzone) gyroX = 0;
+                if (Math.abs(gyroY) < state.gyroDeadzone) gyroY = 0;
+                if (!gyroX && !gyroY) {
+                    applyPoseState();
+                    return;
+                }
 
-                const scale = 0.00011;
-                const qx = new THREE.Quaternion().setFromAxisAngle(
-                    new THREE.Vector3(1, 0, 0),
-                    gy * delta * scale,
-                );
-                const qy = new THREE.Quaternion().setFromAxisAngle(
-                    new THREE.Vector3(0, 1, 0),
-                    gz * delta * scale,
-                );
-                const qz = new THREE.Quaternion().setFromAxisAngle(
-                    new THREE.Vector3(0, 0, 1),
-                    -gx * delta * scale,
-                );
-                state.controllerGroup.quaternion.multiply(qy);
-                state.controllerGroup.quaternion.multiply(qx);
-                state.controllerGroup.quaternion.multiply(qz);
-                state.controllerGroup.quaternion.normalize();
+                const yawScale = 0.00022;
+                const pitchScale = 0.00022;
+                state.yawAngle -= gyroX * delta * yawScale;
+                state.pitchAngle -= gyroY * delta * pitchScale;
+                applyPoseState();
+            }
 
-                const worldUp = accelToWorldUp();
-                if (!worldUp) return;
-
-                const currentUp = new THREE.Vector3(0, 1, 0).applyQuaternion(
+            function updatePoseAngles() {
+                if (!state.controllerGroup) return;
+                const euler = new THREE.Euler().setFromQuaternion(
                     state.controllerGroup.quaternion,
+                    "YXZ",
                 );
-                const correction = new THREE.Quaternion().setFromUnitVectors(
-                    currentUp.normalize(),
-                    worldUp,
-                );
-                const target = state.controllerGroup.quaternion
-                    .clone()
-                    .premultiply(correction);
-                state.controllerGroup.quaternion.slerp(target, 0.018);
+                const yaw = THREE.MathUtils.radToDeg(euler.y);
+                const pitch = THREE.MathUtils.radToDeg(euler.x);
+                ui.poseYaw.textContent = `${yaw.toFixed(1)} deg`;
+                ui.posePitch.textContent = `${pitch.toFixed(1)} deg`;
             }
 
             function animateScene(now) {
-                if (!state.sceneReady) return;
+                if (!state.sceneReady || !state.sceneTabActive) {
+                    state.animationFrameId = null;
+                    return;
+                }
                 const delta = state.lastAnimationTs
                     ? (now - state.lastAnimationTs) / 1000
                     : 1 / 60;
                 state.lastAnimationTs = now;
                 applyGyroToScene(delta);
+                updatePoseAngles();
                 state.renderer.render(state.scene, state.camera);
-                requestAnimationFrame(animateScene);
-            }
-
-            function updateFps() {
-                const now = performance.now();
-                state.fpsSamples.push(now);
-                state.fpsSamples = state.fpsSamples.filter(
-                    (sample) => now - sample < 1000,
-                );
-                ui.fps.textContent = `${state.fpsSamples.length} fps`;
+                state.animationFrameId = requestAnimationFrame(animateScene);
             }
 
             function parseInputStream(data) {
-                const sequence = data[4];
                 const buttons = [data[5], data[6], data[7]];
                 const lx = toSigned8(data[8]) / 127;
                 const ly = toSigned8(data[9]) / 127;
@@ -1189,7 +1482,6 @@
                 const accelZ = toSigned16(data[24], data[25]);
                 const rotary = toSigned8(data[26]);
                 const flags = data[27];
-                const profileIndex = data[28];
 
                 updateButtons(buttons);
                 setStick(ui.leftStickDot, lx, ly);
@@ -1208,14 +1500,13 @@
                 setBar(ui.gyroXBar, gyroX);
                 setBar(ui.gyroYBar, gyroY);
                 setBar(ui.gyroZBar, gyroZ);
-                ui.profileIndex.textContent = `${profileIndex}`;
-                ui.sequence.textContent = `${sequence}`;
-                ui.linkMode.textContent =
-                    flags & INPUT_FLAGS.wireless ? "wireless relay" : "wired";
-                state.latestGyro = { x: gyroX, y: gyroY, z: gyroZ };
-                state.latestAccel = { x: accelX, y: accelY, z: accelZ };
+                state.latestGyro.x = gyroX;
+                state.latestGyro.y = gyroY;
+                state.latestGyro.z = gyroZ;
+                state.latestAccel.x = accelX;
+                state.latestAccel.y = accelY;
+                state.latestAccel.z = accelZ;
                 state.lastGyroSampleTs = performance.now();
-                updateFps();
                 state.lastSequenceTs = performance.now();
             }
 
@@ -1271,14 +1562,18 @@
             }
 
             async function readLoop() {
-                if (!state.device || state.inEndpoint == null) return;
+                if (
+                    !state.device ||
+                    state.inEndpoint == null ||
+                    state.readLoopActive
+                )
+                    return;
+                const device = state.device;
+                const inEndpoint = state.inEndpoint;
                 state.readLoopActive = true;
-                while (state.readLoopActive) {
+                while (state.readLoopActive && state.device === device) {
                     try {
-                        const result = await state.device.transferIn(
-                            state.inEndpoint,
-                            64,
-                        );
+                        const result = await device.transferIn(inEndpoint, 64);
                         if (!result.data || result.data.byteLength < 4)
                             continue;
                         const data = new Uint8Array(
@@ -1299,65 +1594,77 @@
             }
 
             async function openDevice() {
+                if (state.openingDevice) return;
                 if (!("usb" in navigator)) {
                     throw new Error("WebUSB is not available in this browser.");
                 }
+                state.openingDevice = true;
+                try {
+                    if (state.device) {
+                        await disconnectDevice();
+                    }
 
-                const device = await navigator.usb.requestDevice({
-                    filters: [{ vendorId: 0x0170 }, { vendorId: 0x045e }],
-                });
+                    const device = await navigator.usb.requestDevice({
+                        filters: [{ vendorId: 0x0170 }, { vendorId: 0x045e }],
+                    });
 
-                await device.open();
-                if (!device.configuration) {
-                    await device.selectConfiguration(1);
-                }
+                    await device.open();
+                    if (!device.configuration) {
+                        await device.selectConfiguration(1);
+                    }
 
-                const descriptor = device.configuration.interfaces
-                    .flatMap((iface) =>
-                        iface.alternates.map((alternate) => ({
-                            interfaceNumber: iface.interfaceNumber,
-                            alternate,
-                        })),
-                    )
-                    .find(
-                        ({ alternate }) =>
-                            alternate.endpoints.some(
-                                (endpoint) => endpoint.direction === "in",
-                            ) &&
-                            alternate.endpoints.some(
-                                (endpoint) => endpoint.direction === "out",
-                            ),
+                    const descriptor = device.configuration.interfaces
+                        .flatMap((iface) =>
+                            iface.alternates.map((alternate) => ({
+                                interfaceNumber: iface.interfaceNumber,
+                                alternate,
+                            })),
+                        )
+                        .find(
+                            ({ alternate }) =>
+                                alternate.endpoints.some(
+                                    (endpoint) => endpoint.direction === "in",
+                                ) &&
+                                alternate.endpoints.some(
+                                    (endpoint) => endpoint.direction === "out",
+                                ),
+                        );
+
+                    if (!descriptor) {
+                        throw new Error("No suitable WebUSB interface found.");
+                    }
+
+                    state.ifaceNumber = descriptor.interfaceNumber;
+                    state.inEndpoint = descriptor.alternate.endpoints.find(
+                        (endpoint) => endpoint.direction === "in",
+                    ).endpointNumber;
+                    state.outEndpoint = descriptor.alternate.endpoints.find(
+                        (endpoint) => endpoint.direction === "out",
+                    ).endpointNumber;
+
+                    await device.claimInterface(state.ifaceNumber);
+                    if (descriptor.alternate.alternateSetting !== 0) {
+                        await device.selectAlternateInterface(
+                            state.ifaceNumber,
+                            descriptor.alternate.alternateSetting,
+                        );
+                    }
+
+                    state.device = device;
+                    setStatus(
+                        `Connected: ${device.productName || "device"}`,
+                        true,
                     );
-
-                if (!descriptor) {
-                    throw new Error("No suitable WebUSB interface found.");
-                }
-
-                state.ifaceNumber = descriptor.interfaceNumber;
-                state.inEndpoint = descriptor.alternate.endpoints.find(
-                    (endpoint) => endpoint.direction === "in",
-                ).endpointNumber;
-                state.outEndpoint = descriptor.alternate.endpoints.find(
-                    (endpoint) => endpoint.direction === "out",
-                ).endpointNumber;
-
-                await device.claimInterface(state.ifaceNumber);
-                if (descriptor.alternate.alternateSetting !== 0) {
-                    await device.selectAlternateInterface(
-                        state.ifaceNumber,
-                        descriptor.alternate.alternateSetting,
+                    ui.toggleStream.disabled = true;
+                    ui.disconnect.disabled = false;
+                    log(
+                        `connected to ${device.productName || device.manufacturerName || "device"}`,
                     );
+                    readLoop();
+                    await primeWebUsbLink();
+                } finally {
+                    state.openingDevice = false;
                 }
-
-                state.device = device;
-                setStatus(`Connected: ${device.productName || "device"}`, true);
-                ui.toggleStream.disabled = true;
-                ui.disconnect.disabled = false;
-                log(
-                    `connected to ${device.productName || device.manufacturerName || "device"}`,
-                );
-                readLoop();
-                await primeWebUsbLink();
             }
 
             async function disconnectDevice() {
@@ -1377,7 +1684,11 @@
                     } catch (error) {
                         log(`release interface failed: ${error.message}`);
                     }
-                    await state.device.close();
+                    try {
+                        await state.device.close();
+                    } catch (error) {
+                        log(`close device failed: ${error.message}`);
+                    }
                 }
                 state.device = null;
                 state.ifaceNumber = null;
@@ -1390,6 +1701,14 @@
                 ui.toggleStream.textContent = "Start stream";
                 setStatus("Disconnected", false);
                 log("device disconnected");
+            }
+
+            function cleanupApp() {
+                state.readLoopActive = false;
+                disposeThreeScene();
+                if (state.device) {
+                    disconnectDevice().catch(() => {});
+                }
             }
 
             ui.connect.addEventListener("click", async () => {
@@ -1419,6 +1738,30 @@
                 });
             });
 
+            [
+                ui.modelOffsetX,
+                ui.modelOffsetY,
+                ui.modelOffsetZ,
+                ui.modelRotX,
+                ui.modelRotY,
+                ui.modelRotZ,
+            ].forEach((input) => {
+                input.addEventListener("input", syncModelOffsetFromInputs);
+            });
+
+            [
+                ui.cameraX,
+                ui.cameraY,
+                ui.cameraZ,
+                ui.cameraLookX,
+                ui.cameraLookY,
+                ui.cameraLookZ,
+            ].forEach((input) => {
+                input.addEventListener("input", syncCameraFromInputs);
+            });
+
+            ui.activeColor.addEventListener("input", syncActiveColorFromInput);
+
             ui.disconnect.addEventListener("click", async () => {
                 try {
                     await disconnectDevice();
@@ -1433,14 +1776,19 @@
                 }
             });
 
+            window.addEventListener("pagehide", cleanupApp);
+
             window.addEventListener("beforeunload", () => {
                 if (state.device && state.streamEnabled) {
                     sendMessage(MSG_INPUT_STREAM_SET, [0]).catch(() => {});
                 }
+                cleanupApp();
             });
 
             initThreeScene();
-            requestAnimationFrame(animateScene);
+            syncActiveColorFromInput();
+            applyPoseState();
+            activateTab("tab-3d");
             setStatus("Disconnected", false);
             log("ready");
         </script>
