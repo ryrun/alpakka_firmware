@@ -7,15 +7,6 @@ on:
   # Manual trigger on UI.
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: github-pages
-  cancel-in-progress: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -99,20 +90,3 @@ jobs:
             alpakka_marmota_${{env.VERSION}}.uf2
             dongle_marmota_${{env.VERSION}}.uf2
             metadata.txt
-
-      - name: Upload web viewer for Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: html
-
-  deploy-pages:
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
