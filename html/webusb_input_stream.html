@@ -799,8 +799,7 @@
             const MSG_STATUS_GET = 9;
             const MSG_INPUT_STREAM_SET = 13;
             const MSG_INPUT_STREAM_SHARE = 14;
-            const REMOTE_GLB_URL =
-                "https://github.com/ryrun/alpakka_firmware/raw/refs/heads/my_v1_firmware_webusb_controllerstate/html/alpakka.glb";
+            const MODEL_URL = "./alpakka.glb";
 
             const INPUT_FLAGS = {
                 touch: 1 << 0,
@@ -1010,7 +1009,7 @@
             function loadGlbModel(parent) {
                 const loader = new GLTFLoader();
                 loader.load(
-                    REMOTE_GLB_URL,
+                    MODEL_URL,
                     (gltf) => {
                         const model = gltf.scene || gltf.scenes?.[0];
                         if (!model) {
@@ -1035,12 +1034,12 @@
                         });
                         parent.add(model);
                         state.modelGroup = model;
-                        log(`loaded remote alpakka.glb from ${REMOTE_GLB_URL}`);
+                        log(`loaded alpakka.glb from ${MODEL_URL}`);
                     },
                     undefined,
                     (error) => {
                         log(
-                            `remote glb load failed: ${error?.message || "unknown error"}`,
+                            `glb load failed: ${error?.message || "unknown error"}`,
                         );
                     },
                 );
