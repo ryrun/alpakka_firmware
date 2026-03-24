@@ -56,6 +56,30 @@ static int16_t webusb_pack_gyro(double value) {
     return (int16_t)value;
 }
 
+static ThumbstickPosition webusb_input_stream_get_right_position(Profile *profile) {
+    #ifdef DEVICE_ALPAKKA_V0
+        bool left = button_is_pressed_physical(&(profile->dhat.left));
+        bool right = button_is_pressed_physical(&(profile->dhat.right));
+        bool up = button_is_pressed_physical(&(profile->dhat.up));
+        bool down = button_is_pressed_physical(&(profile->dhat.down));
+        float x = 0;
+        float y = 0;
+        if (left) x -= 1;
+        if (right) x += 1;
+        if (up) y -= 1;
+        if (down) y += 1;
+        if (x && y) {
+            x *= 0.70710678;
+            y *= 0.70710678;
+        }
+        float radius = (left || right || up || down) ? 1 : 0;
+        float angle = radius ? atan2(x, -y) * (180 / M_PI) : 0;
+        return (ThumbstickPosition){x, y, angle, radius};
+    #else
+        return thumbstick_get_last_position(&(profile->right_thumbstick));
+    #endif
+}
+
 static void webusb_input_stream_button_set(CtrlInputStream *input_stream, uint8_t bit, bool value) {
     uint8_t index = bit / 8;
     uint8_t mask = 1 << (bit % 8);
@@ -67,7 +91,7 @@ static CtrlInputStream webusb_input_stream_snapshot() {
     Profile *profile = profile_get_active(false);
     if (!profile) return input_stream;
     ThumbstickPosition left = thumbstick_get_last_position(&(profile->left_thumbstick));
-    ThumbstickPosition right = thumbstick_get_last_position(&(profile->right_thumbstick));
+    ThumbstickPosition right = webusb_input_stream_get_right_position(profile);
     Vector gyro = imu_get_last_gyro();
     int8_t rotary = rotary_get_recent_increment(&(profile->rotary), WEBUSB_INPUT_STREAM_ROTARY_WINDOW_US);
     bool touch = touch_status();
@@ -105,7 +129,11 @@ static CtrlInputStream webusb_input_stream_snapshot() {
     webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_R4, button_is_pressed_physical(&(profile->r4)));
     webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_HOME, profile_home_button_pressed());
     webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_L3, button_is_pressed_physical(&(profile->left_thumbstick.push)));
-    webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_R3, button_is_pressed_physical(&(profile->right_thumbstick.push)));
+    #ifdef DEVICE_ALPAKKA_V0
+        webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_R3, button_is_pressed_physical(&(profile->dhat.push)));
+    #else
+        webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_R3, button_is_pressed_physical(&(profile->right_thumbstick.push)));
+    #endif
 
     input_stream.flags = bitmask_set(input_stream.flags, CTRL_INPUT_FLAG_TOUCH, touch);
     input_stream.flags = bitmask_set(input_stream.flags, CTRL_INPUT_FLAG_ROTARY, rotary != 0);
