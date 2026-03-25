@@ -174,13 +174,15 @@ typedef struct __packed _CtrlThumbstick {
     uint8_t sens_scroll;
     uint8_t sens_xy_ratio;
     uint8_t accel_curve;
+    uint8_t rot_center_deadzone;
     uint8_t rot_entry_deadzone;
     uint8_t rot_anticlockwise;
     uint8_t rot_absolute_mode;
     uint8_t rot_rws_enabled;
     uint8_t rot_rws;
     uint8_t rot_sens_axis;
-    uint8_t _padding[39];
+    uint8_t rot_smoothing;
+    uint8_t _padding[37];
 } CtrlThumbstick;
 
 typedef struct __packed _CtrlGlyph {

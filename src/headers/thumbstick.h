@@ -85,12 +85,14 @@ struct Thumbstick_struct {
     float sens_scroll;
     float sens_xy_ratio;
     float accel_curve;
+    float rot_center_deadzone;
     float rot_entry_deadzone;
     bool rot_anticlockwise;
     bool rot_absolute_mode;
     bool rot_rws_enabled;
     float rot_rws;
     float rot_sens_axis;
+    float rot_smoothing;
     Button left;
     Button right;
     Button up;
@@ -127,12 +129,14 @@ Thumbstick Thumbstick_ (
     float sens_scroll,
     float sens_xy_ratio,
     float accel_curve,
+    float rot_center_deadzone,
     float rot_entry_deadzone,
     bool rot_anticlockwise,
     bool rot_absolute_mode,
     bool rot_rws_enabled,
     float rot_rws,
-    float rot_sens_axis
+    float rot_sens_axis,
+    float rot_smoothing
 );
 
 void thumbstick_init();

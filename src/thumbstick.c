@@ -165,12 +165,14 @@ void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t ind
         ctrl_thumbstick.sens_scroll,
         ctrl_thumbstick.sens_xy_ratio / 100.0,
         (int8_t)ctrl_thumbstick.accel_curve / 100.0,
+        ctrl_thumbstick.rot_center_deadzone / 100.0,
         ctrl_thumbstick.rot_entry_deadzone / 100.0,
         (bool)ctrl_thumbstick.rot_anticlockwise,
         (bool)ctrl_thumbstick.rot_absolute_mode,
         (bool)ctrl_thumbstick.rot_rws_enabled,
         ctrl_thumbstick.rot_rws * CTRL_STICK_RWS_FACTOR,
-        ctrl_thumbstick.rot_sens_axis * CTRL_STICK_SENS_AXIS_FACTOR
+        ctrl_thumbstick.rot_sens_axis * CTRL_STICK_SENS_AXIS_FACTOR,
+        ctrl_thumbstick.rot_smoothing
     );
     // Safe defaults.
     if (thumbstick->saturation == 0) thumbstick->saturation = 1.0;
@@ -180,6 +182,8 @@ void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t ind
     if (thumbstick->sens_mouse == 0) thumbstick->sens_mouse = 2000;
     if (thumbstick->sens_scroll == 0) thumbstick->sens_scroll = 20;
     if (thumbstick->rot_sens_axis == 0) thumbstick->rot_sens_axis = 100;
+    if (thumbstick->rot_smoothing == 0) thumbstick->rot_smoothing = 10;
+    if (thumbstick->rot_center_deadzone == 0) thumbstick->rot_center_deadzone = 50;
     // Modes config.
     if (ctrl_thumbstick.mode == THUMBSTICK_MODE_4DIR) {
         thumbstick->config_4dir(
@@ -410,7 +414,7 @@ void Thumbstick__report_rotation(
         if (angle_smooth == 0) angle_smooth = pos.angle;
         float diff_angle = pos.angle - last_angle;
         float angle = pos.angle - roundf(diff_angle / 360) * 360;  // Unwrap.
-        angle_smooth = smooth(angle_smooth, angle, 10);
+        angle_smooth = smooth(angle_smooth, angle, self->rot_smoothing);
         float diff_angle_smooth = angle_smooth - last_angle;
         last_angle = angle_smooth;
         float mouse_value = diff_angle_smooth * self->sens_mouse / 360.0;
@@ -581,8 +585,13 @@ void Thumbstick__report(Thumbstick *self) {
     x = constrain(x, -1, 1) * (self->invert_x? -1 : 1);
     y = constrain(y, -1, 1) * (self->invert_y? -1 : 1);
     // Get correct deadzone.
-    float deadzone = self->deadzone_override ? self->deadzone : config_deadzone;
-    deadzone /= self->saturation;
+    float deadzone = 0;
+    if (self->mode == THUMBSTICK_MODE_ROTATION) {
+        deadzone = self->rot_center_deadzone;
+    } else {
+        float deadzone = self->deadzone_override ? self->deadzone : config_deadzone;
+        deadzone /= self->saturation;
+    }
     // Calculate trigonometry.
     float angle = atan2(x, -y) * (180 / M_PI);
     float raw_radius = sqrt(powf(raw_x, 2) + powf(raw_y, 2));
@@ -642,12 +651,14 @@ Thumbstick Thumbstick_ (
     float sens_scroll,
     float sens_xy_ratio,
     float accel_curve,
+    float rot_center_deadzone,
     float rot_entry_deadzone,
     bool rot_anticlockwise,
     bool rot_absolute_mode,
     bool rot_rws_enabled,
     float rot_rws,
-    float rot_sens_axis
+    float rot_sens_axis,
+    float rot_smoothing
 ) {
     Thumbstick thumbstick;
     // Methods.
@@ -686,11 +697,13 @@ Thumbstick Thumbstick_ (
     thumbstick.sens_scroll = sens_scroll;
     thumbstick.sens_xy_ratio = sens_xy_ratio;
     thumbstick.accel_curve = accel_curve;
+    thumbstick.rot_center_deadzone = rot_center_deadzone;
     thumbstick.rot_entry_deadzone = rot_entry_deadzone;
     thumbstick.rot_anticlockwise = rot_anticlockwise;
     thumbstick.rot_absolute_mode = rot_absolute_mode;
     thumbstick.rot_rws_enabled = rot_rws_enabled;
     thumbstick.rot_rws = rot_rws;
     thumbstick.rot_sens_axis = rot_sens_axis;
+    thumbstick.rot_smoothing = rot_smoothing;
     return thumbstick;
 }
