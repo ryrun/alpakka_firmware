@@ -311,6 +311,7 @@ void hid_mouse_scroll(double x, double y);
 // Gamepad.
 bool hid_is_axis(uint8_t action);
 bool hid_is_mouse_axis(uint8_t action);
+bool hid_is_scroll_axis(uint8_t action);
 bool hid_is_gamepad_axis(uint8_t action);
 void hid_gamepad_axis(GamepadAxis axis, double value);
 

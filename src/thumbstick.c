@@ -168,7 +168,7 @@ void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t ind
         ctrl_thumbstick.rot_center_deadzone / 100.0,
         ctrl_thumbstick.rot_entry_deadzone / 100.0,
         (bool)ctrl_thumbstick.rot_anticlockwise,
-        (bool)ctrl_thumbstick.rot_absolute_mode,
+        (bool)ctrl_thumbstick.rot_any_angle,
         (bool)ctrl_thumbstick.rot_rws_enabled,
         ctrl_thumbstick.rot_rws * CTRL_STICK_RWS_FACTOR,
         ctrl_thumbstick.rot_sens_axis * CTRL_STICK_SENS_AXIS_FACTOR,
@@ -185,7 +185,7 @@ void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t ind
     if (thumbstick->rot_smoothing == 0) thumbstick->rot_smoothing = 10;
     if (thumbstick->rot_center_deadzone == 0) thumbstick->rot_center_deadzone = 50;
     // Modes config.
-    if (ctrl_thumbstick.mode == THUMBSTICK_MODE_4DIR) {
+    if (ctrl_thumbstick.mode == THUMBSTICK_MODE_4DIR || ctrl_thumbstick.mode == THUMBSTICK_MODE_ROTATION) {
         thumbstick->config_4dir(
             thumbstick,
             Button_from_ctrl(PIN_VIRTUAL, ctrl->sections[SECTION_STICK_LEFT]),
@@ -357,13 +357,13 @@ void Thumbstick__report_4dir_axis(Thumbstick *self, uint8_t axis, float value) {
         else if (axis == GAMEPAD_AXIS_RZ)     hid_gamepad_axis(RZ, value);
     }
     else if (hid_is_mouse_axis(axis)) {
-        // Mouse move.
         float mouse_value = value * self->sens_mouse / CFG_TICK_FREQUENCY;
         if      (axis == MOUSE_X)     hid_mouse_move( mouse_value, 0);
         else if (axis == MOUSE_X_NEG) hid_mouse_move(-mouse_value, 0);
         else if (axis == MOUSE_Y)     hid_mouse_move(0,  mouse_value);
         else if (axis == MOUSE_Y_NEG) hid_mouse_move(0, -mouse_value);
-        // Mouse scroll.
+    }
+    else if (hid_is_scroll_axis(axis)) {
         float scroll_value = value * self->sens_scroll / CFG_TICK_FREQUENCY;
         if      (axis == MOUSE_SCROLL_UP)   hid_mouse_scroll(0,  scroll_value);
         else if (axis == MOUSE_SCROLL_DOWN) hid_mouse_scroll(0, -scroll_value);
@@ -405,20 +405,52 @@ void Thumbstick__report_rotation(
     ThumbstickPosition pos,
     float raw_radius
 ) {
-    static float last_angle = 0;
     static float angle_smooth = 0;
+    static float last_angle = 0;
+    static uint8_t action = 0;
+    static bool has_action = false;
     if (pos.radius == 0) {
-        last_angle = 0;
         angle_smooth = 0;
+        has_action = false;
     } else {
+        if (!has_action) {
+            // Find the action and entry angle, by walking (clockwise or
+            // anticlockwise) from the initial angle to the first cardinal with
+            // a defined action.
+            uint8_t actions_cw[4] = {self->up.actions[0], self->left.actions[0], self->down.actions[0], self->right.actions[0]};
+            uint8_t actions_acw[4] = {self->right.actions[0], self->down.actions[0], self->left.actions[0], self->up.actions[0]};
+            uint8_t *actions = self->rot_anticlockwise ? actions_acw : actions_cw;
+            float angle_360 = pos.angle > 0 ? pos.angle : pos.angle+360;  // Offset from -180:180 to 0:360.
+            uint8_t quarter = floorf(angle_360 / 90);  // Get initial angle quarter 0|1|2|3.
+            for(uint8_t i=0; i<4; i++) {
+                uint8_t offset = (quarter + i) % 4;  // Wrappable quarter offset index to iterate quarters.
+                if (actions[offset]) {
+                    action = actions[offset];
+                    has_action = true;
+                    if (self->rot_any_angle) {
+                        last_angle = pos.angle;  // Use initial angle (ignore action cardinal).
+                    } else {
+                        last_angle = ((quarter + i) % 4) * 90;  // Cardinal entry angle of defined action.
+                        if (last_angle > 180) last_angle -= 360;  // Offset from 0:360 to -180:180.
+                    }
+                    break;
+                }
+            }
+        }
         if (angle_smooth == 0) angle_smooth = pos.angle;
         float diff_angle = pos.angle - last_angle;
         float angle = pos.angle - roundf(diff_angle / 360) * 360;  // Unwrap.
         angle_smooth = smooth(angle_smooth, angle, self->rot_smoothing);
         float diff_angle_smooth = angle_smooth - last_angle;
         last_angle = angle_smooth;
-        float mouse_value = diff_angle_smooth * self->sens_mouse / 360.0;
-        hid_mouse_move(mouse_value, 0);
+        if (hid_is_mouse_axis(action)) {
+            float mouse_value = diff_angle_smooth * self->sens_mouse / 360.0;
+            if (self->rot_anticlockwise) mouse_value = -mouse_value;
+            if (action == MOUSE_X)     hid_mouse_move( mouse_value, 0);
+            if (action == MOUSE_X_NEG) hid_mouse_move(-mouse_value, 0);
+            if (action == MOUSE_Y)     hid_mouse_move(0,  mouse_value);
+            if (action == MOUSE_Y_NEG) hid_mouse_move(0, -mouse_value);
+        }
     }
 }
 
@@ -654,7 +686,7 @@ Thumbstick Thumbstick_ (
     float rot_center_deadzone,
     float rot_entry_deadzone,
     bool rot_anticlockwise,
-    bool rot_absolute_mode,
+    bool rot_any_angle,
     bool rot_rws_enabled,
     float rot_rws,
     float rot_sens_axis,
@@ -700,7 +732,7 @@ Thumbstick Thumbstick_ (
     thumbstick.rot_center_deadzone = rot_center_deadzone;
     thumbstick.rot_entry_deadzone = rot_entry_deadzone;
     thumbstick.rot_anticlockwise = rot_anticlockwise;
-    thumbstick.rot_absolute_mode = rot_absolute_mode;
+    thumbstick.rot_any_angle = rot_any_angle;
     thumbstick.rot_rws_enabled = rot_rws_enabled;
     thumbstick.rot_rws = rot_rws;
     thumbstick.rot_sens_axis = rot_sens_axis;

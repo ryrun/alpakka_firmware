@@ -177,7 +177,7 @@ typedef struct __packed _CtrlThumbstick {
     uint8_t rot_center_deadzone;
     uint8_t rot_entry_deadzone;
     uint8_t rot_anticlockwise;
-    uint8_t rot_absolute_mode;
+    uint8_t rot_any_angle;
     uint8_t rot_rws_enabled;
     uint8_t rot_rws;
     uint8_t rot_sens_axis;

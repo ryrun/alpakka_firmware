@@ -88,7 +88,7 @@ struct Thumbstick_struct {
     float rot_center_deadzone;
     float rot_entry_deadzone;
     bool rot_anticlockwise;
-    bool rot_absolute_mode;
+    bool rot_any_angle;
     bool rot_rws_enabled;
     float rot_rws;
     float rot_sens_axis;
@@ -132,7 +132,7 @@ Thumbstick Thumbstick_ (
     float rot_center_deadzone,
     float rot_entry_deadzone,
     bool rot_anticlockwise,
-    bool rot_absolute_mode,
+    bool rot_any_angle,
     bool rot_rws_enabled,
     float rot_rws,
     float rot_sens_axis,
