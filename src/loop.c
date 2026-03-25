@@ -26,9 +26,14 @@
 static DeviceMode device_mode = WIRED;
 static bool battery_low = false;
 static uint64_t system_clock = 0;
+static uint32_t loop_iteration = 0;
 
 DeviceMode loop_get_device_mode() {
     return device_mode;
+}
+
+uint32_t loop_get_iteration() {
+    return loop_iteration;
 }
 
 void loop_set_battery_low(bool state) {
@@ -171,6 +176,7 @@ void loop_dongle_init() {
 }
 
 void loop_controller_task() {
+    loop_iteration++;
     // Write flash if needed.
     config_sync();
     // Gather values for input sources.

@@ -12,6 +12,7 @@
 #include "bus.h"
 #include "vector.h"
 #include "logging.h"
+#include "loop.h"
 
 uint8_t IMU0 = 0;
 uint8_t IMU1 = 0;
@@ -28,6 +29,7 @@ double offset_accel_1_x;
 double offset_accel_1_y;
 double offset_accel_1_z;
 static Vector last_gyro = {0, 0, 0};
+static uint32_t last_gyro_iteration = 0;
 
 void imu_channel_select() {
     Config *config = config_read();
@@ -144,11 +146,16 @@ Vector imu_read_gyro() {
     double y = (gyro0.y * weight_0) + (gyro1.y * weight_1 / 4);
     double z = (gyro0.z * weight_0) + (gyro1.z * weight_1 / 4);
     last_gyro = (Vector){x, y, z};
+    last_gyro_iteration = loop_get_iteration();
     return last_gyro;
 }
 
 Vector imu_get_last_gyro() {
     return last_gyro;
+}
+
+uint32_t imu_get_last_gyro_iteration() {
+    return last_gyro_iteration;
 }
 
 Vector imu_read_accel() {
