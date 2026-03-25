@@ -103,10 +103,9 @@ static CtrlInputStream webusb_input_stream_snapshot() {
     ThumbstickPosition left = thumbstick_get_last_position(&(profile->left_thumbstick));
     ThumbstickPosition right = webusb_input_stream_get_right_position(profile);
     ThumbstickPosition dhat = webusb_input_stream_get_dhat_position(profile);
-    // Sample gyro explicitly for the stream so WebUSB keeps getting fresh
-    // angular velocity values even when the profile's gyro mapping is gated by
-    // touch or another engage condition.
-    Vector gyro = imu_read_gyro();
+    Vector gyro = imu_get_last_gyro_iteration() == loop_get_iteration()
+        ? imu_get_last_gyro()
+        : imu_read_gyro();
     Vector accel = imu_read_accel();
     int8_t rotary = rotary_get_recent_increment(&(profile->rotary), WEBUSB_INPUT_STREAM_ROTARY_WINDOW_US);
     bool touch = touch_status();
