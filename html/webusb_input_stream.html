@@ -768,6 +768,12 @@
                                 x 0 / y 0 / r 0
                             </div>
                         </div>
+                        <div class="data-card">
+                            <strong>Dhat</strong>
+                            <div id="dhat-state" class="mono">
+                                x 0 / y 0 / r 0
+                            </div>
+                        </div>
                     </section>
 
                     <section class="panel">
@@ -1037,6 +1043,7 @@
                 rotaryState: document.getElementById("rotary-state"),
                 leftState: document.getElementById("left-state"),
                 rightState: document.getElementById("right-state"),
+                dhatState: document.getElementById("dhat-state"),
                 leftStickDot: document.getElementById("left-stick-dot"),
                 rightStickDot: document.getElementById("right-stick-dot"),
                 gyroX: document.getElementById("gyro-x"),
@@ -1168,6 +1175,10 @@
                 let value = lo | (hi << 8);
                 if (value & 0x8000) value -= 0x10000;
                 return value;
+            }
+
+            function getDisplayRightStick(right, dhat) {
+                return right.radius > 0.05 ? right : dhat;
             }
 
             function setStick(dot, x, y) {
@@ -1577,27 +1588,54 @@
             }
 
             function parseInputStream(data) {
+                const payloadLength = data[3];
                 const buttons = [data[5], data[6], data[7]];
                 const lx = toSigned8(data[8]) / 127;
                 const ly = toSigned8(data[9]) / 127;
                 const rx = toSigned8(data[10]) / 127;
                 const ry = toSigned8(data[11]) / 127;
-                const lRadius = data[12] / 255;
-                const rRadius = data[13] / 255;
-                const gyroX = toSigned16(data[14], data[15]);
-                const gyroY = toSigned16(data[16], data[17]);
-                const gyroZ = toSigned16(data[18], data[19]);
-                const accelX = toSigned16(data[20], data[21]);
-                const accelY = toSigned16(data[22], data[23]);
-                const accelZ = toSigned16(data[24], data[25]);
-                const rotary = toSigned8(data[26]);
-                const flags = data[27];
+                const hasDedicatedDhat = payloadLength >= 27;
+                const dhx = hasDedicatedDhat ? toSigned8(data[12]) / 127 : rx;
+                const dhy = hasDedicatedDhat ? toSigned8(data[13]) / 127 : ry;
+                const lRadius = data[hasDedicatedDhat ? 14 : 12] / 255;
+                const rRadius = data[hasDedicatedDhat ? 15 : 13] / 255;
+                const dhatRadius = Math.min(1, Math.hypot(dhx, dhy));
+                const gyroX = toSigned16(
+                    data[hasDedicatedDhat ? 16 : 14],
+                    data[hasDedicatedDhat ? 17 : 15],
+                );
+                const gyroY = toSigned16(
+                    data[hasDedicatedDhat ? 18 : 16],
+                    data[hasDedicatedDhat ? 19 : 17],
+                );
+                const gyroZ = toSigned16(
+                    data[hasDedicatedDhat ? 20 : 18],
+                    data[hasDedicatedDhat ? 21 : 19],
+                );
+                const accelX = toSigned16(
+                    data[hasDedicatedDhat ? 22 : 20],
+                    data[hasDedicatedDhat ? 23 : 21],
+                );
+                const accelY = toSigned16(
+                    data[hasDedicatedDhat ? 24 : 22],
+                    data[hasDedicatedDhat ? 25 : 23],
+                );
+                const accelZ = toSigned16(
+                    data[hasDedicatedDhat ? 26 : 24],
+                    data[hasDedicatedDhat ? 27 : 25],
+                );
+                const rotary = toSigned8(data[hasDedicatedDhat ? 28 : 26]);
+                const flags = data[hasDedicatedDhat ? 29 : 27];
+                const right = { x: rx, y: ry, radius: rRadius };
+                const dhat = { x: dhx, y: dhy, radius: dhatRadius };
+                const displayRight = getDisplayRightStick(right, dhat);
 
                 updateButtons(buttons);
                 setStick(ui.leftStickDot, lx, ly);
-                setStick(ui.rightStickDot, rx, ry);
+                setStick(ui.rightStickDot, displayRight.x, displayRight.y);
                 ui.leftState.textContent = `x ${lx.toFixed(2)} / y ${ly.toFixed(2)} / r ${lRadius.toFixed(2)}`;
-                ui.rightState.textContent = `x ${rx.toFixed(2)} / y ${ry.toFixed(2)} / r ${rRadius.toFixed(2)}`;
+                ui.rightState.textContent = `x ${displayRight.x.toFixed(2)} / y ${displayRight.y.toFixed(2)} / r ${displayRight.radius.toFixed(2)}`;
+                ui.dhatState.textContent = `x ${dhx.toFixed(2)} / y ${dhy.toFixed(2)} / r ${dhatRadius.toFixed(2)}`;
                 ui.touchState.textContent =
                     flags & INPUT_FLAGS.touch ? "active" : "inactive";
                 ui.rotaryState.textContent = `${rotary}`;
@@ -1759,7 +1797,6 @@
                             descriptor.alternate.alternateSetting,
                         );
                     }
-
                     state.device = device;
                     setStatus(
                         `Connected: ${device.productName || "device"}`,
