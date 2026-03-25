@@ -621,7 +621,7 @@ void Thumbstick__report(Thumbstick *self) {
     if (self->mode == THUMBSTICK_MODE_ROTATION) {
         deadzone = self->rot_center_deadzone;
     } else {
-        float deadzone = self->deadzone_override ? self->deadzone : config_deadzone;
+        deadzone = self->deadzone_override ? self->deadzone : config_deadzone;
         deadzone /= self->saturation;
     }
     // Calculate trigonometry.
