@@ -203,10 +203,10 @@ Send a compact snapshot of the current physical controller state.
 
 Direction: `Controller` -> `App`
 
-| Byte 0 | 1 | 2 | 3 | 4~28 |
+| Byte 0 | 1 | 2 | 3 | 4~30 |
 | - | - | - | - | - |
 | Version | Device Id | Message type | Payload size | Payload |
-|         |           | INPUT_STREAM_SHARE | 25 | `CtrlInputStream` |
+|         |           | INPUT_STREAM_SHARE | 27 | `CtrlInputStream` |
 
 `CtrlInputStream` payload layout:
 
@@ -218,17 +218,19 @@ Direction: `Controller` -> `App`
 | 5 | Left stick Y (`int8`, `-127..127`) |
 | 6 | Right stick X (`int8`, `-127..127`) |
 | 7 | Right stick Y (`int8`, `-127..127`) |
-| 8 | Left stick radius (`uint8`, `0..255`) |
-| 9 | Right stick radius (`uint8`, `0..255`) |
-| 10..11 | Gyro X (`int16`) |
-| 12..13 | Gyro Y (`int16`) |
-| 14..15 | Gyro Z (`int16`) |
-| 16..17 | Accel X (`int16`) |
-| 18..19 | Accel Y (`int16`) |
-| 20..21 | Accel Z (`int16`) |
-| 22 | Recent rotary increment (`int8`) |
-| 23 | Flags |
-| 24 | Active profile index |
+| 8 | Dhat X (`int8`, `-127..127`) |
+| 9 | Dhat Y (`int8`, `-127..127`) |
+| 10 | Left stick radius (`uint8`, `0..255`) |
+| 11 | Right stick radius (`uint8`, `0..255`) |
+| 12..13 | Gyro X (`int16`) |
+| 14..15 | Gyro Y (`int16`) |
+| 16..17 | Gyro Z (`int16`) |
+| 18..19 | Accel X (`int16`) |
+| 20..21 | Accel Y (`int16`) |
+| 22..23 | Accel Z (`int16`) |
+| 24 | Recent rotary increment (`int8`) |
+| 25 | Flags |
+| 26 | Active profile index |
 
 Button bit assignments:
 - 0 `A`

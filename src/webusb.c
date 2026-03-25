@@ -61,27 +61,32 @@ static int16_t webusb_pack_accel(double value) {
     return (int16_t)value;
 }
 
+static ThumbstickPosition webusb_input_stream_get_dhat_position(Profile *profile) {
+    bool left = button_is_pressed_physical(&(profile->dhat.left));
+    bool right = button_is_pressed_physical(&(profile->dhat.right));
+    bool up = button_is_pressed_physical(&(profile->dhat.up));
+    bool down = button_is_pressed_physical(&(profile->dhat.down));
+    float x = 0;
+    float y = 0;
+    if (left) x -= 1;
+    if (right) x += 1;
+    if (up) y -= 1;
+    if (down) y += 1;
+    if (x && y) {
+        x *= 0.70710678;
+        y *= 0.70710678;
+    }
+    float radius = (left || right || up || down) ? 1 : 0;
+    float angle = radius ? atan2(x, -y) * (180 / M_PI) : 0;
+    return (ThumbstickPosition){x, y, angle, radius};
+}
+
 static ThumbstickPosition webusb_input_stream_get_right_position(Profile *profile) {
-    #ifdef DEVICE_ALPAKKA_V0
-        bool left = button_is_pressed_physical(&(profile->dhat.left));
-        bool right = button_is_pressed_physical(&(profile->dhat.right));
-        bool up = button_is_pressed_physical(&(profile->dhat.up));
-        bool down = button_is_pressed_physical(&(profile->dhat.down));
-        float x = 0;
-        float y = 0;
-        if (left) x -= 1;
-        if (right) x += 1;
-        if (up) y -= 1;
-        if (down) y += 1;
-        if (x && y) {
-            x *= 0.70710678;
-            y *= 0.70710678;
-        }
-        float radius = (left || right || up || down) ? 1 : 0;
-        float angle = radius ? atan2(x, -y) * (180 / M_PI) : 0;
-        return (ThumbstickPosition){x, y, angle, radius};
-    #else
+    #ifdef DEVICE_ALPAKKA_V1
         return thumbstick_get_last_position(&(profile->right_thumbstick));
+    #else
+        (void)profile;
+        return (ThumbstickPosition){0,};
     #endif
 }
 
@@ -97,6 +102,7 @@ static CtrlInputStream webusb_input_stream_snapshot() {
     if (!profile) return input_stream;
     ThumbstickPosition left = thumbstick_get_last_position(&(profile->left_thumbstick));
     ThumbstickPosition right = webusb_input_stream_get_right_position(profile);
+    ThumbstickPosition dhat = webusb_input_stream_get_dhat_position(profile);
     // Sample gyro explicitly for the stream so WebUSB keeps getting fresh
     // angular velocity values even when the profile's gyro mapping is gated by
     // touch or another engage condition.
@@ -110,6 +116,8 @@ static CtrlInputStream webusb_input_stream_snapshot() {
     input_stream.ly = webusb_pack_axis(left.y);
     input_stream.rx = webusb_pack_axis(right.x);
     input_stream.ry = webusb_pack_axis(right.y);
+    input_stream.dhx = webusb_pack_axis(dhat.x);
+    input_stream.dhy = webusb_pack_axis(dhat.y);
     input_stream.l_radius = webusb_pack_radius(left.radius);
     input_stream.r_radius = webusb_pack_radius(right.radius);
     input_stream.gyro_x = webusb_pack_gyro(gyro.x);
