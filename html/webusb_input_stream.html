@@ -1391,6 +1391,12 @@
                                 fitModelToScene(model);
                                 model.traverse((child) => {
                                     if (!child.isMesh) return;
+                                    if (child.name === "Case_front") {
+                                        child.material = child.material.clone();
+                                        child.material.color = new THREE.Color(
+                                            0x1f1f1f,
+                                        );
+                                    }
                                     child.castShadow = false;
                                     child.receiveShadow = false;
                                 });
