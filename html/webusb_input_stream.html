@@ -1111,8 +1111,8 @@
                                     type="number"
                                     min="0"
                                     max="1"
-                                    step="0.05"
-                                    value="0.1"
+                                    step="0.01"
+                                    value="0.05"
                                 />Hexagon Highlight Mixing</label
                             >
                         </div>
@@ -1227,7 +1227,7 @@
             const DEFAULT_ELEMENT_COLORS = {
                 Case_back: "#8d939b",
                 Case_cover: "#8d939b",
-                Case_front: "#1f1f1f",
+                Case_front: "#242424",
                 A: "#8d939b",
                 B: "#8d939b",
                 X: "#8d939b",
@@ -1236,21 +1236,21 @@
                 Right: "#8d939b",
                 Up: "#8d939b",
                 Down: "#8d939b",
-                Select1: "#8d939b",
-                Select2: "#8d939b",
-                Start1: "#8d939b",
-                Start2: "#8d939b",
-                L1: "#8d939b",
-                L2: "#8d939b",
-                L4: "#8d939b",
-                R1: "#8d939b",
-                R2: "#8d939b",
-                R4: "#8d939b",
+                Select1: "#0d0d0d",
+                Select2: "#0d0d0d",
+                Start1: "#0d0d0d",
+                Start2: "#0d0d0d",
+                L1: "#0d0d0d",
+                L2: "#0d0d0d",
+                L4: "#0d0d0d",
+                R1: "#0d0d0d",
+                R2: "#0d0d0d",
+                R4: "#0d0d0d",
                 Home: "#8d939b",
                 Left_Stick: "#8d939b",
-                Right_Stick: "#8d939b",
+                Right_Stick: "#0d0d0d",
                 Wheel: "#8d939b",
-                Hexagon: "#000000",
+                Hexagon: "#0d0d0d",
             };
 
             const DEFAULT_HIGHLIGHT_COLOR = "#ffffff";
@@ -1366,7 +1366,7 @@
                 lastGyroSampleTs: 0,
                 linkPrimed: false,
                 touchActive: false,
-                highlightMix: 0.1,
+                highlightMix: 0.05,
                 wheelAngle: 0,
                 wheelRotationStep: 0.06,
                 leftStickTiltMax: THREE.MathUtils.degToRad(22),
@@ -1964,7 +1964,7 @@
                 state.elementColors = { ...DEFAULT_ELEMENT_COLORS };
                 state.sceneBackgroundColor = DEFAULT_SCENE_BACKGROUND_COLOR;
                 state.highlightColor = DEFAULT_HIGHLIGHT_COLOR;
-                state.highlightMix = 0.1;
+                state.highlightMix = 0.05;
                 applyColorStateToInputs();
                 applyModelColors();
                 updateTouchIndicator(state.touchActive);
@@ -2015,7 +2015,7 @@
                     ui.sceneBackgroundColor.value || "#000000";
                 state.highlightColor = ui.highlightColor.value || "#ffffff";
                 state.highlightMix = clamp(
-                    Number.parseFloat(ui.highlightMix.value) || 0.1,
+                    Number.parseFloat(ui.highlightMix.value) || 0.05,
                     0,
                     1,
                 );
