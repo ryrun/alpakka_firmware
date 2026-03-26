@@ -1026,6 +1026,13 @@
                         >
                             <label class="color-entry"
                                 ><input
+                                    id="scene-background-color"
+                                    type="color"
+                                    value="#000000"
+                                />Scene Background</label
+                            >
+                            <label class="color-entry"
+                                ><input
                                     id="highlight-color"
                                     type="color"
                                     value="#ffffff"
@@ -1170,6 +1177,7 @@
             };
 
             const DEFAULT_HIGHLIGHT_COLOR = "#ffffff";
+            const DEFAULT_SCENE_BACKGROUND_COLOR = "#000000";
             const COLOR_STORAGE_KEY = "alpakka-webusb-colors";
 
             const ui = {
@@ -1195,6 +1203,9 @@
                 groupCaseColor: document.getElementById("group-case-color"),
                 groupControlsColor: document.getElementById(
                     "group-controls-color",
+                ),
+                sceneBackgroundColor: document.getElementById(
+                    "scene-background-color",
                 ),
                 highlightColor: document.getElementById("highlight-color"),
                 caseColorGrid: document.getElementById("case-color-grid"),
@@ -1267,6 +1278,7 @@
                 rollAngle: 0,
                 groupColors: { ...DEFAULT_GROUP_COLORS },
                 elementColors: { ...DEFAULT_ELEMENT_COLORS },
+                sceneBackgroundColor: DEFAULT_SCENE_BACKGROUND_COLOR,
                 highlightColor: DEFAULT_HIGHLIGHT_COLOR,
                 returnToResetThreshold: 35,
                 returnToResetFadeRange: 18,
@@ -1626,6 +1638,7 @@
             function applyColorStateToInputs() {
                 ui.groupCaseColor.value = state.groupColors.case;
                 ui.groupControlsColor.value = state.groupColors.controls;
+                ui.sceneBackgroundColor.value = state.sceneBackgroundColor;
                 ui.highlightColor.value = state.highlightColor;
                 MODEL_ELEMENTS.forEach((name) => {
                     const input = document.getElementById(
@@ -1639,6 +1652,7 @@
                 const payload = {
                     groupColors: state.groupColors,
                     elementColors: state.elementColors,
+                    sceneBackgroundColor: state.sceneBackgroundColor,
                     highlightColor: state.highlightColor,
                 };
                 try {
@@ -1666,6 +1680,10 @@
                             ...parsed.elementColors,
                         };
                     }
+                    if (typeof parsed.sceneBackgroundColor === "string") {
+                        state.sceneBackgroundColor =
+                            parsed.sceneBackgroundColor;
+                    }
                     if (typeof parsed.highlightColor === "string") {
                         state.highlightColor = parsed.highlightColor;
                     }
@@ -1675,9 +1693,12 @@
             function resetColorSettings() {
                 state.groupColors = { ...DEFAULT_GROUP_COLORS };
                 state.elementColors = { ...DEFAULT_ELEMENT_COLORS };
+                state.sceneBackgroundColor = DEFAULT_SCENE_BACKGROUND_COLOR;
                 state.highlightColor = DEFAULT_HIGHLIGHT_COLOR;
                 applyColorStateToInputs();
                 applyModelColors();
+                ui.sceneCanvas.parentElement.style.background =
+                    state.sceneBackgroundColor;
                 saveColorSettings();
             }
 
@@ -1711,6 +1732,8 @@
                 state.groupColors.case = ui.groupCaseColor.value || "#8d939b";
                 state.groupColors.controls =
                     ui.groupControlsColor.value || "#8d939b";
+                state.sceneBackgroundColor =
+                    ui.sceneBackgroundColor.value || "#000000";
                 state.highlightColor = ui.highlightColor.value || "#ffffff";
                 document
                     .querySelectorAll(
@@ -1721,6 +1744,8 @@
                             input.value;
                     });
                 applyModelColors();
+                ui.sceneCanvas.parentElement.style.background =
+                    state.sceneBackgroundColor;
                 saveColorSettings();
             }
 
@@ -2289,6 +2314,7 @@
             [
                 ui.groupCaseColor,
                 ui.groupControlsColor,
+                ui.sceneBackgroundColor,
                 ui.highlightColor,
             ].forEach((input) => {
                 input.addEventListener("input", syncActiveColorFromInput);
