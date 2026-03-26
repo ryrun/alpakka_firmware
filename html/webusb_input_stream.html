@@ -356,6 +356,32 @@
                 border: 1px solid var(--line);
             }
 
+            .color-control-grid {
+                display: grid;
+                gap: 0.7rem;
+                grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+            }
+
+            .color-entry {
+                display: flex;
+                align-items: center;
+                gap: 0.55rem;
+            }
+
+            .color-entry input[type="color"] {
+                flex: 0 0 auto;
+            }
+
+            .group-color-row {
+                margin-top: 1rem;
+                padding-top: 1rem;
+                border-top: 1px solid var(--line);
+                display: flex;
+                gap: 0.7rem;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+
             .button-grid {
                 display: grid;
                 gap: 0.55rem;
@@ -934,7 +960,7 @@
                         </p>
                     </section>
                     <section class="panel">
-                        <h2>Highlight</h2>
+                        <h2>Connection</h2>
                         <div
                             style="
                                 margin-top: 1rem;
@@ -944,13 +970,6 @@
                             "
                         >
                             <label
-                                >Scene background
-                                <input
-                                    id="active-color"
-                                    type="color"
-                                    value="#000000"
-                            /></label>
-                            <label
                                 >Interval ms
                                 <input
                                     id="interval"
@@ -959,6 +978,66 @@
                                     max="50"
                                     value="16"
                             /></label>
+                        </div>
+                    </section>
+                    <section class="panel">
+                        <h2>Case</h2>
+                        <div
+                            id="case-color-grid"
+                            class="color-control-grid"
+                            style="margin-top: 1rem"
+                        ></div>
+                        <div class="group-color-row">
+                            <label class="color-entry"
+                                ><input
+                                    id="group-case-color"
+                                    type="color"
+                                    value="#8d939b"
+                                />Apply To Case</label
+                            >
+                            <button id="apply-case-group" class="secondary">
+                                Apply To All Case Elements
+                            </button>
+                        </div>
+                    </section>
+                    <section class="panel">
+                        <h2>Controls</h2>
+                        <div
+                            id="controls-color-grid"
+                            class="color-control-grid"
+                            style="margin-top: 1rem"
+                        ></div>
+                        <div class="group-color-row">
+                            <label class="color-entry"
+                                ><input
+                                    id="group-controls-color"
+                                    type="color"
+                                    value="#8d939b"
+                                />Apply To Controls</label
+                            >
+                            <button id="apply-controls-group" class="secondary">
+                                Apply To All Control Elements
+                            </button>
+                        </div>
+                    </section>
+                    <section class="panel">
+                        <h2>Display</h2>
+                        <div
+                            class="color-control-grid"
+                            style="margin-top: 1rem"
+                        >
+                            <label class="color-entry"
+                                ><input
+                                    id="highlight-color"
+                                    type="color"
+                                    value="#ffffff"
+                                />Highlighting</label
+                            >
+                        </div>
+                        <div class="group-color-row">
+                            <button id="reset-colors" class="secondary">
+                                Reset Colors
+                            </button>
                         </div>
                     </section>
                 </section>
@@ -981,7 +1060,7 @@
             const MSG_STATUS_GET = 9;
             const MSG_INPUT_STREAM_SET = 13;
             const MSG_INPUT_STREAM_SHARE = 14;
-            const MODEL_URL = "./alpakka.obj";
+            const MODEL_URL = "./alpakka.obj?v=20260326";
 
             const INPUT_FLAGS = {
                 touch: 1 << 0,
@@ -1024,6 +1103,77 @@
                 { id: "r3", label: "R3" },
             ];
 
+            const MODEL_GROUPS = {
+                case: ["Case_back", "Case_cover", "Case_front"],
+                controls: [
+                    "A",
+                    "B",
+                    "X",
+                    "Y",
+                    "Left",
+                    "Right",
+                    "Up",
+                    "Down",
+                    "Select1",
+                    "Select2",
+                    "Start1",
+                    "Start2",
+                    "L1",
+                    "L2",
+                    "L4",
+                    "R1",
+                    "R2",
+                    "R4",
+                    "Home",
+                    "Left_Stick",
+                    "Right_Stick",
+                    "Wheel",
+                    "Hexagon",
+                ],
+            };
+
+            const MODEL_ELEMENTS = [
+                ...MODEL_GROUPS.case,
+                ...MODEL_GROUPS.controls,
+            ];
+
+            const DEFAULT_GROUP_COLORS = {
+                case: "#8d939b",
+                controls: "#8d939b",
+            };
+
+            const DEFAULT_ELEMENT_COLORS = {
+                Case_back: "#8d939b",
+                Case_cover: "#8d939b",
+                Case_front: "#1f1f1f",
+                A: "#8d939b",
+                B: "#8d939b",
+                X: "#8d939b",
+                Y: "#8d939b",
+                Left: "#8d939b",
+                Right: "#8d939b",
+                Up: "#8d939b",
+                Down: "#8d939b",
+                Select1: "#8d939b",
+                Select2: "#8d939b",
+                Start1: "#8d939b",
+                Start2: "#8d939b",
+                L1: "#8d939b",
+                L2: "#8d939b",
+                L4: "#8d939b",
+                R1: "#8d939b",
+                R2: "#8d939b",
+                R4: "#8d939b",
+                Home: "#8d939b",
+                Left_Stick: "#8d939b",
+                Right_Stick: "#8d939b",
+                Wheel: "#8d939b",
+                Hexagon: "#8d939b",
+            };
+
+            const DEFAULT_HIGHLIGHT_COLOR = "#ffffff";
+            const COLOR_STORAGE_KEY = "alpakka-webusb-colors";
+
             const ui = {
                 connect: document.getElementById("connect"),
                 toggleStream: document.getElementById("toggle-stream"),
@@ -1044,7 +1194,20 @@
                 cameraLookX: document.getElementById("camera-look-x"),
                 cameraLookY: document.getElementById("camera-look-y"),
                 cameraLookZ: document.getElementById("camera-look-z"),
-                activeColor: document.getElementById("active-color"),
+                groupCaseColor: document.getElementById("group-case-color"),
+                groupControlsColor: document.getElementById(
+                    "group-controls-color",
+                ),
+                highlightColor: document.getElementById("highlight-color"),
+                caseColorGrid: document.getElementById("case-color-grid"),
+                controlsColorGrid: document.getElementById(
+                    "controls-color-grid",
+                ),
+                resetColors: document.getElementById("reset-colors"),
+                applyCaseGroup: document.getElementById("apply-case-group"),
+                applyControlsGroup: document.getElementById(
+                    "apply-controls-group",
+                ),
                 statusDot: document.getElementById("status-dot"),
                 statusText: document.getElementById("status-text"),
                 log: document.getElementById("log"),
@@ -1104,7 +1267,9 @@
                 yawAngle: 0,
                 pitchAngle: 0,
                 rollAngle: 0,
-                activeColor: "#000000",
+                groupColors: { ...DEFAULT_GROUP_COLORS },
+                elementColors: { ...DEFAULT_ELEMENT_COLORS },
+                highlightColor: DEFAULT_HIGHLIGHT_COLOR,
                 returnToResetThreshold: 35,
                 returnToResetFadeRange: 18,
                 returnToResetSinceTs: 0,
@@ -1128,6 +1293,59 @@
                 button.element = document.getElementById(button.id);
                 button.matrix = element;
             });
+
+            function getElementInputId(name) {
+                return `color-${name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
+            }
+
+            MODEL_ELEMENTS.forEach((name) => {
+                const label = document.createElement("label");
+                label.className = "color-entry";
+                label.innerHTML = `<input
+                        id="${getElementInputId(name)}"
+                        type="color"
+                        value="${state.elementColors[name]}"
+                    />${name}`;
+                const input = label.querySelector("input");
+                input.dataset.elementName = name;
+                const group = getElementGroup(name);
+                if (group === "case") {
+                    ui.caseColorGrid.appendChild(label);
+                } else if (group === "controls") {
+                    ui.controlsColorGrid.appendChild(label);
+                }
+            });
+
+            const SCENE_BUTTON_NAMES = new Map([
+                ["a", "A"],
+                ["b", "B"],
+                ["x", "X"],
+                ["y", "Y"],
+                ["dpad-left", "Left"],
+                ["dpad-right", "Right"],
+                ["dpad-up", "Up"],
+                ["dpad-down", "Down"],
+                ["select-1", "Select1"],
+                ["start-1", "Start1"],
+                ["select-2", "Select2"],
+                ["start-2", "Start2"],
+                ["l1", "L1"],
+                ["r1", "R1"],
+                ["l2", "L2"],
+                ["r2", "R2"],
+                ["l4", "L4"],
+                ["r4", "R4"],
+                ["home", "Home"],
+                ["l3", "Left_Stick"],
+                ["r3", "Right_Stick"],
+            ]);
+
+            const SCENE_LED_NAMES = new Map([
+                ["up", "LED_U"],
+                ["right", "LED_R"],
+                ["down", "LED_D"],
+                ["left", "LED_L"],
+            ]);
 
             function log(message) {
                 const time = new Date().toLocaleTimeString();
@@ -1214,12 +1432,30 @@
                     const sceneButton = state.sceneButtons.get(button.id);
                     if (sceneButton) {
                         sceneButton.material.emissive.setHex(0x000000);
-                        sceneButton.material.color.setHex(0xf4eadf);
+                        sceneButton.material.color.set(
+                            active
+                                ? state.highlightColor
+                                : sceneButton.userData.baseColor,
+                        );
                         sceneButton.position.y = active
                             ? sceneButton.userData.baseY - 0.06
                             : sceneButton.userData.baseY;
                     }
                 });
+            }
+
+            function updateSceneLeds(ledMask) {
+                for (const [flagName, objectName] of SCENE_LED_NAMES) {
+                    const sceneLed = state.sceneButtons.get(objectName);
+                    if (!sceneLed) continue;
+                    const active = !!(ledMask & LED_FLAGS[flagName]);
+                    sceneLed.material.emissive.setHex(0x000000);
+                    sceneLed.material.color.set(
+                        active
+                            ? state.highlightColor
+                            : sceneLed.userData.baseColor,
+                    );
+                }
             }
 
             function resetPose() {
@@ -1383,13 +1619,130 @@
                 state.rollAngle += wrapAngleDelta(-state.rollAngle) * blend;
             }
 
-            function syncActiveColorFromInput() {
-                state.activeColor = ui.activeColor.value || "#000000";
-                ui.sceneCanvas.parentElement.style.background =
-                    state.activeColor;
+            function getElementGroup(name) {
+                if (MODEL_GROUPS.case.includes(name)) return "case";
+                if (MODEL_GROUPS.controls.includes(name)) return "controls";
+                return null;
             }
 
-            function createControllerMaterial(color = 0x8d939b) {
+            function applyColorStateToInputs() {
+                ui.groupCaseColor.value = state.groupColors.case;
+                ui.groupControlsColor.value = state.groupColors.controls;
+                ui.highlightColor.value = state.highlightColor;
+                MODEL_ELEMENTS.forEach((name) => {
+                    const input = document.getElementById(
+                        getElementInputId(name),
+                    );
+                    if (input) input.value = state.elementColors[name];
+                });
+            }
+
+            function saveColorSettings() {
+                const payload = {
+                    groupColors: state.groupColors,
+                    elementColors: state.elementColors,
+                    highlightColor: state.highlightColor,
+                };
+                try {
+                    window.localStorage.setItem(
+                        COLOR_STORAGE_KEY,
+                        JSON.stringify(payload),
+                    );
+                } catch {}
+            }
+
+            function loadColorSettings() {
+                try {
+                    const raw = window.localStorage.getItem(COLOR_STORAGE_KEY);
+                    if (!raw) return;
+                    const parsed = JSON.parse(raw);
+                    if (parsed.groupColors) {
+                        state.groupColors = {
+                            ...DEFAULT_GROUP_COLORS,
+                            ...parsed.groupColors,
+                        };
+                    }
+                    if (parsed.elementColors) {
+                        state.elementColors = {
+                            ...DEFAULT_ELEMENT_COLORS,
+                            ...parsed.elementColors,
+                        };
+                    }
+                    if (typeof parsed.highlightColor === "string") {
+                        state.highlightColor = parsed.highlightColor;
+                    }
+                } catch {}
+            }
+
+            function resetColorSettings() {
+                state.groupColors = { ...DEFAULT_GROUP_COLORS };
+                state.elementColors = { ...DEFAULT_ELEMENT_COLORS };
+                state.highlightColor = DEFAULT_HIGHLIGHT_COLOR;
+                applyColorStateToInputs();
+                applyModelColors();
+                saveColorSettings();
+            }
+
+            function getMaterialColorForName(name) {
+                const normalized = (name || "").toLowerCase();
+                if (normalized.startsWith("led_")) {
+                    return "#000000";
+                }
+                if (state.elementColors[name]) {
+                    return state.elementColors[name];
+                }
+                const group = getElementGroup(name);
+                return group
+                    ? state.groupColors[group]
+                    : state.groupColors.controls;
+            }
+
+            function applyModelColors(object = state.modelGroup) {
+                if (!object) return;
+                object.traverse((child) => {
+                    if (!child.isMesh || !child.material?.color) return;
+                    const color = getMaterialColorForName(child.name);
+                    child.material.color.set(color);
+                    if (child.userData.baseColor != null) {
+                        child.userData.baseColor = color;
+                    }
+                });
+            }
+
+            function syncActiveColorFromInput() {
+                state.groupColors.case = ui.groupCaseColor.value || "#8d939b";
+                state.groupColors.controls =
+                    ui.groupControlsColor.value || "#8d939b";
+                state.highlightColor = ui.highlightColor.value || "#ffffff";
+                document
+                    .querySelectorAll(
+                        "#case-color-grid input[type='color'], #controls-color-grid input[type='color']",
+                    )
+                    .forEach((input) => {
+                        state.elementColors[input.dataset.elementName] =
+                            input.value;
+                    });
+                applyModelColors();
+                saveColorSettings();
+            }
+
+            function applyGroupColor(groupName) {
+                const color = state.groupColors[groupName];
+                const names = MODEL_GROUPS[groupName] || [];
+                names.forEach((name) => {
+                    state.elementColors[name] = color;
+                    const input = document.getElementById(
+                        getElementInputId(name),
+                    );
+                    if (input) input.value = color;
+                });
+                applyModelColors();
+                saveColorSettings();
+            }
+
+            function createControllerMaterial(
+                color = state.groupColors.controls,
+            ) {
                 return new THREE.MeshStandardMaterial({
                     color,
                     roughness: 0.84,
@@ -1405,13 +1758,24 @@
                         fitModelToScene(model);
                         model.traverse((child) => {
                             if (!child.isMesh) return;
-                            const color =
-                                child.name === "Case_front"
-                                    ? 0x1f1f1f
-                                    : 0x8d939b;
+                            const color = getMaterialColorForName(child.name);
                             child.material = createControllerMaterial(color);
                             child.castShadow = false;
                             child.receiveShadow = false;
+                            for (const [
+                                buttonId,
+                                objectName,
+                            ] of SCENE_BUTTON_NAMES) {
+                                if (child.name !== objectName) continue;
+                                child.userData.baseY = child.position.y;
+                                child.userData.baseColor = color;
+                                state.sceneButtons.set(buttonId, child);
+                            }
+                            for (const [, objectName] of SCENE_LED_NAMES) {
+                                if (child.name !== objectName) continue;
+                                child.userData.baseColor = color;
+                                state.sceneButtons.set(objectName, child);
+                            }
                         });
                         parent.add(model);
                         state.modelGroup = model;
@@ -1653,6 +2017,7 @@
                     `R ${ledMask & LED_FLAGS.right ? 1 : 0} / ` +
                     `D ${ledMask & LED_FLAGS.down ? 1 : 0} / ` +
                     `L ${ledMask & LED_FLAGS.left ? 1 : 0}`;
+                updateSceneLeds(ledMask);
                 ui.touchState.textContent =
                     flags & INPUT_FLAGS.touch ? "active" : "inactive";
                 ui.rotaryState.textContent = `${rotary}`;
@@ -1924,7 +2289,36 @@
                 input.addEventListener("input", syncCameraFromInputs);
             });
 
-            ui.activeColor.addEventListener("input", syncActiveColorFromInput);
+            [
+                ui.groupCaseColor,
+                ui.groupControlsColor,
+                ui.highlightColor,
+            ].forEach((input) => {
+                input.addEventListener("input", syncActiveColorFromInput);
+            });
+
+            document
+                .querySelectorAll(
+                    "#case-color-grid input[type='color'], #controls-color-grid input[type='color']",
+                )
+                .forEach((input) => {
+                    input.addEventListener("input", syncActiveColorFromInput);
+                });
+
+            ui.applyCaseGroup.addEventListener("click", () => {
+                state.groupColors.case = ui.groupCaseColor.value || "#8d939b";
+                applyGroupColor("case");
+            });
+
+            ui.applyControlsGroup.addEventListener("click", () => {
+                state.groupColors.controls =
+                    ui.groupControlsColor.value || "#8d939b";
+                applyGroupColor("controls");
+            });
+
+            ui.resetColors.addEventListener("click", () => {
+                resetColorSettings();
+            });
 
             ui.disconnect.addEventListener("click", async () => {
                 try {
@@ -1949,6 +2343,8 @@
                 cleanupApp();
             });
 
+            loadColorSettings();
+            applyColorStateToInputs();
             initThreeScene();
             syncActiveColorFromInput();
             applyPoseState();
