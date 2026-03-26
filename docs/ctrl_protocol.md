@@ -203,10 +203,10 @@ Send a compact snapshot of the current physical controller state.
 
 Direction: `Controller` -> `App`
 
-| Byte 0 | 1 | 2 | 3 | 4~30 |
+| Byte 0 | 1 | 2 | 3 | 4~31 |
 | - | - | - | - | - |
 | Version | Device Id | Message type | Payload size | Payload |
-|         |           | INPUT_STREAM_SHARE | 27 | `CtrlInputStream` |
+|         |           | INPUT_STREAM_SHARE | 28 | `CtrlInputStream` |
 
 `CtrlInputStream` payload layout:
 
@@ -231,6 +231,7 @@ Direction: `Controller` -> `App`
 | 24 | Recent rotary increment (`int8`) |
 | 25 | Flags |
 | 26 | Active profile index |
+| 27 | Visible LED bitmask |
 
 Button bit assignments:
 - 0 `A`
