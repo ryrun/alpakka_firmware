@@ -82,6 +82,15 @@ static ThumbstickPosition webusb_input_stream_get_dhat_position(Profile *profile
     return (ThumbstickPosition){x, y, angle, radius};
 }
 
+static bool webusb_input_stream_get_dhat_push(Profile *profile) {
+    bool left = button_is_pressed_physical(&(profile->dhat.left));
+    bool right = button_is_pressed_physical(&(profile->dhat.right));
+    bool up = button_is_pressed_physical(&(profile->dhat.up));
+    bool down = button_is_pressed_physical(&(profile->dhat.down));
+    bool push = button_is_pressed_physical(&(profile->dhat.push));
+    return push && !left && !right && !up && !down;
+}
+
 static ThumbstickPosition webusb_input_stream_get_right_position(Profile *profile) {
     #ifdef DEVICE_ALPAKKA_V1
         return thumbstick_get_last_position(&(profile->right_thumbstick));
@@ -151,7 +160,7 @@ static CtrlInputStream webusb_input_stream_snapshot() {
     webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_HOME, profile_home_button_pressed());
     webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_L3, button_is_pressed_physical(&(profile->left_thumbstick.push)));
     #ifdef DEVICE_ALPAKKA_V0
-        webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_R3, button_is_pressed_physical(&(profile->dhat.push)));
+        webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_R3, webusb_input_stream_get_dhat_push(profile));
     #else
         webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_R3, button_is_pressed_physical(&(profile->right_thumbstick.push)));
     #endif
