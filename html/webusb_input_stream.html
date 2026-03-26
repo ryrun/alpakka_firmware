@@ -1288,6 +1288,7 @@
                 highlightMix: 0.1,
                 wheelAngle: 0,
                 wheelRotationStep: 0.06,
+                leftStickTiltMax: THREE.MathUtils.degToRad(12),
                 yawAngle: 0,
                 pitchAngle: 0,
                 rollAngle: 0,
@@ -1508,10 +1509,31 @@
                 mesh.position.add(center);
             }
 
+            function setMeshPivotToBottom(mesh) {
+                if (!mesh?.geometry) return;
+                mesh.geometry.computeBoundingBox();
+                const bounds = mesh.geometry.boundingBox;
+                if (!bounds) return;
+                const pivot = new THREE.Vector3(
+                    (bounds.min.x + bounds.max.x) * 0.5,
+                    bounds.min.y,
+                    (bounds.min.z + bounds.max.z) * 0.5,
+                );
+                mesh.geometry.translate(-pivot.x, -pivot.y, -pivot.z);
+                mesh.position.add(pivot);
+            }
+
             function updateWheelRotation() {
                 const wheel = state.sceneButtons.get("Wheel");
                 if (!wheel) return;
                 wheel.rotation.x = state.wheelAngle;
+            }
+
+            function updateLeftStickTilt(x, y) {
+                const stick = state.sceneButtons.get("l3");
+                if (!stick) return;
+                stick.rotation.x = y * state.leftStickTiltMax;
+                stick.rotation.z = -x * state.leftStickTiltMax;
             }
 
             function resetPose() {
@@ -1850,6 +1872,13 @@
                                 objectName,
                             ] of SCENE_BUTTON_NAMES) {
                                 if (child.name !== objectName) continue;
+                                if (buttonId === "l3") {
+                                    setMeshPivotToBottom(child);
+                                    child.userData.baseRotationX =
+                                        child.rotation.x;
+                                    child.userData.baseRotationZ =
+                                        child.rotation.z;
+                                }
                                 child.userData.baseY = child.position.y;
                                 child.userData.baseColor = color;
                                 state.sceneButtons.set(buttonId, child);
@@ -2103,6 +2132,7 @@
                 updateButtons(buttons);
                 setStick(ui.leftStickDot, lx, ly);
                 setStick(ui.rightStickDot, displayRight.x, displayRight.y);
+                updateLeftStickTilt(lx, ly);
                 ui.leftState.textContent = `x ${lx.toFixed(2)} / y ${ly.toFixed(2)} / r ${lRadius.toFixed(2)}`;
                 ui.rightState.textContent = `x ${displayRight.x.toFixed(2)} / y ${displayRight.y.toFixed(2)} / r ${displayRight.radius.toFixed(2)}`;
                 ui.dhatState.textContent = `x ${dhx.toFixed(2)} / y ${dhy.toFixed(2)}`;
