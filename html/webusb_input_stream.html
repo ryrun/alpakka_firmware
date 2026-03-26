@@ -974,7 +974,6 @@
         </script>
         <script type="module">
             import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js";
-            import { MTLLoader } from "https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/loaders/MTLLoader.js";
             import { OBJLoader } from "https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/loaders/OBJLoader.js";
 
             const CTRL_FLAG_NONE = 1;
@@ -983,7 +982,6 @@
             const MSG_INPUT_STREAM_SET = 13;
             const MSG_INPUT_STREAM_SHARE = 14;
             const MODEL_URL = "./alpakka.obj";
-            const MATERIAL_URL = "./alpakka.mtl";
 
             const INPUT_FLAGS = {
                 touch: 1 << 0,
@@ -1391,45 +1389,38 @@
                     state.activeColor;
             }
 
+            function createControllerMaterial(color = 0x8d939b) {
+                return new THREE.MeshStandardMaterial({
+                    color,
+                    roughness: 0.84,
+                    metalness: 0.05,
+                });
+            }
+
             function loadGlbModel(parent) {
-                const materialLoader = new MTLLoader();
-                materialLoader.load(
-                    MATERIAL_URL,
-                    (materials) => {
-                        materials.preload();
-                        const objectLoader = new OBJLoader();
-                        objectLoader.setMaterials(materials);
-                        objectLoader.load(
-                            MODEL_URL,
-                            (model) => {
-                                fitModelToScene(model);
-                                model.traverse((child) => {
-                                    if (!child.isMesh) return;
-                                    if (child.name === "Case_front") {
-                                        child.material = child.material.clone();
-                                        child.material.color = new THREE.Color(
-                                            0x1f1f1f,
-                                        );
-                                    }
-                                    child.castShadow = false;
-                                    child.receiveShadow = false;
-                                });
-                                parent.add(model);
-                                state.modelGroup = model;
-                                log(`loaded alpakka.obj from ${MODEL_URL}`);
-                            },
-                            undefined,
-                            (error) => {
-                                log(
-                                    `obj load failed: ${error?.message || "unknown error"}`,
-                                );
-                            },
-                        );
+                const objectLoader = new OBJLoader();
+                objectLoader.load(
+                    MODEL_URL,
+                    (model) => {
+                        fitModelToScene(model);
+                        model.traverse((child) => {
+                            if (!child.isMesh) return;
+                            const color =
+                                child.name === "Case_front"
+                                    ? 0x1f1f1f
+                                    : 0x8d939b;
+                            child.material = createControllerMaterial(color);
+                            child.castShadow = false;
+                            child.receiveShadow = false;
+                        });
+                        parent.add(model);
+                        state.modelGroup = model;
+                        log(`loaded alpakka.obj from ${MODEL_URL}`);
                     },
                     undefined,
                     (error) => {
                         log(
-                            `mtl load failed: ${error?.message || "unknown error"}`,
+                            `obj load failed: ${error?.message || "unknown error"}`,
                         );
                     },
                 );
