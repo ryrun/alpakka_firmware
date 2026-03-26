@@ -20,6 +20,7 @@
 #include "thumbstick.h"
 #include "touch.h"
 #include "imu.h"
+#include "led.h"
 
 uint8_t webusb_buffer[WEBUSB_BUFFER_SIZE] = {0,};
 uint16_t webusb_ptr_in = 0;
@@ -127,6 +128,7 @@ static CtrlInputStream webusb_input_stream_snapshot() {
     input_stream.accel_z = webusb_pack_accel(accel.z);
     input_stream.rotary = rotary;
     input_stream.profile_index = profile_get_active_index(false);
+    input_stream.led_mask = led_get_visible_mask();
 
     webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_A, button_is_pressed_physical(&(profile->a)));
     webusb_input_stream_button_set(&input_stream, CTRL_INPUT_BUTTON_B, button_is_pressed_physical(&(profile->b)));

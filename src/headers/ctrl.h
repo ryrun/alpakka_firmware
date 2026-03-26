@@ -175,6 +175,7 @@ typedef struct __packed _CtrlInputStream {
     int8_t rotary;
     uint8_t flags;
     uint8_t profile_index;
+    uint8_t led_mask;
 } CtrlInputStream;
 
 typedef struct __packed _CtrlProfileMeta {

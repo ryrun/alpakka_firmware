@@ -42,6 +42,7 @@ LEDMode led_mode = LED_MODE_IDLE;
 uint8_t idle_mask = 0;
 uint8_t engage_mask = 0;
 uint8_t blink_mask = 0;
+uint8_t visible_mask = 0;
 
 // Cycling.
 repeating_timer_t led_timer;
@@ -54,6 +55,10 @@ void led_set(uint8_t pin, bool state) {
     pwm_clear_irq(slice_num);
     uint8_t brightness = state ? (255 * CFG_LED_BRIGHTNESS) : 0;
     pwm_set_gpio_level(pin, brightness);
+    if (pin == PIN_LED_UP) visible_mask = bitmask_set(visible_mask, LED_UP, state);
+    if (pin == PIN_LED_RIGHT) visible_mask = bitmask_set(visible_mask, LED_RIGHT, state);
+    if (pin == PIN_LED_DOWN) visible_mask = bitmask_set(visible_mask, LED_DOWN, state);
+    if (pin == PIN_LED_LEFT) visible_mask = bitmask_set(visible_mask, LED_LEFT, state);
 }
 
 void led_show_idle() {
@@ -221,6 +226,10 @@ void led_board_blink() {
         NULL,
         &led_timer
     );
+}
+
+uint8_t led_get_visible_mask() {
+    return visible_mask;
 }
 
 void led_init_each(uint8_t pin) {
