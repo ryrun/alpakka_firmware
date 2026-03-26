@@ -1286,6 +1286,8 @@
                 linkPrimed: false,
                 touchActive: false,
                 highlightMix: 0.1,
+                wheelAngle: 0,
+                wheelRotationStep: 0.06,
                 yawAngle: 0,
                 pitchAngle: 0,
                 rollAngle: 0,
@@ -1493,6 +1495,23 @@
                     : baseColor;
                 hexagon.material.emissive.setHex(0x000000);
                 hexagon.material.color.copy(color);
+            }
+
+            function centerMeshPivot(mesh) {
+                if (!mesh?.geometry) return;
+                mesh.geometry.computeBoundingBox();
+                const bounds = mesh.geometry.boundingBox;
+                if (!bounds) return;
+                const center = new THREE.Vector3();
+                bounds.getCenter(center);
+                mesh.geometry.translate(-center.x, -center.y, -center.z);
+                mesh.position.add(center);
+            }
+
+            function updateWheelRotation() {
+                const wheel = state.sceneButtons.get("Wheel");
+                if (!wheel) return;
+                wheel.rotation.x = state.wheelAngle;
             }
 
             function resetPose() {
@@ -1844,6 +1863,13 @@
                                 child.userData.baseColor = color;
                                 state.sceneButtons.set("Hexagon", child);
                             }
+                            if (child.name === "Wheel") {
+                                centerMeshPivot(child);
+                                child.userData.baseColor = color;
+                                child.userData.baseRotationX = child.rotation.x;
+                                state.sceneButtons.set("Wheel", child);
+                                updateWheelRotation();
+                            }
                         });
                         parent.add(model);
                         state.modelGroup = model;
@@ -2088,6 +2114,10 @@
                 updateSceneLeds(ledMask);
                 state.touchActive = !!(flags & INPUT_FLAGS.touch);
                 updateTouchIndicator(state.touchActive);
+                if (rotary !== 0) {
+                    state.wheelAngle -= rotary * state.wheelRotationStep;
+                    updateWheelRotation();
+                }
                 ui.touchState.textContent = state.touchActive
                     ? "active"
                     : "inactive";
