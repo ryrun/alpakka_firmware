@@ -1289,6 +1289,7 @@
                 wheelAngle: 0,
                 wheelRotationStep: 0.06,
                 leftStickTiltMax: THREE.MathUtils.degToRad(12),
+                rightStickTiltMax: THREE.MathUtils.degToRad(16),
                 yawAngle: 0,
                 pitchAngle: 0,
                 rollAngle: 0,
@@ -1534,6 +1535,13 @@
                 if (!stick) return;
                 stick.rotation.x = y * state.leftStickTiltMax;
                 stick.rotation.z = -x * state.leftStickTiltMax;
+            }
+
+            function updateRightStickTilt(x, y) {
+                const stick = state.sceneButtons.get("r3");
+                if (!stick) return;
+                stick.rotation.x = y * state.rightStickTiltMax;
+                stick.rotation.z = -x * state.rightStickTiltMax;
             }
 
             function resetPose() {
@@ -1872,7 +1880,7 @@
                                 objectName,
                             ] of SCENE_BUTTON_NAMES) {
                                 if (child.name !== objectName) continue;
-                                if (buttonId === "l3") {
+                                if (buttonId === "l3" || buttonId === "r3") {
                                     setMeshPivotToBottom(child);
                                     child.userData.baseRotationX =
                                         child.rotation.x;
@@ -2133,6 +2141,7 @@
                 setStick(ui.leftStickDot, lx, ly);
                 setStick(ui.rightStickDot, displayRight.x, displayRight.y);
                 updateLeftStickTilt(lx, ly);
+                updateRightStickTilt(displayRight.x, displayRight.y);
                 ui.leftState.textContent = `x ${lx.toFixed(2)} / y ${ly.toFixed(2)} / r ${lRadius.toFixed(2)}`;
                 ui.rightState.textContent = `x ${displayRight.x.toFixed(2)} / y ${displayRight.y.toFixed(2)} / r ${displayRight.radius.toFixed(2)}`;
                 ui.dhatState.textContent = `x ${dhx.toFixed(2)} / y ${dhy.toFixed(2)}`;
