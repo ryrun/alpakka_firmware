@@ -187,6 +187,51 @@
                 display: block;
             }
 
+            #tab-3d-host.scene-expanded {
+                position: fixed;
+                inset: 0;
+                z-index: 1000;
+            }
+
+            #tab-3d-host.scene-expanded #tab-3d {
+                display: block !important;
+                height: 100%;
+            }
+
+            #tab-3d-host.scene-expanded .controller-shell {
+                min-height: 100vh;
+                height: 100vh;
+                padding: 0;
+                border: 0;
+                border-radius: 0;
+                box-shadow: none;
+                background: transparent;
+                backdrop-filter: none;
+            }
+
+            #tab-3d-host.scene-expanded .controller-body {
+                display: none;
+            }
+
+            #tab-3d-host.scene-expanded #scene-canvas {
+                border-radius: 0;
+            }
+
+            #scene-overlay-controls {
+                position: fixed;
+                top: 1rem;
+                right: 1rem;
+                z-index: 1100;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.18s ease;
+            }
+
+            #scene-overlay-controls.visible {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
             .controller-body {
                 position: absolute;
                 inset: 1rem;
@@ -479,177 +524,254 @@
     </head>
     <body>
         <main>
-            <section id="tab-3d" class="tab-panel active">
-                <section class="panel controller-shell">
-                    <div class="controller-scene">
-                        <canvas id="scene-canvas"></canvas>
+            <section class="hero">
+                <div class="hero-top">
+                    <div>
+                        <h1>Alpakka Input Stream</h1>
+                        <p>
+                            Physical buttons, triggers, sticks, touch, scroll
+                            wheel and gyro via WebUSB.
+                        </p>
                     </div>
-                    <div id="controller-body" class="controller-body">
-                        <div class="controller-outline"></div>
-
+                    <div class="pill">
+                        <span id="status-dot" class="dot"></span
+                        ><span id="status-text">Disconnected</span>
+                    </div>
+                </div>
+                <div class="controls">
+                    <div style="display: flex; gap: 0.7rem; flex-wrap: wrap">
+                        <button id="connect">Connect</button>
+                        <button id="toggle-stream" class="secondary" disabled>
+                            Start stream
+                        </button>
+                        <button id="reset-pose" class="secondary">
+                            Reset pose
+                        </button>
+                        <button id="disconnect" class="secondary" disabled>
+                            Stop
+                        </button>
+                        <button id="toggle-popout" class="secondary">
+                            Expand 3D
+                        </button>
                         <div
-                            id="dpad-up"
-                            class="control small"
-                            style="left: 10%; top: 34%"
+                            style="
+                                display: flex;
+                                gap: 0.6rem;
+                                flex-wrap: wrap;
+                                margin-left: 1.2rem;
+                            "
                         >
-                            Up
-                        </div>
-                        <div
-                            id="dpad-left"
-                            class="control small"
-                            style="left: 4.5%; top: 43%"
-                        >
-                            Left
-                        </div>
-                        <div
-                            id="dpad-right"
-                            class="control small"
-                            style="left: 15.5%; top: 43%"
-                        >
-                            Right
-                        </div>
-                        <div
-                            id="dpad-down"
-                            class="control small"
-                            style="left: 10%; top: 52%"
-                        >
-                            Down
-                        </div>
-
-                        <div
-                            id="a"
-                            class="control medium"
-                            style="right: 13%; top: 43%"
-                        >
-                            A
-                        </div>
-                        <div
-                            id="b"
-                            class="control medium"
-                            style="right: 20%; top: 36%"
-                        >
-                            B
-                        </div>
-                        <div
-                            id="x"
-                            class="control medium"
-                            style="right: 20%; top: 50%"
-                        >
-                            X
-                        </div>
-                        <div
-                            id="y"
-                            class="control medium"
-                            style="right: 27%; top: 43%"
-                        >
-                            Y
-                        </div>
-
-                        <div
-                            id="select-1"
-                            class="control wide"
-                            style="left: 35%; top: 27%"
-                        >
-                            Sel 1
-                        </div>
-                        <div
-                            id="start-1"
-                            class="control wide"
-                            style="right: 35%; top: 27%"
-                        >
-                            Start 1
-                        </div>
-                        <div
-                            id="select-2"
-                            class="control wide"
-                            style="left: 35%; top: 71%"
-                        >
-                            Sel 2
-                        </div>
-                        <div
-                            id="start-2"
-                            class="control wide"
-                            style="right: 35%; top: 71%"
-                        >
-                            Start 2
-                        </div>
-                        <div
-                            id="home"
-                            class="control medium"
-                            style="left: calc(50% - 1.7rem); top: 47%"
-                        >
-                            Home
-                        </div>
-
-                        <div
-                            id="l1"
-                            class="control wide"
-                            style="left: 8%; top: 8%"
-                        >
-                            L1
-                        </div>
-                        <div
-                            id="l2"
-                            class="control wide"
-                            style="left: 20%; top: 8%"
-                        >
-                            L2
-                        </div>
-                        <div
-                            id="r1"
-                            class="control wide"
-                            style="right: 20%; top: 8%"
-                        >
-                            R1
-                        </div>
-                        <div
-                            id="r2"
-                            class="control wide"
-                            style="right: 8%; top: 8%"
-                        >
-                            R2
-                        </div>
-                        <div
-                            id="l4"
-                            class="control wide"
-                            style="left: 8%; bottom: 8%"
-                        >
-                            L4
-                        </div>
-                        <div
-                            id="r4"
-                            class="control wide"
-                            style="right: 8%; bottom: 8%"
-                        >
-                            R4
-                        </div>
-
-                        <div class="stick" style="left: 25%; top: 42%">
-                            <div id="left-stick-dot" class="stick-dot"></div>
-                            <div class="radial-label">Left Stick</div>
-                        </div>
-                        <div class="stick" style="right: 25%; top: 42%">
-                            <div id="right-stick-dot" class="stick-dot"></div>
-                            <div class="radial-label">Right Stick</div>
-                        </div>
-
-                        <div
-                            id="l3"
-                            class="control small"
-                            style="left: 31.5%; top: 50%"
-                        >
-                            L3
-                        </div>
-                        <div
-                            id="r3"
-                            class="control small"
-                            style="right: 31.5%; top: 50%"
-                        >
-                            R3
+                            <button
+                                id="tab-3d-button"
+                                class="tab-button active"
+                                data-tab-target="tab-3d"
+                            >
+                                3D
+                            </button>
+                            <button
+                                id="tab-details-button"
+                                class="tab-button"
+                                data-tab-target="tab-details"
+                            >
+                                Details
+                            </button>
+                            <button
+                                id="tab-settings-button"
+                                class="tab-button"
+                                data-tab-target="tab-settings"
+                            >
+                                Settings
+                            </button>
                         </div>
                     </div>
-                </section>
+                </div>
             </section>
+
+            <div id="scene-overlay-controls">
+                <button id="restore-scene" class="secondary">
+                    Restore Layout
+                </button>
+            </div>
+
+            <div id="tab-3d-host">
+                <section id="tab-3d" class="tab-panel active">
+                    <section class="panel controller-shell">
+                        <div class="controller-scene">
+                            <canvas id="scene-canvas"></canvas>
+                        </div>
+                        <div id="controller-body" class="controller-body">
+                            <div class="controller-outline"></div>
+
+                            <div
+                                id="dpad-up"
+                                class="control small"
+                                style="left: 10%; top: 34%"
+                            >
+                                Up
+                            </div>
+                            <div
+                                id="dpad-left"
+                                class="control small"
+                                style="left: 4.5%; top: 43%"
+                            >
+                                Left
+                            </div>
+                            <div
+                                id="dpad-right"
+                                class="control small"
+                                style="left: 15.5%; top: 43%"
+                            >
+                                Right
+                            </div>
+                            <div
+                                id="dpad-down"
+                                class="control small"
+                                style="left: 10%; top: 52%"
+                            >
+                                Down
+                            </div>
+
+                            <div
+                                id="a"
+                                class="control medium"
+                                style="right: 13%; top: 43%"
+                            >
+                                A
+                            </div>
+                            <div
+                                id="start-1"
+                                class="control wide"
+                                style="right: 35%; top: 27%"
+                            >
+                                Start 1
+                            </div>
+                            <div
+                                id="b"
+                                class="control medium"
+                                style="right: 20%; top: 36%"
+                            >
+                                B
+                            </div>
+                            <div
+                                id="x"
+                                class="control medium"
+                                style="right: 20%; top: 50%"
+                            >
+                                X
+                            </div>
+                            <div
+                                id="y"
+                                class="control medium"
+                                style="right: 27%; top: 43%"
+                            >
+                                Y
+                            </div>
+
+                            <div
+                                id="select-1"
+                                class="control wide"
+                                style="left: 35%; top: 27%"
+                            >
+                                Sel 1
+                            </div>
+                            <div
+                                id="select-2"
+                                class="control wide"
+                                style="left: 35%; top: 71%"
+                            >
+                                Sel 2
+                            </div>
+                            <div
+                                id="start-2"
+                                class="control wide"
+                                style="right: 35%; top: 71%"
+                            >
+                                Start 2
+                            </div>
+                            <div
+                                id="home"
+                                class="control medium"
+                                style="left: calc(50% - 1.7rem); top: 47%"
+                            >
+                                Home
+                            </div>
+
+                            <div
+                                id="l1"
+                                class="control wide"
+                                style="left: 8%; top: 8%"
+                            >
+                                L1
+                            </div>
+                            <div
+                                id="l2"
+                                class="control wide"
+                                style="left: 20%; top: 8%"
+                            >
+                                L2
+                            </div>
+                            <div
+                                id="r1"
+                                class="control wide"
+                                style="right: 20%; top: 8%"
+                            >
+                                R1
+                            </div>
+                            <div
+                                id="r2"
+                                class="control wide"
+                                style="right: 8%; top: 8%"
+                            >
+                                R2
+                            </div>
+                            <div
+                                id="l4"
+                                class="control wide"
+                                style="left: 8%; bottom: 8%"
+                            >
+                                L4
+                            </div>
+                            <div
+                                id="r4"
+                                class="control wide"
+                                style="right: 8%; bottom: 8%"
+                            >
+                                R4
+                            </div>
+
+                            <div class="stick" style="left: 25%; top: 42%">
+                                <div
+                                    id="left-stick-dot"
+                                    class="stick-dot"
+                                ></div>
+                                <div class="radial-label">Left Stick</div>
+                            </div>
+                            <div class="stick" style="right: 25%; top: 42%">
+                                <div
+                                    id="right-stick-dot"
+                                    class="stick-dot"
+                                ></div>
+                                <div class="radial-label">Right Stick</div>
+                            </div>
+
+                            <div
+                                id="l3"
+                                class="control small"
+                                style="left: 31.5%; top: 50%"
+                            >
+                                L3
+                            </div>
+                            <div
+                                id="r3"
+                                class="control small"
+                                style="right: 31.5%; top: 50%"
+                            >
+                                R3
+                            </div>
+                        </div>
+                    </section>
+                </section>
+            </div>
 
             <section id="tab-details" class="tab-panel">
                 <section class="details-layout">
@@ -1002,59 +1124,6 @@
                     </section>
                 </section>
             </section>
-
-            <section class="hero">
-                <div class="hero-top">
-                    <div class="pill">
-                        <span id="status-dot" class="dot"></span
-                        ><span id="status-text">Disconnected</span>
-                    </div>
-                </div>
-                <div class="controls">
-                    <div style="display: flex; gap: 0.7rem; flex-wrap: wrap">
-                        <button id="connect">Connect</button>
-                        <button id="toggle-stream" class="secondary" disabled>
-                            Start stream
-                        </button>
-                        <button id="reset-pose" class="secondary">
-                            Reset pose
-                        </button>
-                        <button id="disconnect" class="secondary" disabled>
-                            Stop
-                        </button>
-                        <div
-                            style="
-                                display: flex;
-                                gap: 0.6rem;
-                                flex-wrap: wrap;
-                                margin-left: 1.2rem;
-                            "
-                        >
-                            <button
-                                id="tab-3d-button"
-                                class="tab-button active"
-                                data-tab-target="tab-3d"
-                            >
-                                3D
-                            </button>
-                            <button
-                                id="tab-details-button"
-                                class="tab-button"
-                                data-tab-target="tab-details"
-                            >
-                                Details
-                            </button>
-                            <button
-                                id="tab-settings-button"
-                                class="tab-button"
-                                data-tab-target="tab-settings"
-                            >
-                                Settings
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
         </main>
 
         <script type="importmap">
@@ -1196,8 +1265,15 @@
                 toggleStream: document.getElementById("toggle-stream"),
                 resetPose: document.getElementById("reset-pose"),
                 disconnect: document.getElementById("disconnect"),
+                togglePopout: document.getElementById("toggle-popout"),
+                restoreScene: document.getElementById("restore-scene"),
                 tabButtons: document.querySelectorAll("[data-tab-target]"),
                 tabPanels: document.querySelectorAll(".tab-panel"),
+                tab3dHost: document.getElementById("tab-3d-host"),
+                tab3d: document.getElementById("tab-3d"),
+                sceneOverlayControls: document.getElementById(
+                    "scene-overlay-controls",
+                ),
                 interval: document.getElementById("interval"),
                 modelOffsetX: document.getElementById("model-offset-x"),
                 modelOffsetY: document.getElementById("model-offset-y"),
@@ -1277,6 +1353,9 @@
                 animationFrameId: null,
                 sceneTabActive: false,
                 resizeHandler: null,
+                resizeTargetWindow: window,
+                sceneExpanded: false,
+                sceneOverlayHideTimeoutId: null,
                 modelOffset: { x: 0, y: -1.55, z: -2 },
                 modelRotation: { x: 0, y: 0, z: 0 },
                 cameraPosition: { ...DEFAULT_CAMERA_POSITION },
@@ -1393,6 +1472,70 @@
             function setStatus(text, live = false) {
                 ui.statusText.textContent = text;
                 ui.statusDot.classList.toggle("live", live);
+            }
+
+            function bindSceneResizeWindow(targetWindow) {
+                if (state.resizeHandler && state.resizeTargetWindow) {
+                    state.resizeTargetWindow.removeEventListener(
+                        "resize",
+                        state.resizeHandler,
+                    );
+                }
+                state.resizeTargetWindow = targetWindow;
+                if (state.resizeHandler && state.resizeTargetWindow) {
+                    state.resizeTargetWindow.addEventListener(
+                        "resize",
+                        state.resizeHandler,
+                    );
+                }
+            }
+
+            function updateSceneExpandControls() {
+                ui.togglePopout.textContent = state.sceneExpanded
+                    ? "Restore 3D"
+                    : "Expand 3D";
+                ui.sceneOverlayControls.classList.toggle(
+                    "visible",
+                    state.sceneExpanded,
+                );
+            }
+
+            function showSceneOverlayControls() {
+                if (!state.sceneExpanded) return;
+                ui.sceneOverlayControls.classList.add("visible");
+                if (state.sceneOverlayHideTimeoutId != null) {
+                    window.clearTimeout(state.sceneOverlayHideTimeoutId);
+                }
+                state.sceneOverlayHideTimeoutId = window.setTimeout(() => {
+                    ui.sceneOverlayControls.classList.remove("visible");
+                    state.sceneOverlayHideTimeoutId = null;
+                }, 1400);
+            }
+
+            function restore3dLayout() {
+                state.sceneExpanded = false;
+                ui.tab3dHost.classList.remove("scene-expanded");
+                state.lastAnimationTs = 0;
+                state.resizeHandler?.();
+                updateSceneExpandControls();
+            }
+
+            function expand3dLayout() {
+                state.sceneExpanded = true;
+                ui.tab3dHost.classList.add("scene-expanded");
+                activateTab("tab-3d");
+                state.lastAnimationTs = 0;
+                state.resizeHandler?.();
+                updateSceneExpandControls();
+                showSceneOverlayControls();
+            }
+
+            function toggle3dPopup() {
+                if (state.sceneExpanded) {
+                    restore3dLayout();
+                } else {
+                    expand3dLayout();
+                }
             }
 
             function activateTab(targetId) {
@@ -1990,7 +2133,7 @@
                     state.animationFrameId = null;
                 }
                 if (state.resizeHandler) {
-                    window.removeEventListener("resize", state.resizeHandler);
+                    bindSceneResizeWindow(null);
                     state.resizeHandler = null;
                 }
                 if (state.scene) {
@@ -2017,6 +2160,7 @@
                 state.sceneButtons.clear();
                 state.sceneReady = false;
                 state.lastAnimationTs = 0;
+                state.resizeTargetWindow = window;
             }
 
             function initThreeScene() {
@@ -2078,7 +2222,7 @@
                 state.sceneReady = true;
                 state.resizeHandler = resizeScene;
                 resizeScene();
-                window.addEventListener("resize", state.resizeHandler);
+                bindSceneResizeWindow(window);
             }
 
             function applyGyroToScene(delta) {
@@ -2427,6 +2571,10 @@
 
             function cleanupApp() {
                 state.readLoopActive = false;
+                if (state.sceneOverlayHideTimeoutId != null) {
+                    window.clearTimeout(state.sceneOverlayHideTimeoutId);
+                    state.sceneOverlayHideTimeoutId = null;
+                }
                 disposeThreeScene();
                 if (state.device) {
                     disconnectDevice().catch(() => {});
@@ -2452,6 +2600,18 @@
             ui.resetPose.addEventListener("click", () => {
                 resetPose();
                 log("3d pose reset");
+            });
+
+            ui.togglePopout.addEventListener("click", () => {
+                toggle3dPopup();
+            });
+
+            ui.restoreScene.addEventListener("click", () => {
+                restore3dLayout();
+            });
+
+            window.addEventListener("mousemove", () => {
+                showSceneOverlayControls();
             });
 
             ui.tabButtons.forEach((button) => {
@@ -2549,6 +2709,7 @@
             initThreeScene();
             syncActiveColorFromInput();
             applyPoseState();
+            updateSceneExpandControls();
             activateTab("tab-3d");
             setStatus("Disconnected", false);
             log("ready");
