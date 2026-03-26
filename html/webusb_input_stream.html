@@ -1997,6 +1997,7 @@
                 const dhy = hasDedicatedDhat ? toSigned8(data[13]) / 127 : ry;
                 const lRadius = data[hasDedicatedDhat ? 14 : 12] / 255;
                 const rRadius = data[hasDedicatedDhat ? 15 : 13] / 255;
+                const dhatRadius = Math.min(1, Math.hypot(dhx, dhy));
                 const gyroX = toSigned16(
                     data[hasDedicatedDhat ? 16 : 14],
                     data[hasDedicatedDhat ? 17 : 15],
@@ -2025,7 +2026,7 @@
                 const flags = data[hasDedicatedDhat ? 29 : 27];
                 const ledMask = data[hasDedicatedDhat ? 31 : 29];
                 const right = { x: rx, y: ry, radius: rRadius };
-                const dhat = { x: dhx, y: dhy };
+                const dhat = { x: dhx, y: dhy, radius: dhatRadius };
                 const displayRight = getDisplayRightStick(right, dhat);
 
                 updateButtons(buttons);
