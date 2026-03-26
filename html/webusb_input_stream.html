@@ -952,6 +952,11 @@
                                     value="0"
                             /></label>
                         </div>
+                        <div class="group-color-row" style="margin-top: 0.9rem">
+                            <button id="reset-camera" class="secondary">
+                                Reset Camera
+                            </button>
+                        </div>
                         <p class="pose-note" style="margin-top: 0.9rem">
                             Use these values to tune the local viewer without
                             re-exporting the model.
@@ -1189,6 +1194,9 @@
             const DEFAULT_HIGHLIGHT_COLOR = "#ffffff";
             const DEFAULT_SCENE_BACKGROUND_COLOR = "#000000";
             const COLOR_STORAGE_KEY = "alpakka-webusb-colors";
+            const CAMERA_STORAGE_KEY = "alpakka-webusb-camera";
+            const DEFAULT_CAMERA_POSITION = { x: 0, y: 12, z: 0 };
+            const DEFAULT_CAMERA_TARGET = { x: 0, y: -1.55, z: 0 };
 
             const ui = {
                 connect: document.getElementById("connect"),
@@ -1210,6 +1218,7 @@
                 cameraLookX: document.getElementById("camera-look-x"),
                 cameraLookY: document.getElementById("camera-look-y"),
                 cameraLookZ: document.getElementById("camera-look-z"),
+                resetCamera: document.getElementById("reset-camera"),
                 groupCaseColor: document.getElementById("group-case-color"),
                 groupControlsColor: document.getElementById(
                     "group-controls-color",
@@ -1277,8 +1286,8 @@
                 resizeHandler: null,
                 modelOffset: { x: 0, y: -1.55, z: -2 },
                 modelRotation: { x: 0, y: 0, z: 0 },
-                cameraPosition: { x: 0, y: 12, z: 0 },
-                cameraTarget: { x: 0, y: -1.55, z: 0 },
+                cameraPosition: { ...DEFAULT_CAMERA_POSITION },
+                cameraTarget: { ...DEFAULT_CAMERA_TARGET },
                 gyroDeadzone: 24,
                 latestGyro: { x: 0, y: 0, z: 0 },
                 latestAccel: { x: 0, y: 0, z: 0 },
@@ -1621,6 +1630,7 @@
                 state.cameraTarget.z =
                     Number.parseFloat(ui.cameraLookZ.value) || 0;
                 applyCameraSettings();
+                saveCameraSettings();
             }
 
             function applyPoseState() {
@@ -1725,6 +1735,15 @@
                 });
             }
 
+            function applyCameraStateToInputs() {
+                ui.cameraX.value = String(state.cameraPosition.x);
+                ui.cameraY.value = String(state.cameraPosition.y);
+                ui.cameraZ.value = String(state.cameraPosition.z);
+                ui.cameraLookX.value = String(state.cameraTarget.x);
+                ui.cameraLookY.value = String(state.cameraTarget.y);
+                ui.cameraLookZ.value = String(state.cameraTarget.z);
+            }
+
             function saveColorSettings() {
                 const payload = {
                     groupColors: state.groupColors,
@@ -1736,6 +1755,19 @@
                 try {
                     window.localStorage.setItem(
                         COLOR_STORAGE_KEY,
+                        JSON.stringify(payload),
+                    );
+                } catch {}
+            }
+
+            function saveCameraSettings() {
+                const payload = {
+                    cameraPosition: state.cameraPosition,
+                    cameraTarget: state.cameraTarget,
+                };
+                try {
+                    window.localStorage.setItem(
+                        CAMERA_STORAGE_KEY,
                         JSON.stringify(payload),
                     );
                 } catch {}
@@ -1771,6 +1803,26 @@
                 } catch {}
             }
 
+            function loadCameraSettings() {
+                try {
+                    const raw = window.localStorage.getItem(CAMERA_STORAGE_KEY);
+                    if (!raw) return;
+                    const parsed = JSON.parse(raw);
+                    if (parsed.cameraPosition) {
+                        state.cameraPosition = {
+                            ...DEFAULT_CAMERA_POSITION,
+                            ...parsed.cameraPosition,
+                        };
+                    }
+                    if (parsed.cameraTarget) {
+                        state.cameraTarget = {
+                            ...DEFAULT_CAMERA_TARGET,
+                            ...parsed.cameraTarget,
+                        };
+                    }
+                } catch {}
+            }
+
             function resetColorSettings() {
                 state.groupColors = { ...DEFAULT_GROUP_COLORS };
                 state.elementColors = { ...DEFAULT_ELEMENT_COLORS };
@@ -1783,6 +1835,14 @@
                 ui.sceneCanvas.parentElement.style.background =
                     state.sceneBackgroundColor;
                 saveColorSettings();
+            }
+
+            function resetCameraSettings() {
+                state.cameraPosition = { ...DEFAULT_CAMERA_POSITION };
+                state.cameraTarget = { ...DEFAULT_CAMERA_TARGET };
+                applyCameraStateToInputs();
+                applyCameraSettings();
+                saveCameraSettings();
             }
 
             function getMaterialColorForName(name) {
@@ -2462,6 +2522,10 @@
                 resetColorSettings();
             });
 
+            ui.resetCamera.addEventListener("click", () => {
+                resetCameraSettings();
+            });
+
             ui.disconnect.addEventListener("click", async () => {
                 try {
                     await disconnectDevice();
@@ -2486,7 +2550,9 @@
             });
 
             loadColorSettings();
+            loadCameraSettings();
             applyColorStateToInputs();
+            applyCameraStateToInputs();
             initThreeScene();
             syncActiveColorFromInput();
             applyPoseState();
