@@ -479,66 +479,6 @@
     </head>
     <body>
         <main>
-            <section class="hero">
-                <div class="hero-top">
-                    <div>
-                        <h1>Alpakka Input Stream</h1>
-                        <p>
-                            Physical buttons, triggers, sticks, touch, scroll
-                            wheel and gyro via WebUSB.
-                        </p>
-                    </div>
-                    <div class="pill">
-                        <span id="status-dot" class="dot"></span
-                        ><span id="status-text">Disconnected</span>
-                    </div>
-                </div>
-                <div class="controls">
-                    <div style="display: flex; gap: 0.7rem; flex-wrap: wrap">
-                        <button id="connect">Connect</button>
-                        <button id="toggle-stream" class="secondary" disabled>
-                            Start stream
-                        </button>
-                        <button id="reset-pose" class="secondary">
-                            Reset pose
-                        </button>
-                        <button id="disconnect" class="secondary" disabled>
-                            Stop
-                        </button>
-                        <div
-                            style="
-                                display: flex;
-                                gap: 0.6rem;
-                                flex-wrap: wrap;
-                                margin-left: 1.2rem;
-                            "
-                        >
-                            <button
-                                id="tab-3d-button"
-                                class="tab-button active"
-                                data-tab-target="tab-3d"
-                            >
-                                3D
-                            </button>
-                            <button
-                                id="tab-details-button"
-                                class="tab-button"
-                                data-tab-target="tab-details"
-                            >
-                                Details
-                            </button>
-                            <button
-                                id="tab-settings-button"
-                                class="tab-button"
-                                data-tab-target="tab-settings"
-                            >
-                                Settings
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             <section id="tab-3d" class="tab-panel active">
                 <section class="panel controller-shell">
                     <div class="controller-scene">
@@ -1061,6 +1001,59 @@
                         </div>
                     </section>
                 </section>
+            </section>
+
+            <section class="hero">
+                <div class="hero-top">
+                    <div class="pill">
+                        <span id="status-dot" class="dot"></span
+                        ><span id="status-text">Disconnected</span>
+                    </div>
+                </div>
+                <div class="controls">
+                    <div style="display: flex; gap: 0.7rem; flex-wrap: wrap">
+                        <button id="connect">Connect</button>
+                        <button id="toggle-stream" class="secondary" disabled>
+                            Start stream
+                        </button>
+                        <button id="reset-pose" class="secondary">
+                            Reset pose
+                        </button>
+                        <button id="disconnect" class="secondary" disabled>
+                            Stop
+                        </button>
+                        <div
+                            style="
+                                display: flex;
+                                gap: 0.6rem;
+                                flex-wrap: wrap;
+                                margin-left: 1.2rem;
+                            "
+                        >
+                            <button
+                                id="tab-3d-button"
+                                class="tab-button active"
+                                data-tab-target="tab-3d"
+                            >
+                                3D
+                            </button>
+                            <button
+                                id="tab-details-button"
+                                class="tab-button"
+                                data-tab-target="tab-details"
+                            >
+                                Details
+                            </button>
+                            <button
+                                id="tab-settings-button"
+                                class="tab-button"
+                                data-tab-target="tab-settings"
+                            >
+                                Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </section>
         </main>
 
