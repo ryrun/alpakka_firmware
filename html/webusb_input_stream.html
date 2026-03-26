@@ -1417,8 +1417,8 @@
                 return value;
             }
 
-            function getDisplayRightStick(right) {
-                return right;
+            function getDisplayRightStick(right, dhat) {
+                return right.radius > 0.05 ? right : dhat;
             }
 
             function setStick(dot, x, y) {
@@ -2026,7 +2026,7 @@
                 const ledMask = data[hasDedicatedDhat ? 31 : 29];
                 const right = { x: rx, y: ry, radius: rRadius };
                 const dhat = { x: dhx, y: dhy };
-                const displayRight = getDisplayRightStick(right);
+                const displayRight = getDisplayRightStick(right, dhat);
 
                 updateButtons(buttons);
                 setStick(ui.leftStickDot, lx, ly);
