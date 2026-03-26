@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 typedef enum LEDMode_enum {
     LED_MODE_IDLE,
     LED_MODE_ENGAGE,
@@ -39,3 +41,4 @@ void led_show_cycle2();
 void led_show_cycle_step();
 void led_board_set(bool state);
 void led_board_blink();
+uint8_t led_get_visible_mask();
