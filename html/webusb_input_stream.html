@@ -1038,6 +1038,16 @@
                                     value="#ffffff"
                                 />Highlighting</label
                             >
+                            <label class="color-entry"
+                                ><input
+                                    id="highlight-mix"
+                                    type="number"
+                                    min="0"
+                                    max="1"
+                                    step="0.05"
+                                    value="0.1"
+                                />Hexagon Highlight Mixing</label
+                            >
                         </div>
                         <div class="group-color-row">
                             <button id="reset-colors" class="secondary">
@@ -1208,6 +1218,7 @@
                     "scene-background-color",
                 ),
                 highlightColor: document.getElementById("highlight-color"),
+                highlightMix: document.getElementById("highlight-mix"),
                 caseColorGrid: document.getElementById("case-color-grid"),
                 controlsColorGrid: document.getElementById(
                     "controls-color-grid",
@@ -1273,6 +1284,8 @@
                 latestAccel: { x: 0, y: 0, z: 0 },
                 lastGyroSampleTs: 0,
                 linkPrimed: false,
+                touchActive: false,
+                highlightMix: 0.1,
                 yawAngle: 0,
                 pitchAngle: 0,
                 rollAngle: 0,
@@ -1468,6 +1481,20 @@
                 }
             }
 
+            function updateTouchIndicator(active) {
+                const hexagon = state.sceneButtons.get("Hexagon");
+                if (!hexagon) return;
+                const baseColor = new THREE.Color(hexagon.userData.baseColor);
+                const color = active
+                    ? baseColor.lerp(
+                          new THREE.Color(state.highlightColor),
+                          state.highlightMix,
+                      )
+                    : baseColor;
+                hexagon.material.emissive.setHex(0x000000);
+                hexagon.material.color.copy(color);
+            }
+
             function resetPose() {
                 if (!state.controllerGroup) return;
                 state.yawAngle = 0;
@@ -1640,6 +1667,7 @@
                 ui.groupControlsColor.value = state.groupColors.controls;
                 ui.sceneBackgroundColor.value = state.sceneBackgroundColor;
                 ui.highlightColor.value = state.highlightColor;
+                ui.highlightMix.value = String(state.highlightMix);
                 MODEL_ELEMENTS.forEach((name) => {
                     const input = document.getElementById(
                         getElementInputId(name),
@@ -1654,6 +1682,7 @@
                     elementColors: state.elementColors,
                     sceneBackgroundColor: state.sceneBackgroundColor,
                     highlightColor: state.highlightColor,
+                    highlightMix: state.highlightMix,
                 };
                 try {
                     window.localStorage.setItem(
@@ -1687,6 +1716,9 @@
                     if (typeof parsed.highlightColor === "string") {
                         state.highlightColor = parsed.highlightColor;
                     }
+                    if (typeof parsed.highlightMix === "number") {
+                        state.highlightMix = clamp(parsed.highlightMix, 0, 1);
+                    }
                 } catch {}
             }
 
@@ -1695,8 +1727,10 @@
                 state.elementColors = { ...DEFAULT_ELEMENT_COLORS };
                 state.sceneBackgroundColor = DEFAULT_SCENE_BACKGROUND_COLOR;
                 state.highlightColor = DEFAULT_HIGHLIGHT_COLOR;
+                state.highlightMix = 0.1;
                 applyColorStateToInputs();
                 applyModelColors();
+                updateTouchIndicator(state.touchActive);
                 ui.sceneCanvas.parentElement.style.background =
                     state.sceneBackgroundColor;
                 saveColorSettings();
@@ -1735,6 +1769,12 @@
                 state.sceneBackgroundColor =
                     ui.sceneBackgroundColor.value || "#000000";
                 state.highlightColor = ui.highlightColor.value || "#ffffff";
+                state.highlightMix = clamp(
+                    Number.parseFloat(ui.highlightMix.value) || 0.1,
+                    0,
+                    1,
+                );
+                ui.highlightMix.value = state.highlightMix.toFixed(2);
                 document
                     .querySelectorAll(
                         "#case-color-grid input[type='color'], #controls-color-grid input[type='color']",
@@ -1744,6 +1784,7 @@
                             input.value;
                     });
                 applyModelColors();
+                updateTouchIndicator(state.touchActive);
                 ui.sceneCanvas.parentElement.style.background =
                     state.sceneBackgroundColor;
                 saveColorSettings();
@@ -1798,6 +1839,10 @@
                                 if (child.name !== objectName) continue;
                                 child.userData.baseColor = color;
                                 state.sceneButtons.set(objectName, child);
+                            }
+                            if (child.name === "Hexagon") {
+                                child.userData.baseColor = color;
+                                state.sceneButtons.set("Hexagon", child);
                             }
                         });
                         parent.add(model);
@@ -2041,8 +2086,11 @@
                     `D ${ledMask & LED_FLAGS.down ? 1 : 0} / ` +
                     `L ${ledMask & LED_FLAGS.left ? 1 : 0}`;
                 updateSceneLeds(ledMask);
-                ui.touchState.textContent =
-                    flags & INPUT_FLAGS.touch ? "active" : "inactive";
+                state.touchActive = !!(flags & INPUT_FLAGS.touch);
+                updateTouchIndicator(state.touchActive);
+                ui.touchState.textContent = state.touchActive
+                    ? "active"
+                    : "inactive";
                 ui.rotaryState.textContent = `${rotary}`;
                 ui.gyroX.textContent = `${gyroX}`;
                 ui.gyroY.textContent = `${gyroY}`;
@@ -2317,6 +2365,7 @@
                 ui.groupControlsColor,
                 ui.sceneBackgroundColor,
                 ui.highlightColor,
+                ui.highlightMix,
             ].forEach((input) => {
                 input.addEventListener("input", syncActiveColorFromInput);
             });
