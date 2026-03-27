@@ -47,11 +47,6 @@ static int8_t webusb_pack_axis(float value) {
     return (int8_t)(value * BIT_7);
 }
 
-static uint8_t webusb_pack_radius(float value) {
-    value = constrain(value, 0, 1);
-    return (uint8_t)(value * BIT_8);
-}
-
 static int16_t webusb_pack_gyro(double value) {
     value = constrain(value, -32767, 32767);
     return (int16_t)value;
@@ -129,8 +124,6 @@ static CtrlInputStream webusb_input_stream_snapshot() {
     input_stream.ry = webusb_pack_axis(right.y);
     input_stream.dhx = webusb_pack_axis(dhat.x);
     input_stream.dhy = webusb_pack_axis(dhat.y);
-    input_stream.l_radius = webusb_pack_radius(left.radius);
-    input_stream.r_radius = webusb_pack_radius(right.radius);
     input_stream.gyro_x = webusb_pack_gyro(gyro.x);
     input_stream.gyro_y = webusb_pack_gyro(gyro.y);
     input_stream.gyro_z = webusb_pack_gyro(gyro.z);

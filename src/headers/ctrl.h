@@ -169,8 +169,6 @@ typedef struct __packed _CtrlInputStream {
     int8_t ry;
     int8_t dhx;
     int8_t dhy;
-    uint8_t l_radius;
-    uint8_t r_radius;
     int16_t gyro_x;
     int16_t gyro_y;
     int16_t gyro_z;
