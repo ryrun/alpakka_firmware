@@ -30,6 +30,8 @@ double offset_accel_1_y;
 double offset_accel_1_z;
 static Vector last_gyro = {0, 0, 0};
 static uint32_t last_gyro_iteration = 0;
+static Vector last_accel = {0, 0, 0};
+static uint32_t last_accel_iteration = 0;
 
 void imu_channel_select() {
     Config *config = config_read();
@@ -161,11 +163,21 @@ uint32_t imu_get_last_gyro_iteration() {
 Vector imu_read_accel() {
     Vector accel0 = imu_read_accel_bits(IMU0);
     Vector accel1 = imu_read_accel_bits(IMU1);
-    return (Vector){
+    last_accel = (Vector){
         (accel0.x + accel1.x) / 2,
         (accel0.y + accel1.y) / 2,
         (accel0.z + accel1.z) / 2
     };
+    last_accel_iteration = loop_get_iteration();
+    return last_accel;
+}
+
+Vector imu_get_last_accel() {
+    return last_accel;
+}
+
+uint32_t imu_get_last_accel_iteration() {
+    return last_accel_iteration;
 }
 
 void imu_calibrate_single(uint8_t cs, bool mode, double* x, double* y, double* z) {

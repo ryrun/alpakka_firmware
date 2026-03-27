@@ -33,5 +33,7 @@ Vector imu_read_gyro();
 Vector imu_get_last_gyro();
 uint32_t imu_get_last_gyro_iteration();
 Vector imu_read_accel();
+Vector imu_get_last_accel();
+uint32_t imu_get_last_accel_iteration();
 void imu_load_calibration();
 void imu_calibrate();
