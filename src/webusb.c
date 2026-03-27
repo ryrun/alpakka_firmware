@@ -162,8 +162,6 @@ static CtrlInputStream webusb_input_stream_snapshot() {
 
     input_stream.flags = bitmask_set(input_stream.flags, CTRL_INPUT_FLAG_TOUCH, touch);
     input_stream.flags = bitmask_set(input_stream.flags, CTRL_INPUT_FLAG_ROTARY, rotary != 0);
-    input_stream.flags = bitmask_set(input_stream.flags, CTRL_INPUT_FLAG_LEFT_MOVED, left.radius > 0.05);
-    input_stream.flags = bitmask_set(input_stream.flags, CTRL_INPUT_FLAG_RIGHT_MOVED, right.radius > 0.05);
     input_stream.flags = bitmask_set(
         input_stream.flags,
         CTRL_INPUT_FLAG_GYRO_ACTIVE,

@@ -257,11 +257,9 @@ Button bit assignments:
 Flag bit assignments:
 - `1 << 0`: touch engaged
 - `1 << 1`: recent rotary activity
-- `1 << 2`: left stick moved
-- `1 << 3`: right stick moved
-- `1 << 4`: gyro active
-- `1 << 5`: wired mode
-- `1 << 6`: wireless mode
+- `1 << 2`: gyro active
+- `1 << 3`: wired mode
+- `1 << 4`: wireless mode
 
 ## Config GET message
 Request the current value of some specific configuration parameter.
