@@ -846,15 +846,11 @@
                         </div>
                         <div class="data-card">
                             <strong>Left Stick</strong>
-                            <div id="left-state" class="mono">
-                                x 0 / y 0 / r 0
-                            </div>
+                            <div id="left-state" class="mono">x 0 / y 0</div>
                         </div>
                         <div class="data-card">
                             <strong>Right Stick</strong>
-                            <div id="right-state" class="mono">
-                                x 0 / y 0 / r 0
-                            </div>
+                            <div id="right-state" class="mono">x 0 / y 0</div>
                         </div>
                         <div class="data-card">
                             <strong>Dhat</strong>
@@ -2297,40 +2293,39 @@
                 const ly = toSigned8(data[9]) / 127;
                 const rx = toSigned8(data[10]) / 127;
                 const ry = toSigned8(data[11]) / 127;
-                const hasDedicatedDhat = payloadLength >= 27;
+                const hasDedicatedDhat = payloadLength >= 26;
                 const dhx = hasDedicatedDhat ? toSigned8(data[12]) / 127 : rx;
                 const dhy = hasDedicatedDhat ? toSigned8(data[13]) / 127 : ry;
-                const lRadius = data[hasDedicatedDhat ? 14 : 12] / 255;
-                const rRadius = data[hasDedicatedDhat ? 15 : 13] / 255;
+                const rightRadius = Math.min(1, Math.hypot(rx, ry));
                 const dhatRadius = Math.min(1, Math.hypot(dhx, dhy));
                 const gyroX = toSigned16(
+                    data[hasDedicatedDhat ? 14 : 12],
+                    data[hasDedicatedDhat ? 15 : 13],
+                );
+                const gyroY = toSigned16(
                     data[hasDedicatedDhat ? 16 : 14],
                     data[hasDedicatedDhat ? 17 : 15],
                 );
-                const gyroY = toSigned16(
+                const gyroZ = toSigned16(
                     data[hasDedicatedDhat ? 18 : 16],
                     data[hasDedicatedDhat ? 19 : 17],
                 );
-                const gyroZ = toSigned16(
+                const accelX = toSigned16(
                     data[hasDedicatedDhat ? 20 : 18],
                     data[hasDedicatedDhat ? 21 : 19],
                 );
-                const accelX = toSigned16(
+                const accelY = toSigned16(
                     data[hasDedicatedDhat ? 22 : 20],
                     data[hasDedicatedDhat ? 23 : 21],
                 );
-                const accelY = toSigned16(
+                const accelZ = toSigned16(
                     data[hasDedicatedDhat ? 24 : 22],
                     data[hasDedicatedDhat ? 25 : 23],
                 );
-                const accelZ = toSigned16(
-                    data[hasDedicatedDhat ? 26 : 24],
-                    data[hasDedicatedDhat ? 27 : 25],
-                );
-                const rotary = toSigned8(data[hasDedicatedDhat ? 28 : 26]);
-                const flags = data[hasDedicatedDhat ? 29 : 27];
-                const ledMask = data[hasDedicatedDhat ? 31 : 29];
-                const right = { x: rx, y: ry, radius: rRadius };
+                const rotary = toSigned8(data[hasDedicatedDhat ? 26 : 24]);
+                const flags = data[hasDedicatedDhat ? 27 : 25];
+                const ledMask = data[hasDedicatedDhat ? 29 : 27];
+                const right = { x: rx, y: ry, radius: rightRadius };
                 const dhat = { x: dhx, y: dhy, radius: dhatRadius };
                 const displayRight = getDisplayRightStick(right, dhat);
 
@@ -2339,8 +2334,8 @@
                 setStick(ui.rightStickDot, displayRight.x, displayRight.y);
                 updateLeftStickTilt(lx, ly);
                 updateRightStickTilt(displayRight.x, displayRight.y);
-                ui.leftState.textContent = `x ${lx.toFixed(2)} / y ${ly.toFixed(2)} / r ${lRadius.toFixed(2)}`;
-                ui.rightState.textContent = `x ${displayRight.x.toFixed(2)} / y ${displayRight.y.toFixed(2)} / r ${displayRight.radius.toFixed(2)}`;
+                ui.leftState.textContent = `x ${lx.toFixed(2)} / y ${ly.toFixed(2)}`;
+                ui.rightState.textContent = `x ${displayRight.x.toFixed(2)} / y ${displayRight.y.toFixed(2)}`;
                 ui.dhatState.textContent = `x ${dhx.toFixed(2)} / y ${dhy.toFixed(2)}`;
                 ui.ledState.textContent =
                     `U ${ledMask & LED_FLAGS.up ? 1 : 0} / ` +
