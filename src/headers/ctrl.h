@@ -153,11 +153,9 @@ typedef enum CtrlInputButtonBit_enum {
 typedef enum CtrlInputFlag_enum {
     CTRL_INPUT_FLAG_TOUCH = 1 << 0,
     CTRL_INPUT_FLAG_ROTARY = 1 << 1,
-    CTRL_INPUT_FLAG_LEFT_MOVED = 1 << 2,
-    CTRL_INPUT_FLAG_RIGHT_MOVED = 1 << 3,
-    CTRL_INPUT_FLAG_GYRO_ACTIVE = 1 << 4,
-    CTRL_INPUT_FLAG_WIRED = 1 << 5,
-    CTRL_INPUT_FLAG_WIRELESS = 1 << 6,
+    CTRL_INPUT_FLAG_GYRO_ACTIVE = 1 << 2,
+    CTRL_INPUT_FLAG_WIRED = 1 << 3,
+    CTRL_INPUT_FLAG_WIRELESS = 1 << 4,
 } CtrlInputFlag;
 
 typedef struct __packed _CtrlInputStream {
