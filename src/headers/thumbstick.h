@@ -8,6 +8,9 @@
 #define THUMBSTICK_BASELINE_SATURATION 1.65
 #define THUMBSTICK_ADDITIONAL_DEADZONE_FOR_BUTTONS 0.05
 
+#define TS_ROTATION_SMOOTH_SPEED 30
+#define TS_ROTATION_SMOOTH_ANGLE 1.0
+
 typedef enum ThumbstickMode_enum {
     THUMBSTICK_MODE_OFF,
     THUMBSTICK_MODE_4DIR,
@@ -49,6 +52,14 @@ typedef enum Dir8_enum {
     DIR8_DOWN_LEFT,
     DIR8_DOWN_RIGHT,
 } Dir8;
+
+typedef struct _RotState {
+    float angle_smooth;
+    float diff_smooth;
+    float last_angle;
+    uint8_t action;
+    bool has_action;
+} RotState;
 
 typedef struct Thumbstick_struct Thumbstick;
 struct Thumbstick_struct {
@@ -93,6 +104,7 @@ struct Thumbstick_struct {
     float rot_rws;
     float rot_sens_axis;
     float rot_smoothing;
+    RotState rot;
     Button left;
     Button right;
     Button up;

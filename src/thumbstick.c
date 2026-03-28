@@ -342,7 +342,6 @@ void Thumbstick__report_4dir_dir(Thumbstick *self, Button *direction, float valu
 }
 
 void Thumbstick__report_4dir_axis(Thumbstick *self, uint8_t axis, float value) {
-    if (value == 0) return;
     // Gamepad.
     if (hid_is_gamepad_axis(axis)) {
         if      (axis == GAMEPAD_AXIS_LX)     hid_gamepad_axis(LX, value);
@@ -405,51 +404,62 @@ void Thumbstick__report_rotation(
     ThumbstickPosition pos,
     float raw_radius
 ) {
-    static float angle_smooth = 0;
-    static float last_angle = 0;
-    static uint8_t action = 0;
-    static bool has_action = false;
     if (pos.radius == 0) {
-        angle_smooth = 0;
-        has_action = false;
+        self->rot.angle_smooth = 0;
+        self->rot.diff_smooth = 0;
+        self->rot.action = KEY_NONE;
+        self->rot.has_action = false;
     } else {
-        if (!has_action) {
+        if (!self->rot.has_action) {
             // Find the action and entry angle, by walking (clockwise or
             // anticlockwise) from the initial angle to the first cardinal with
             // a defined action.
             uint8_t actions_cw[4] = {self->up.actions[0], self->left.actions[0], self->down.actions[0], self->right.actions[0]};
-            uint8_t actions_acw[4] = {self->right.actions[0], self->down.actions[0], self->left.actions[0], self->up.actions[0]};
+            uint8_t actions_acw[4] = {self->up.actions[0], self->right.actions[0], self->down.actions[0], self->left.actions[0]};
             uint8_t *actions = self->rot_anticlockwise ? actions_acw : actions_cw;
             float angle_360 = pos.angle > 0 ? pos.angle : pos.angle+360;  // Offset from -180:180 to 0:360.
             uint8_t quarter = floorf(angle_360 / 90);  // Get initial angle quarter 0|1|2|3.
             for(uint8_t i=0; i<4; i++) {
                 uint8_t offset = (quarter + i) % 4;  // Wrappable quarter offset index to iterate quarters.
                 if (actions[offset]) {
-                    action = actions[offset];
-                    has_action = true;
+                    self->rot.action = actions[offset];
+                    self->rot.has_action = true;
                     if (self->rot_any_angle) {
-                        last_angle = pos.angle;  // Use initial angle (ignore action cardinal).
+                        self->rot.last_angle = pos.angle;  // Use initial angle (ignore action cardinal).
                     } else {
-                        last_angle = ((quarter + i) % 4) * 90;  // Cardinal entry angle of defined action.
-                        if (last_angle > 180) last_angle -= 360;  // Offset from 0:360 to -180:180.
+                        self->rot.last_angle = ((quarter + i) % 4) * 90;  // Cardinal entry angle of defined action.
+                        if (self->rot.last_angle > 180) self->rot.last_angle -= 360;  // Offset from 0:360 to -180:180.
                     }
                     break;
                 }
             }
         }
-        if (angle_smooth == 0) angle_smooth = pos.angle;
-        float diff_angle = pos.angle - last_angle;
-        float angle = pos.angle - roundf(diff_angle / 360) * 360;  // Unwrap.
-        angle_smooth = smooth(angle_smooth, angle, self->rot_smoothing);
-        float diff_angle_smooth = angle_smooth - last_angle;
-        last_angle = angle_smooth;
-        if (hid_is_mouse_axis(action)) {
-            float mouse_value = diff_angle_smooth * self->sens_mouse / 360.0;
-            if (self->rot_anticlockwise) mouse_value = -mouse_value;
-            if (action == MOUSE_X)     hid_mouse_move( mouse_value, 0);
-            if (action == MOUSE_X_NEG) hid_mouse_move(-mouse_value, 0);
-            if (action == MOUSE_Y)     hid_mouse_move(0,  mouse_value);
-            if (action == MOUSE_Y_NEG) hid_mouse_move(0, -mouse_value);
+        float angle = pos.angle;
+        if (self->rot.angle_smooth == 0) self->rot.angle_smooth = angle;
+        if (self->rot.angle_smooth >  90 && angle < -90) angle += 360;
+        if (self->rot.angle_smooth < -90 && angle >  90) angle -= 360;
+        float smooth_angle = fabsf(self->rot.diff_smooth) / TS_ROTATION_SMOOTH_ANGLE;
+        float smooth_factor = interpolate(self->rot_smoothing, 1, smooth_angle);
+        self->rot.angle_smooth = wrap_angle(smooth(self->rot.angle_smooth, angle, smooth_factor));
+        float diff_angle = wrap_angle(self->rot.angle_smooth - self->rot.last_angle);
+        if (self->rot_anticlockwise) diff_angle = -diff_angle;
+        self->rot.diff_smooth = smooth(self->rot.diff_smooth, diff_angle, TS_ROTATION_SMOOTH_SPEED);
+        // Mouse.
+        if (hid_is_mouse_axis(self->rot.action)) {
+            float value = diff_angle * self->sens_mouse / 360.0f;
+            if (self->rot_anticlockwise) value = -value;
+            if      (self->rot.action == MOUSE_X)     hid_mouse_move( value, 0);
+            else if (self->rot.action == MOUSE_X_NEG) hid_mouse_move(-value, 0);
+            else if (self->rot.action == MOUSE_Y)     hid_mouse_move(0,  value);
+            else if (self->rot.action == MOUSE_Y_NEG) hid_mouse_move(0, -value);
+            self->rot.last_angle = self->rot.angle_smooth;
+        }
+        // Gamepad.
+        else if (hid_is_gamepad_axis(self->rot.action)) {
+            if (diff_angle < 0) diff_angle = 360;
+            float value = diff_angle * (self->rot_sens_axis / 100.0) / 360.0;
+            value = constrain(value, 0.0, 1.0);
+            hid_gamepad_axis(self->rot.action-GAMEPAD_AXIS_INDEX, value);
         }
     }
 }
