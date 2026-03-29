@@ -19,7 +19,6 @@
 #define min(a, b)  ((a < b) ? a : b)
 #define max(a, b)  ((a > b) ? a : b)
 #define constrain(value, low, high)  max(low, min(high, value))
-#define is_between(value, low, high)  ( (value >= low) && (value <= high) )
 #define sign(value)  ( value >= 0 ? 1 : -1 )
 #define smooth(smoothed, value, factor)  ( (smoothed*factor + value) / (factor+1) )
 
@@ -76,5 +75,6 @@ void print_array(uint8_t *array, uint8_t len);
 
 void print_array(uint8_t *array, uint8_t len);
 uint8_t bitmask_set(uint8_t bitmask, uint8_t flag, bool value);
+bool is_between(float value, float a, float b);
 float wrap_angle(float angle);
 float interpolate(float a, float b, float factor);

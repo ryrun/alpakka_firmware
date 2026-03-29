@@ -29,6 +29,14 @@ uint8_t bitmask_set(uint8_t bitmask, uint8_t flag, bool value) {
     return bitmask;
 }
 
+inline bool is_between(float value, float a, float b) {
+    if (a < b) {
+        return value >= a && value <= b;
+    } else {
+        return value >= b && value <= a;
+    }
+}
+
 inline float wrap_angle(float angle) {
     if (angle > 180.0f) return angle - 360.0f;
     if (angle < -180.0f) return angle + 360.0f;

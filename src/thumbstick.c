@@ -171,7 +171,7 @@ void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t ind
         (bool)ctrl_thumbstick.rot_any_angle,
         (bool)ctrl_thumbstick.rot_rws_enabled,
         ctrl_thumbstick.rot_rws * CTRL_STICK_RWS_FACTOR,
-        ctrl_thumbstick.rot_sens_axis * CTRL_STICK_SENS_AXIS_FACTOR,
+        (ctrl_thumbstick.rot_sens_axis * CTRL_STICK_SENS_AXIS_FACTOR) / 100.0,
         ctrl_thumbstick.rot_smoothing
     );
     // Safe defaults.
@@ -414,20 +414,20 @@ void Thumbstick__report_rotation(
             // Find the action and entry angle, by walking (clockwise or
             // anticlockwise) from the initial angle to the first cardinal with
             // a defined action.
-            uint8_t actions_cw[4] = {self->up.actions[0], self->left.actions[0], self->down.actions[0], self->right.actions[0]};
-            uint8_t actions_acw[4] = {self->up.actions[0], self->right.actions[0], self->down.actions[0], self->left.actions[0]};
-            uint8_t *actions = self->rot_anticlockwise ? actions_acw : actions_cw;
+            uint8_t actions[4] = {self->up.actions[0], self->right.actions[0], self->down.actions[0], self->left.actions[0]};
             // Determine entry quarter.
             float angle_360 = pos.angle > 0 ? pos.angle : pos.angle+360;  // Reframe -180:180 to 0:360.
             uint8_t quarter = floorf(angle_360 / 90);  // Get initial angle quarter 0|1|2|3.
             // Walk in circle.
             for(uint8_t i=0; i<4; i++) {
-                uint8_t offset = (quarter + i) % 4;
+                uint8_t ii = self->rot_anticlockwise ? -i : i;
+                uint8_t offset = (quarter + ii) % 4;
                 if (actions[offset]) {
                     self->rot.action = actions[offset];
                     self->rot.has_action = true;
-                    self->rot.entry_angle = ((quarter + i) % 4) * 90;  // Cardinal entry angle of defined action.
-                    if (self->rot.entry_angle > 180) self->rot.entry_angle -= 360;  // Reframe 0:360 to -180:180.
+                    self->rot.entry_angle = ((quarter + ii) % 4) * 90;  // Cardinal entry angle of defined action.
+                    if (self->rot.entry_angle >  180) self->rot.entry_angle -= 360;  // Reframe 0:360 to -180:180.
+                    if (self->rot.entry_angle < -180) self->rot.entry_angle += 360;  // Reframe 0:360 to -180:180.
                     self->rot.last_angle = self->rot_any_angle ? pos.angle : self->rot.entry_angle;
                     break;
                 }
@@ -444,9 +444,9 @@ void Thumbstick__report_rotation(
         self->rot.angle_smooth = wrap_angle(smooth(self->rot.angle_smooth, angle, smooth_factor));
         // Deadzone.
         bool is_in_deadzone = is_between(
-            fabs(self->rot.angle_smooth),
-            fabs(self->rot.entry_angle) - self->rot_entry_deadzone,
-            fabs(self->rot.entry_angle) + self->rot_entry_deadzone
+            (self->rot.entry_angle != 180) ? self->rot.angle_smooth : fabs(self->rot.angle_smooth),
+            self->rot.entry_angle - self->rot_entry_deadzone,
+            self->rot.entry_angle + self->rot_entry_deadzone
         );
         if (is_in_deadzone) self->rot.angle_smooth = 0;
         // Delta.
@@ -465,11 +465,12 @@ void Thumbstick__report_rotation(
         }
         // Gamepad.
         else if (hid_is_gamepad_axis(self->rot.action)) {
-            if (is_in_deadzone) delta_angle = 0;
-            if (delta_angle < 0) delta_angle = 360;
-            float value = delta_angle * (self->rot_sens_axis / 100.0) / 360.0;
+            delta_angle = delta_angle > 0 ? delta_angle : delta_angle+360.0f;  // Reframe -0.5:0.5 to 0:1.
+            float value = delta_angle * self->rot_sens_axis / 360.0;
             value = constrain(value, 0.0, 1.0);
+            if (is_in_deadzone) value = 0;
             hid_gamepad_axis(self->rot.action-GAMEPAD_AXIS_INDEX, value);
+            // info("G %.2f\n", value);
         }
     }
 }
