@@ -55,7 +55,8 @@ typedef enum Dir8_enum {
 
 typedef struct _RotState {
     float angle_smooth;
-    float diff_smooth;
+    float delta_smooth;
+    float entry_angle;
     float last_angle;
     uint8_t action;
     bool has_action;
