@@ -171,7 +171,7 @@ void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t ind
         (bool)ctrl_thumbstick.rot_any_angle,
         (bool)ctrl_thumbstick.rot_rws_enabled,
         ctrl_thumbstick.rot_rws * CTRL_STICK_RWS_FACTOR,
-        (ctrl_thumbstick.rot_sens_axis * CTRL_STICK_SENS_AXIS_FACTOR) / 100.0,
+        ctrl_thumbstick.rot_sens_axis * CTRL_STICK_SENS_AXIS_FACTOR,
         ctrl_thumbstick.rot_smoothing
     );
     // Safe defaults.
@@ -455,7 +455,14 @@ void Thumbstick__report_rotation(
         self->rot.delta_smooth = smooth(self->rot.delta_smooth, delta_angle, TS_ROTATION_SMOOTH_SPEED);
         // Mouse.
         if (hid_is_mouse_axis(self->rot.action)) {
-            float value = delta_angle * self->sens_mouse / 360.0f;
+            float pixels_per_degree;
+            if (self->rot_rws_enabled) {
+                float gyro_sens = config_get_mouse_sens_value(config_get_mouse_sens_preset());
+                pixels_per_degree = ((gyro_sens * 1920) / 45) / self->rot_rws;
+            } else {
+                pixels_per_degree = self->sens_mouse / 360.0f;
+            }
+            float value = delta_angle * pixels_per_degree;
             if (self->rot_anticlockwise) value = -value;
             if      (self->rot.action == MOUSE_X)     hid_mouse_move( value, 0);
             else if (self->rot.action == MOUSE_X_NEG) hid_mouse_move(-value, 0);
