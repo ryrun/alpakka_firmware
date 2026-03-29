@@ -76,3 +76,5 @@ void print_array(uint8_t *array, uint8_t len);
 
 void print_array(uint8_t *array, uint8_t len);
 uint8_t bitmask_set(uint8_t bitmask, uint8_t flag, bool value);
+float wrap_angle(float angle);
+float interpolate(float a, float b, float factor);
