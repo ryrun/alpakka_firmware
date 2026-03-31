@@ -2008,8 +2008,9 @@
                 state.sceneBackgroundColor =
                     ui.sceneBackgroundColor.value || "#000000";
                 state.highlightColor = ui.highlightColor.value || "#ffffff";
+                const highlightMix = Number.parseFloat(ui.highlightMix.value);
                 state.highlightMix = clamp(
-                    Number.parseFloat(ui.highlightMix.value) || 0.05,
+                    Number.isNaN(highlightMix) ? 0.05 : highlightMix,
                     0,
                     1,
                 );
