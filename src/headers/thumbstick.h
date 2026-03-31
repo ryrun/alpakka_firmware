@@ -58,8 +58,10 @@ typedef struct _RotState {
     float delta_smooth;
     float entry_angle;
     float last_angle;
+    float tracked_angle;
     uint8_t action;
     bool has_action;
+    bool action_is_secondary;
 } RotState;
 
 typedef struct Thumbstick_struct Thumbstick;
