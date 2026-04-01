@@ -53,7 +53,7 @@ typedef enum Dir8_enum {
     DIR8_DOWN_RIGHT,
 } Dir8;
 
-typedef struct _RotState {
+typedef struct _RotationState {
     float angle_smooth;
     float delta_smooth;
     float entry_angle;
@@ -62,7 +62,10 @@ typedef struct _RotState {
     uint8_t action;
     bool has_action;
     bool action_is_secondary;
-} RotState;
+    bool did_flick;
+    float delayed_angle;
+    float delayed_action;
+} RotationState;
 
 typedef struct Thumbstick_struct Thumbstick;
 struct Thumbstick_struct {
@@ -107,7 +110,7 @@ struct Thumbstick_struct {
     float rot_rws;
     float rot_sens_axis;
     float rot_smoothing;
-    RotState rot;
+    RotationState rot;
     Button left;
     Button right;
     Button up;
@@ -160,3 +163,6 @@ void thumbstick_calibrate();
 void thumbstick_update_deadzone();
 void thumbstick_update_smooth_samples();
 void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t index);
+
+// thumbstick/rotation.c
+void Thumbstick__report_rotation(Thumbstick *self, ThumbstickPosition pos, float raw_radius);
