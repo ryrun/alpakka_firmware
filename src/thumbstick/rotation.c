@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2022, Input Labs Oy.
+
+/*
+This file contains the logic for the thumbstick rotation mode.
+*/
 
 #include "thumbstick.h"
 #include "config.h"
@@ -84,12 +90,11 @@ static void report_gamepad(Thumbstick *ts, bool is_in_deadzone) {
 }
 
 static void apply_flick_time(Thumbstick *ts) {
-    if (fabsf(ts->rot.flick_angle) > 0.1f) {
-        float factor = 0.1f;
-        float delta_angle = ts->rot.flick_angle * factor;
-        ts->rot.flick_angle *= 1-factor;
-        report_mouse(ts, delta_angle, ts->rot.flick_action, false, false);
-    }
+    if (fabsf(ts->rot.flick_angle) < 0.1f) return;
+    float factor = 0.1f;
+    float delta_angle = ts->rot.flick_angle * factor;
+    ts->rot.flick_angle *= 1-factor;
+    report_mouse(ts, delta_angle, ts->rot.flick_action, false, false);
 }
 
 static void reset_state(Thumbstick *ts) {
@@ -106,11 +111,16 @@ void Thumbstick__report_rotation(Thumbstick *self, ThumbstickPosition pos, float
     /*
     Thumbstick method for reporting rotation mode, extracted to this file.
     */
+    // Push button.
+    self->push.report(&self->push);
+    // Smoothed flick (if previously set).
     apply_flick_time(self);
+    // Reset state.
     if (pos.radius == 0) {
         reset_state(self);
         return;
     }
+    // Find action (once) when stick moves to perimeter.
     if (!self->rot.has_action) find_action(self, pos);
     // Determine angle.
     float angle = pos.angle;
