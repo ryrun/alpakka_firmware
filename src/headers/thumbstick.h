@@ -63,8 +63,8 @@ typedef struct _RotationState {
     bool has_action;
     bool action_is_secondary;
     bool did_flick;
-    float delayed_angle;
-    float delayed_action;
+    float flick_angle;
+    float flick_action;
 } RotationState;
 
 typedef struct Thumbstick_struct Thumbstick;
