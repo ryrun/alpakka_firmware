@@ -65,6 +65,7 @@ typedef struct _RotationState {
     bool did_flick;
     float flick_angle;
     float flick_action;
+    float flick_time_factor;
 } RotationState;
 
 typedef struct Thumbstick_struct Thumbstick;
@@ -110,6 +111,7 @@ struct Thumbstick_struct {
     float rot_rws;
     float rot_sens_axis;
     float rot_smoothing;
+    float rot_flick_time;
     RotationState rot;
     Button left;
     Button right;
@@ -154,7 +156,8 @@ Thumbstick Thumbstick_ (
     bool rot_rws_enabled,
     float rot_rws,
     float rot_sens_axis,
-    float rot_smoothing
+    float rot_smoothing,
+    float rot_flick_time
 );
 
 void thumbstick_init();

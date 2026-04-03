@@ -11,6 +11,7 @@
 #define CTRL_STICK_SENS_MOUSE_FACTOR 100
 #define CTRL_STICK_SENS_AXIS_FACTOR 0.05
 #define CTRL_STICK_RWS_FACTOR 0.05
+#define CTRL_STICK_FLICK_TIME_FACTOR 10
 
 typedef enum _Ctrl_protocol_flags {
     CTRL_FLAG_NONE = 1,
@@ -182,7 +183,8 @@ typedef struct __packed _CtrlThumbstick {
     uint8_t rot_rws;
     uint8_t rot_sens_axis;
     uint8_t rot_smoothing;
-    uint8_t _padding[37];
+    uint8_t rot_flick_time;
+    uint8_t _padding[36];
 } CtrlThumbstick;
 
 typedef struct __packed _CtrlGlyph {
