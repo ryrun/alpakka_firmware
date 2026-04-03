@@ -79,6 +79,15 @@ static void report_mouse(Thumbstick *ts, float delta_angle, uint8_t action, bool
     else if (action == MOUSE_Y_NEG) hid_mouse_move(0, -value);
 }
 
+static void report_scroll(Thumbstick *ts, float delta_angle, uint8_t action) {
+    // Calculate sensitivity.
+    float ticks_per_degree = ts->sens_scroll / 360.0f;
+    // Report.
+    float value = delta_angle * ticks_per_degree;
+    if      (action == MOUSE_SCROLL_UP)   hid_mouse_scroll(0,  value);
+    else if (action == MOUSE_SCROLL_DOWN) hid_mouse_scroll(0, -value);
+}
+
 static void report_gamepad(Thumbstick *ts, float delta_angle, uint8_t action, bool is_in_deadzone) {
     ts->rot.tracked_angle += delta_angle;
     ts->rot.tracked_angle = wrap_angle_360(ts->rot.tracked_angle);
@@ -156,6 +165,10 @@ void Thumbstick__report_rotation(Thumbstick *self, ThumbstickPosition pos, float
     if (hid_is_mouse_axis(self->rot.action)) {
         bool can_be_delayed = !self->rot.did_flick && self->rot_flick_time > 0;
         report_mouse(self, delta_angle, self->rot.action, is_in_deadzone, can_be_delayed);
+    }
+    // Scroll.
+    else if (hid_is_scroll_axis(self->rot.action)) {
+        report_scroll(self, delta_angle, self->rot.action);
     }
     // Gamepad.
     else if (hid_is_gamepad_axis(self->rot.action)) {
