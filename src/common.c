@@ -37,9 +37,15 @@ inline bool is_between(float value, float a, float b) {
     }
 }
 
-inline float wrap_angle(float angle) {
-    if (angle > 180.0f) return angle - 360.0f;
+inline float wrap_angle_180(float angle) {
     if (angle < -180.0f) return angle + 360.0f;
+    if (angle > 180.0f) return angle - 360.0f;
+    return angle;
+}
+
+inline float wrap_angle_360(float angle) {
+    if (angle < 0.0f) return angle + 360.0f;
+    if (angle > 360.0f) return angle - 360.0f;
     return angle;
 }
 

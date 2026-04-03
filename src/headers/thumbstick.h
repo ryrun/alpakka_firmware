@@ -59,6 +59,7 @@ typedef struct _RotationState {
     float entry_angle;
     float last_angle;
     float tracked_angle;
+    float tracked_value;
     uint8_t action;
     bool has_action;
     bool action_is_secondary;

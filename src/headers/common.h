@@ -76,5 +76,6 @@ void print_array(uint8_t *array, uint8_t len);
 void print_array(uint8_t *array, uint8_t len);
 uint8_t bitmask_set(uint8_t bitmask, uint8_t flag, bool value);
 bool is_between(float value, float a, float b);
-float wrap_angle(float angle);
+float wrap_angle_180(float angle);
+float wrap_angle_360(float angle);
 float interpolate(float a, float b, float factor);
