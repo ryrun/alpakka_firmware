@@ -9,7 +9,17 @@ This file contains the logic for the thumbstick rotation mode.
 #include "config.h"
 #include "hid.h"
 
-static void config_perimeter(Thumbstick *ts, ThumbstickPosition pos) {
+static void reset_state(Thumbstick *ts) {
+    ts->rot.angle_smooth = 0;
+    ts->rot.delta_smooth = 0;
+    ts->rot.tracked_angle = 0;
+    ts->rot.action = KEY_NONE;
+    ts->rot.has_action = false;
+    ts->rot.action_is_secondary = false;
+    ts->rot.did_flick = false;
+}
+
+static void find_action(Thumbstick *ts, ThumbstickPosition pos) {
     /*
     Find the action and entry angle, by walking (clockwise or anticlockwise)
     from the initial angle to the first cardinal with a defined action.
@@ -43,12 +53,6 @@ static void config_perimeter(Thumbstick *ts, ThumbstickPosition pos) {
         if (ts->rot.entry_angle < -180) ts->rot.entry_angle += 360;  // Reframe 0:360 to -180:180.
         ts->rot.last_angle = ts->rot_any_angle ? pos.angle : ts->rot.entry_angle;
         break;
-    }
-    // Calculate flick time factor (only once per flick).
-    if (ts->rot_flick_time > 0) {
-        float base = 1.0f / 180.0f;
-        float exp = 1.0f / (ts->rot_flick_time / 4.0f);
-        ts->rot.flick_time_factor = 1 - pow(base, exp);
     }
 }
 
@@ -95,6 +99,17 @@ static void report_gamepad(Thumbstick *ts, bool is_in_deadzone) {
     // info("G %.2f\n", value);
 }
 
+static void calc_flick_time(Thumbstick *ts) {
+    /*
+    Calculate the factor for a max flick (180 degrees) to exponentially decay
+    into less than 1 degree, in the target time, with the current polling rate.
+    */
+    if (ts->rot_flick_time == 0) return;  // Flick time disabled.
+    float base = 1.0f / 180.0f;
+    float exp = 1.0f / (ts->rot_flick_time / CFG_TICK_INTERVAL_IN_MS);
+    ts->rot.flick_time_factor = 1 - pow(base, exp);
+}
+
 static void apply_flick_time(Thumbstick *ts) {
     if (fabsf(ts->rot.flick_angle) < 0.1f) return;
     // info("F %f\n", factor);
@@ -102,16 +117,6 @@ static void apply_flick_time(Thumbstick *ts) {
     float delta_angle = ts->rot.flick_angle * factor;
     ts->rot.flick_angle *= 1-factor;
     report_mouse(ts, delta_angle, ts->rot.flick_action, false, false);
-}
-
-static void reset_state(Thumbstick *ts) {
-    ts->rot.angle_smooth = 0;
-    ts->rot.delta_smooth = 0;
-    ts->rot.tracked_angle = 0;
-    ts->rot.action = KEY_NONE;
-    ts->rot.has_action = false;
-    ts->rot.action_is_secondary = false;
-    ts->rot.did_flick = false;
 }
 
 void Thumbstick__report_rotation(Thumbstick *self, ThumbstickPosition pos, float raw_radius) {
@@ -127,8 +132,11 @@ void Thumbstick__report_rotation(Thumbstick *self, ThumbstickPosition pos, float
         reset_state(self);
         return;
     }
-    // Find action when stick moves to perimeter.
-    if (!self->rot.has_action) config_perimeter(self, pos);
+    // When stick moves from center to perimeter.
+    if (!self->rot.has_action) {
+        find_action(self, pos);
+        calc_flick_time(self);
+    }
     // Determine angle.
     float angle = pos.angle;
     if (self->rot.angle_smooth == 0) self->rot.angle_smooth = angle;
