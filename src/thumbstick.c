@@ -304,8 +304,12 @@ void Thumbstick__report_4dir(
         if (direction & DIR4_MASK_DOWN)  self->down.virtual_press = true;
     }
     // Evaluate and report actions.
-    float x = self->radial_mode ? pos.radius : pos.x;
-    float y = self->radial_mode ? pos.radius : pos.y;
+    float x = pos.x;
+    float y = pos.y;
+    if (self->radial_mode) {
+        x = (x > 0) ? pos.radius : -pos.radius;
+        y = (y > 0) ? pos.radius : -pos.radius;
+    }
     self->report_4dir_dir(self, &(self->left), -constrain((x), -1, 0));
     self->report_4dir_dir(self, &(self->right), constrain((x),  0, 1));
     self->report_4dir_dir(self, &(self->up),   -constrain((y), -1, 0));
