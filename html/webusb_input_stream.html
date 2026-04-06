@@ -1623,7 +1623,7 @@
                 const size = new THREE.Vector3();
                 bounds.getSize(size);
                 const ringRadius = Math.max(size.x, size.z) * 0.34;
-                const ringTube = Math.max(ringRadius * 0.12, 0.01);
+                const ringTube = Math.max(ringRadius * 0.08, 0.007);
                 const ringY = bounds.max.y + ringTube * 0.9;
 
                 const ringGroup = new THREE.Group();
