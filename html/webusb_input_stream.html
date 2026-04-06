@@ -1113,6 +1113,16 @@
                             >
                             <label class="color-entry"
                                 ><input
+                                    id="wheel-highlight-mix"
+                                    type="number"
+                                    min="0"
+                                    max="1"
+                                    step="0.01"
+                                    value="0.18"
+                                />Wheel Highlight Mixing</label
+                            >
+                            <label class="color-entry"
+                                ><input
                                     id="gyro-model-multiplier"
                                     type="number"
                                     min="0"
@@ -1300,6 +1310,9 @@
                 ),
                 highlightColor: document.getElementById("highlight-color"),
                 highlightMix: document.getElementById("highlight-mix"),
+                wheelHighlightMix: document.getElementById(
+                    "wheel-highlight-mix",
+                ),
                 gyroModelMultiplier: document.getElementById(
                     "gyro-model-multiplier",
                 ),
@@ -1373,7 +1386,9 @@
                 lastGyroSampleTs: 0,
                 linkPrimed: false,
                 touchActive: false,
+                wheelActive: false,
                 highlightMix: 0.05,
+                wheelHighlightMix: 0.18,
                 gyroModelMultiplier: 1,
                 wheelAngle: 0,
                 wheelRotationStep: 0.06,
@@ -1685,6 +1700,20 @@
                 }
             }
 
+            function updateWheelIndicator(active) {
+                const wheel = state.sceneButtons.get("Wheel");
+                if (!wheel) return;
+                const baseColor = new THREE.Color(wheel.userData.baseColor);
+                const color = active
+                    ? baseColor.lerp(
+                          new THREE.Color(state.highlightColor),
+                          state.wheelHighlightMix,
+                      )
+                    : baseColor;
+                wheel.material.emissive.setHex(0x000000);
+                wheel.material.color.copy(color);
+            }
+
             function setBar(element, value, maxMagnitude = 1200) {
                 const normalized = clamp(value / maxMagnitude, -1, 1);
                 element.style.width = `${Math.abs(normalized) * 50}%`;
@@ -1771,6 +1800,7 @@
                 const wheel = state.sceneButtons.get("Wheel");
                 if (!wheel) return;
                 wheel.rotation.x = state.wheelAngle;
+                updateWheelIndicator(state.wheelActive);
             }
 
             function updateLeftStickTilt(x, y) {
@@ -1963,6 +1993,7 @@
                 ui.sceneBackgroundColor.value = state.sceneBackgroundColor;
                 ui.highlightColor.value = state.highlightColor;
                 ui.highlightMix.value = String(state.highlightMix);
+                ui.wheelHighlightMix.value = String(state.wheelHighlightMix);
                 ui.gyroModelMultiplier.value = String(
                     state.gyroModelMultiplier,
                 );
@@ -1990,6 +2021,7 @@
                     sceneBackgroundColor: state.sceneBackgroundColor,
                     highlightColor: state.highlightColor,
                     highlightMix: state.highlightMix,
+                    wheelHighlightMix: state.wheelHighlightMix,
                     gyroModelMultiplier: state.gyroModelMultiplier,
                 };
                 try {
@@ -2040,6 +2072,13 @@
                     if (typeof parsed.highlightMix === "number") {
                         state.highlightMix = clamp(parsed.highlightMix, 0, 1);
                     }
+                    if (typeof parsed.wheelHighlightMix === "number") {
+                        state.wheelHighlightMix = clamp(
+                            parsed.wheelHighlightMix,
+                            0,
+                            1,
+                        );
+                    }
                     if (typeof parsed.gyroModelMultiplier === "number") {
                         state.gyroModelMultiplier = Math.max(
                             0,
@@ -2075,10 +2114,12 @@
                 state.sceneBackgroundColor = DEFAULT_SCENE_BACKGROUND_COLOR;
                 state.highlightColor = DEFAULT_HIGHLIGHT_COLOR;
                 state.highlightMix = 0.05;
+                state.wheelHighlightMix = 0.18;
                 state.gyroModelMultiplier = 1;
                 applyColorStateToInputs();
                 applyModelColors();
                 updateTouchIndicator(state.touchActive);
+                updateWheelIndicator(state.wheelActive);
                 ui.sceneCanvas.parentElement.style.background =
                     state.sceneBackgroundColor;
                 saveColorSettings();
@@ -2117,6 +2158,7 @@
                     }
                 });
                 refreshSceneStickRingColors();
+                updateWheelIndicator(state.wheelActive);
             }
 
             function syncActiveColorFromInput() {
@@ -2127,6 +2169,9 @@
                     ui.sceneBackgroundColor.value || "#000000";
                 state.highlightColor = ui.highlightColor.value || "#ffffff";
                 const highlightMix = Number.parseFloat(ui.highlightMix.value);
+                const wheelHighlightMix = Number.parseFloat(
+                    ui.wheelHighlightMix.value,
+                );
                 const gyroModelMultiplier = Number.parseFloat(
                     ui.gyroModelMultiplier.value,
                 );
@@ -2135,11 +2180,18 @@
                     0,
                     1,
                 );
+                state.wheelHighlightMix = clamp(
+                    Number.isNaN(wheelHighlightMix) ? 0.18 : wheelHighlightMix,
+                    0,
+                    1,
+                );
                 state.gyroModelMultiplier = Math.max(
                     0,
                     Number.isNaN(gyroModelMultiplier) ? 1 : gyroModelMultiplier,
                 );
                 ui.highlightMix.value = state.highlightMix.toFixed(2);
+                ui.wheelHighlightMix.value =
+                    state.wheelHighlightMix.toFixed(2);
                 ui.gyroModelMultiplier.value =
                     state.gyroModelMultiplier.toFixed(2);
                 document
@@ -2152,6 +2204,7 @@
                     });
                 applyModelColors();
                 updateTouchIndicator(state.touchActive);
+                updateWheelIndicator(state.wheelActive);
                 ui.sceneCanvas.parentElement.style.background =
                     state.sceneBackgroundColor;
                 saveColorSettings();
@@ -2289,6 +2342,7 @@
                 state.modelGroup = null;
                 state.sceneButtons.clear();
                 state.sceneStickRings.clear();
+                state.wheelActive = false;
                 state.sceneReady = false;
                 state.lastAnimationTs = 0;
                 state.resizeTargetWindow = window;
@@ -2480,6 +2534,8 @@
                 updateSceneLeds(ledMask);
                 state.touchActive = !!(flags & INPUT_FLAGS.touch);
                 updateTouchIndicator(state.touchActive);
+                state.wheelActive = rotary !== 0;
+                updateWheelIndicator(state.wheelActive);
                 if (rotary !== 0) {
                     state.wheelAngle -= rotary * state.wheelRotationStep;
                     updateWheelRotation();
@@ -2778,6 +2834,7 @@
                 ui.sceneBackgroundColor,
                 ui.highlightColor,
                 ui.highlightMix,
+                ui.wheelHighlightMix,
                 ui.gyroModelMultiplier,
             ].forEach((input) => {
                 input.addEventListener("input", syncActiveColorFromInput);
