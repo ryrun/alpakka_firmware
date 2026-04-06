@@ -1354,6 +1354,7 @@
                 controllerGroup: null,
                 modelGroup: null,
                 sceneButtons: new Map(),
+                sceneStickRings: new Map(),
                 sceneReady: false,
                 lastAnimationTs: 0,
                 animationFrameId: null,
@@ -1594,6 +1595,96 @@
                 dot.style.transform = `translate(${x * 3.6}rem, ${y * 3.6}rem)`;
             }
 
+            function setStickState(dot, x, y) {
+                setStick(dot, x, y);
+            }
+
+            function createStickRingMesh(stickMesh) {
+                if (!stickMesh?.geometry) return null;
+                stickMesh.geometry.computeBoundingBox();
+                const bounds = stickMesh.geometry.boundingBox;
+                if (!bounds) return null;
+
+                const size = new THREE.Vector3();
+                bounds.getSize(size);
+                const ringRadius = Math.max(size.x, size.z) * 0.34;
+                const ringTube = Math.max(ringRadius * 0.12, 0.01);
+                const ringY = bounds.max.y + ringTube * 0.9;
+
+                const ringGroup = new THREE.Group();
+                ringGroup.name = `${stickMesh.name}_HighlightRing`;
+                ringGroup.position.set(0, ringY, 0);
+                ringGroup.rotation.x = Math.PI / 2;
+                ringGroup.userData.active = false;
+
+                const core = new THREE.Mesh(
+                    new THREE.TorusGeometry(ringRadius, ringTube, 18, 64),
+                    new THREE.MeshBasicMaterial({
+                        color: state.highlightColor,
+                        transparent: true,
+                        opacity: 0.12,
+                        depthWrite: false,
+                    }),
+                );
+                core.renderOrder = 4;
+
+                const glow = new THREE.Mesh(
+                    new THREE.TorusGeometry(
+                        ringRadius * 1.02,
+                        ringTube * 1.9,
+                        18,
+                        64,
+                    ),
+                    new THREE.MeshBasicMaterial({
+                        color: state.highlightColor,
+                        transparent: true,
+                        opacity: 0,
+                        depthWrite: false,
+                    }),
+                );
+                glow.renderOrder = 3;
+
+                ringGroup.add(glow);
+                ringGroup.add(core);
+                ringGroup.userData.core = core;
+                ringGroup.userData.glow = glow;
+                updateStickRingAppearance(ringGroup, false);
+                stickMesh.add(ringGroup);
+                return ringGroup;
+            }
+
+            function updateStickRingAppearance(ringGroup, active) {
+                if (!ringGroup) return;
+                ringGroup.userData.active = active;
+                const color = new THREE.Color(state.highlightColor);
+                const core = ringGroup.userData.core;
+                const glow = ringGroup.userData.glow;
+                if (core?.material) {
+                    core.material.color.copy(color);
+                    core.material.opacity = active ? 0.95 : 0.14;
+                }
+                if (glow?.material) {
+                    glow.material.color.copy(color);
+                    glow.material.opacity = active ? 0.3 : 0;
+                }
+                ringGroup.visible = active;
+            }
+
+            function updateSceneStickRing(stickId, x, y) {
+                const ringGroup = state.sceneStickRings.get(stickId);
+                if (!ringGroup) return;
+                updateStickRingAppearance(ringGroup, Math.hypot(x, y) > 0.05);
+            }
+
+            function refreshSceneStickRingColors() {
+                for (const ringGroup of state.sceneStickRings.values()) {
+                    updateStickRingAppearance(
+                        ringGroup,
+                        !!ringGroup.userData.active,
+                    );
+                }
+            }
+
             function setBar(element, value, maxMagnitude = 1200) {
                 const normalized = clamp(value / maxMagnitude, -1, 1);
                 element.style.width = `${Math.abs(normalized) * 50}%`;
@@ -1687,6 +1778,7 @@
                 if (!stick) return;
                 stick.rotation.x = y * state.leftStickTiltMax;
                 stick.rotation.z = -x * state.leftStickTiltMax;
+                updateSceneStickRing("l3", x, y);
             }
 
             function updateRightStickTilt(x, y) {
@@ -1694,6 +1786,7 @@
                 if (!stick) return;
                 stick.rotation.x = y * state.rightStickTiltMax;
                 stick.rotation.z = -x * state.rightStickTiltMax;
+                updateSceneStickRing("r3", x, y);
             }
 
             function resetPose() {
@@ -2023,6 +2116,7 @@
                         child.userData.baseColor = color;
                     }
                 });
+                refreshSceneStickRingColors();
             }
 
             function syncActiveColorFromInput() {
@@ -2110,6 +2204,14 @@
                                         child.rotation.x;
                                     child.userData.baseRotationZ =
                                         child.rotation.z;
+                                    const ringMesh =
+                                        createStickRingMesh(child);
+                                    if (ringMesh) {
+                                        state.sceneStickRings.set(
+                                            buttonId,
+                                            ringMesh,
+                                        );
+                                    }
                                 }
                                 child.userData.baseY = child.position.y;
                                 child.userData.baseColor = color;
@@ -2186,6 +2288,7 @@
                 state.controllerGroup = null;
                 state.modelGroup = null;
                 state.sceneButtons.clear();
+                state.sceneStickRings.clear();
                 state.sceneReady = false;
                 state.lastAnimationTs = 0;
                 state.resizeTargetWindow = window;
@@ -2362,8 +2465,8 @@
                 const displayRight = getDisplayRightStick(right, dhat);
 
                 updateButtons(buttons);
-                setStick(ui.leftStickDot, lx, ly);
-                setStick(ui.rightStickDot, displayRight.x, displayRight.y);
+                setStickState(ui.leftStickDot, lx, ly);
+                setStickState(ui.rightStickDot, displayRight.x, displayRight.y);
                 updateLeftStickTilt(lx, ly);
                 updateRightStickTilt(displayRight.x, displayRight.y);
                 ui.leftState.textContent = `x ${lx.toFixed(2)} / y ${ly.toFixed(2)}`;
