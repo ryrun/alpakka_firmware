@@ -12,13 +12,15 @@ This file contains the logic for the thumbstick rotation mode.
 static void reset_state(Thumbstick *ts) {
     ts->rot.angle_smooth = 0;
     ts->rot.delta_smooth = 0;
-    ts->rot.action = KEY_NONE;
-    ts->rot.has_action = false;
-    ts->rot.action_is_secondary = false;
     ts->rot.did_flick = false;
     if (!ts->rot_any_angle) {
         ts->rot.tracked_angle = 0;
+    }
+    if (!ts->rot_keep_value) {
         ts->rot.tracked_value = 0;
+        ts->rot.action = KEY_NONE;
+        ts->rot.has_action = false;
+        ts->rot.action_is_secondary = false;
     }
 }
 
@@ -101,7 +103,12 @@ static void report_gamepad(Thumbstick *ts, float delta_angle, uint8_t action, bo
     if (is_in_deadzone && !ts->rot_any_angle) value = 0;
     ts->rot.tracked_value = value;
     hid_gamepad_axis(action-GAMEPAD_AXIS_INDEX, value);
-    // info("G %.0f %.[2f\n", ts->rot.tracked_angle, value);
+    // info("G %.0f %.2f\n", ts->rot.tracked_angle, value);
+}
+
+static void report_gamepad_resend(Thumbstick *ts) {
+    uint8_t action = ts->rot.action - GAMEPAD_AXIS_INDEX;
+    hid_gamepad_axis(action, ts->rot.tracked_value);
 }
 
 static void calc_flick_time(Thumbstick *ts) {
@@ -132,9 +139,10 @@ void Thumbstick__report_rotation(Thumbstick *self, ThumbstickPosition pos, float
     self->push.report(&self->push);
     // Smoothed flick (if previously set).
     apply_flick_time(self);
-    // Reset state.
+    // When back to center.
     if (pos.radius == 0) {
         reset_state(self);
+        if (self->rot_keep_value) report_gamepad_resend(self);
         return;
     }
     // When stick moves from center to perimeter.

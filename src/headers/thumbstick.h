@@ -113,6 +113,7 @@ struct Thumbstick_struct {
     float rot_sens_axis;
     float rot_smoothing;
     float rot_flick_time;
+    bool rot_keep_value;
     RotationState rot;
     Button left;
     Button right;
@@ -158,7 +159,8 @@ Thumbstick Thumbstick_ (
     float rot_rws,
     float rot_sens_axis,
     float rot_smoothing,
-    float rot_flick_time
+    float rot_flick_time,
+    bool rot_keep_value
 );
 
 void thumbstick_init();

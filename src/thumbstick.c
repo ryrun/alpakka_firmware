@@ -173,7 +173,8 @@ void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t ind
         ctrl_thumbstick.rot_rws * CTRL_STICK_RWS_FACTOR,
         ctrl_thumbstick.rot_sens_axis * CTRL_STICK_SENS_AXIS_FACTOR,
         ctrl_thumbstick.rot_smoothing,
-        ctrl_thumbstick.rot_flick_time * CTRL_STICK_FLICK_TIME_FACTOR
+        ctrl_thumbstick.rot_flick_time * CTRL_STICK_FLICK_TIME_FACTOR,
+        (bool)ctrl_thumbstick.rot_keep_value
     );
     // Safe defaults.
     if (thumbstick->saturation == 0) thumbstick->saturation = 1.0;
@@ -641,7 +642,8 @@ Thumbstick Thumbstick_ (
     float rot_rws,
     float rot_sens_axis,
     float rot_smoothing,
-    float rot_flick_time
+    float rot_flick_time,
+    bool rot_keep_value
 ) {
     Thumbstick thumbstick;
     // Methods.
@@ -689,5 +691,6 @@ Thumbstick Thumbstick_ (
     thumbstick.rot_sens_axis = rot_sens_axis;
     thumbstick.rot_smoothing = rot_smoothing;
     thumbstick.rot_flick_time = rot_flick_time;
+    thumbstick.rot_keep_value = rot_keep_value;
     return thumbstick;
 }

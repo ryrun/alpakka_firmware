@@ -184,7 +184,8 @@ typedef struct __packed _CtrlThumbstick {
     uint8_t rot_sens_axis;
     uint8_t rot_smoothing;
     uint8_t rot_flick_time;
-    uint8_t _padding[36];
+    uint8_t rot_keep_value;
+    uint8_t _padding[35];
 } CtrlThumbstick;
 
 typedef struct __packed _CtrlGlyph {
