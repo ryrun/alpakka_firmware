@@ -12,15 +12,12 @@ This file contains the logic for the thumbstick rotation mode.
 static void reset_state(Thumbstick *ts) {
     ts->rot.angle_smooth = 0;
     ts->rot.delta_smooth = 0;
+    ts->rot.action = KEY_NONE;
+    ts->rot.has_action = false;
     ts->rot.did_flick = false;
     if (!ts->rot_any_angle) {
         ts->rot.tracked_angle = 0;
-    }
-    if (!ts->rot_keep_value) {
         ts->rot.tracked_value = 0;
-        ts->rot.action = KEY_NONE;
-        ts->rot.has_action = false;
-        ts->rot.action_is_secondary = false;
     }
 }
 
@@ -40,7 +37,6 @@ static void find_action(Thumbstick *ts, ThumbstickPosition pos) {
         uint8_t offset = (quarter+4 + ii + (ts->rot_anticlockwise ? 1 : 0)) % 4;
         if (actions[offset]) {
             ts->rot.action = actions[offset];
-            ts->rot.action_is_secondary = false;
             ts->rot.has_action = true;
             ts->rot.entry_angle = offset * 90;  // Cardinal entry angle of defined action.
             if (ts->rot.entry_angle >  180) ts->rot.entry_angle -= 360;  // Reframe 0:360 to -180:180.
@@ -102,13 +98,15 @@ static void report_gamepad(Thumbstick *ts, float delta_angle, uint8_t action, bo
     value = constrain(value, 0.0, 1.0);
     if (is_in_deadzone && !ts->rot_any_angle) value = 0;
     ts->rot.tracked_value = value;
+    ts->rot.last_value = value;
+    ts->rot.last_action = action;
     hid_gamepad_axis(action-GAMEPAD_AXIS_INDEX, value);
     // info("G %.0f %.2f\n", ts->rot.tracked_angle, value);
 }
 
 static void report_gamepad_resend(Thumbstick *ts) {
-    uint8_t action = ts->rot.action - GAMEPAD_AXIS_INDEX;
-    hid_gamepad_axis(action, ts->rot.tracked_value);
+    uint8_t action = ts->rot.last_action - GAMEPAD_AXIS_INDEX;
+    hid_gamepad_axis(action, ts->rot.last_value);
 }
 
 static void calc_flick_time(Thumbstick *ts) {

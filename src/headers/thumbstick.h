@@ -58,11 +58,12 @@ typedef struct _RotationState {
     float delta_smooth;
     float entry_angle;
     float last_angle;
+    float last_value;
     float tracked_angle;
     float tracked_value;
     uint8_t action;
+    uint8_t last_action;
     bool has_action;
-    bool action_is_secondary;
     bool did_flick;
     float flick_angle;
     float flick_action;
