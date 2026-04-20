@@ -95,13 +95,17 @@ static void report_gamepad(Thumbstick *ts, float delta_angle, uint8_t action, bo
         ts->rot.tracked_value + (delta_angle * sens) :  // Relative.
         ts->rot.tracked_angle * sens                    // Absolute.
     );
-    value = constrain(value, 0.0, 1.0);
+    bool axis_is_signed = (action != GAMEPAD_AXIS_LZ) && (action != GAMEPAD_AXIS_RZ);
+    value = constrain(value, (axis_is_signed ? -1.0f : 0.0f), 1.0f);
     if (is_in_deadzone && !ts->rot_any_angle) value = 0;
     ts->rot.tracked_value = value;
     ts->rot.last_value = value;
     ts->rot.last_action = action;
-    hid_gamepad_axis(action-GAMEPAD_AXIS_INDEX, value);
-    // info("G %.0f %.2f\n", ts->rot.tracked_angle, value);
+    bool axis_is_positive = action <= GAMEPAD_AXIS_RZ;  // Last positive gamepad axis.
+    GamepadAxis gamepad_axis = action - GAMEPAD_AXIS_INDEX - (axis_is_positive ? 0 : 6);  // GamepadAxis has no negative variants.
+    float send_value = axis_is_positive ? value : -value;
+    hid_gamepad_axis(gamepad_axis, send_value);
+    // info("G %.2f\n", send_value);
 }
 
 static void report_gamepad_resend(Thumbstick *ts) {
