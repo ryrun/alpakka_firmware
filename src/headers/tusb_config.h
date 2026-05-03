@@ -51,7 +51,6 @@
 #define STRING_WEBUSB "WEBUSB"
 #define STRING_XINPUT "XINPUT_GENERIC_CONTROLLER"
 #define STRING_VENDOR_STADIA "Google LLC"
-#define STRING_SERIAL_STADIA_TEST "STADIA-ALPAKKA-TEST-2"
 
 #define STRING_INDEX_HID 4
 #define STRING_INDEX_WEBUSB 5
@@ -121,7 +120,7 @@
 #define DESCRIPTOR_INTERFACE_HID_N(itf, ep_in, report_size) \
     TUD_HID_DESCRIPTOR( \
         itf,                    /* Interface index */\
-        STRING_INDEX_HID,       /* String index */\
+        0,                      /* String index */\
         HID_ITF_PROTOCOL_NONE,  /* Boot protocol */\
         report_size,            /* Report descriptor length */\
         ep_in,                  /* Interface address */\
