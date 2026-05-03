@@ -16,17 +16,23 @@
 #define CFG_TUD_VENDOR_RX_BUFSIZE 64
 #define CFG_TUD_VENDOR_TX_BUFSIZE 64
 
-#define CFG_TUD_HID 1
+#define CFG_TUD_HID 3
 #define CFG_TUD_CDC 0
 #define CFG_TUD_MSC 0
 #define CFG_TUD_MIDI 0
 #define CFG_TUD_VENDOR 1
 
 #define ITF_HID 0
+#define ITF_GENERIC_KEYBOARD 0
+#define ITF_GENERIC_MOUSE 1
+#define ITF_GENERIC_GAMEPAD 2
 #define ITF_WEBUSB 1
 #define ITF_XINPUT 2
 
 #define ADDR_HID_IN 0x86
+#define ADDR_GENERIC_KEYBOARD_IN 0x81
+#define ADDR_GENERIC_MOUSE_IN 0x82
+#define ADDR_GENERIC_GAMEPAD_IN 0x83
 #define ADDR_WEBUSB_IN 0x83
 #define ADDR_WEBUSB_OUT 0x04
 #define ADDR_XINPUT_IN 0x81
@@ -45,6 +51,10 @@
 #define STRING_WEBUSB "WEBUSB"
 #define STRING_XINPUT "XINPUT_GENERIC_CONTROLLER"
 #define STRING_VENDOR_STADIA "Google LLC"
+
+#define STRING_INDEX_HID 4
+#define STRING_INDEX_WEBUSB 5
+#define STRING_INDEX_XINPUT 6
 
 #define MS_OS_VENDOR 0x17
 
@@ -99,7 +109,7 @@
 #define DESCRIPTOR_INTERFACE_HID(report_size) \
     TUD_HID_DESCRIPTOR( \
         ITF_HID,                /* Interface index */\
-        ITF_HID + 4,            /* String index */\
+        STRING_INDEX_HID,       /* String index */\
         HID_ITF_PROTOCOL_NONE,  /* Boot protocol */\
         report_size,            /* Report descriptor length */\
         ADDR_HID_IN,            /* Interface address */\
@@ -107,10 +117,30 @@
         1                       /* Interface interval (ms) */\
     )
 
+#define DESCRIPTOR_INTERFACE_HID_N(itf, ep_in, report_size) \
+    TUD_HID_DESCRIPTOR( \
+        itf,                    /* Interface index */\
+        STRING_INDEX_HID,       /* String index */\
+        HID_ITF_PROTOCOL_NONE,  /* Boot protocol */\
+        report_size,            /* Report descriptor length */\
+        ep_in,                  /* Interface address */\
+        32,                     /* Endpoint buffer size */\
+        1                       /* Interface interval (ms) */\
+    )
+
+#define DESCRIPTOR_INTERFACE_GENERIC_KEYBOARD(report_size) \
+    DESCRIPTOR_INTERFACE_HID_N(ITF_GENERIC_KEYBOARD, ADDR_GENERIC_KEYBOARD_IN, report_size)
+
+#define DESCRIPTOR_INTERFACE_GENERIC_MOUSE(report_size) \
+    DESCRIPTOR_INTERFACE_HID_N(ITF_GENERIC_MOUSE, ADDR_GENERIC_MOUSE_IN, report_size)
+
+#define DESCRIPTOR_INTERFACE_GENERIC_GAMEPAD(report_size) \
+    DESCRIPTOR_INTERFACE_HID_N(ITF_GENERIC_GAMEPAD, ADDR_GENERIC_GAMEPAD_IN, report_size)
+
 #define DESCRIPTOR_INTERFACE_WEBUSB \
     TUD_VENDOR_DESCRIPTOR( \
         ITF_WEBUSB,       /* Interface index */\
-        ITF_WEBUSB + 4,   /* String index */\
+        STRING_INDEX_WEBUSB, /* String index */\
         ADDR_WEBUSB_OUT,  /* Address out */\
         ADDR_WEBUSB_IN,   /* Address in */\
         64                /* Size */\

@@ -567,7 +567,10 @@ void hid_evaluate_gamepad_synced() {
 
 void hid_report_keyboard(bool wired) {
     KeyboardReport report = hid_get_keyboard_report();
-    if (wired) tud_hid_report(REPORT_KEYBOARD, &report, sizeof(report));
+    if (wired) {
+        if (config_get_protocol() == PROTOCOL_GENERIC) tud_hid_n_report(0, REPORT_KEYBOARD, &report, sizeof(report));
+        else tud_hid_report(REPORT_KEYBOARD, &report, sizeof(report));
+    }
     else wireless_send_hid(REPORT_KEYBOARD, &report, sizeof(report));
     synced_keyboard = true;
     last_report_keyboard = report;
@@ -575,7 +578,10 @@ void hid_report_keyboard(bool wired) {
 
 void hid_report_mouse(bool wired) {
     MouseReport report = hid_get_mouse_report();
-    if (wired) tud_hid_report(REPORT_MOUSE, &report, sizeof(report));
+    if (wired) {
+        if (config_get_protocol() == PROTOCOL_GENERIC) tud_hid_n_report(1, REPORT_MOUSE, &report, sizeof(report));
+        else tud_hid_report(REPORT_MOUSE, &report, sizeof(report));
+    }
     else wireless_send_hid(REPORT_MOUSE, &report, sizeof(report));
     hid_reset_mouse();
     synced_mouse = true;
@@ -588,7 +594,7 @@ void hid_report_gamepad(bool wired) {
     if (wired) {
         if (config_get_protocol() == PROTOCOL_GENERIC) {
             StadiaGamepadReport stadia_report = hid_get_stadia_gamepad_report();
-            tud_hid_report(REPORT_GAMEPAD, &stadia_report, sizeof(stadia_report));
+            tud_hid_n_report(2, REPORT_GAMEPAD, &stadia_report, sizeof(stadia_report));
         } else {
             tud_hid_report(REPORT_GAMEPAD, &report, sizeof(report));
         }
@@ -691,7 +697,14 @@ bool hid_report_wired() {
     ReportType device_to_report = hid_get_priority();
     tud_task();
     if (tud_ready()) {
-        if (tud_hid_ready()) {
+        bool hid_ready = tud_hid_ready();
+        if (config_get_protocol() == PROTOCOL_GENERIC) {
+            hid_ready =
+                (device_to_report == REPORT_KEYBOARD && tud_hid_n_ready(0)) ||
+                (device_to_report == REPORT_MOUSE && tud_hid_n_ready(1)) ||
+                (device_to_report == REPORT_GAMEPAD && tud_hid_n_ready(2));
+        }
+        if (hid_ready) {
             if (config_get_protocol() != PROTOCOL_GENERIC) {
                 webusb_read();
                 webusb_flush();
@@ -738,23 +751,31 @@ void hid_report_dongle(uint8_t report_id, uint8_t* payload) {
     tud_task();
     if (tud_ready()) {
         if (report_id == REPORT_KEYBOARD) {
-            if (tud_hid_ready()) {
+            if (config_get_protocol() == PROTOCOL_GENERIC) {
+                if (tud_hid_n_ready(0)) {
+                    tud_hid_n_report(0, REPORT_KEYBOARD, payload, sizeof(KeyboardReport));
+                }
+            } else if (tud_hid_ready()) {
                 tud_hid_report(REPORT_KEYBOARD, payload, sizeof(KeyboardReport));
             }
         }
         if (report_id == REPORT_MOUSE) {
-            if (tud_hid_ready()) {
+            if (config_get_protocol() == PROTOCOL_GENERIC) {
+                if (tud_hid_n_ready(1)) {
+                    tud_hid_n_report(1, REPORT_MOUSE, payload, sizeof(MouseReport));
+                }
+            } else if (tud_hid_ready()) {
                 tud_hid_report(REPORT_MOUSE, payload, sizeof(MouseReport));
             }
         }
         if (report_id == REPORT_GAMEPAD) {
-            if (tud_hid_ready()) {
-                if (config_get_protocol() == PROTOCOL_GENERIC) {
+            if (config_get_protocol() == PROTOCOL_GENERIC) {
+                if (tud_hid_n_ready(2)) {
                     StadiaGamepadReport stadia_report = hid_gamepad_to_stadia_report(*(GamepadReport*)payload);
-                    tud_hid_report(REPORT_GAMEPAD, &stadia_report, sizeof(stadia_report));
-                } else {
-                    tud_hid_report(REPORT_GAMEPAD, payload, sizeof(GamepadReport));
+                    tud_hid_n_report(2, REPORT_GAMEPAD, &stadia_report, sizeof(stadia_report));
                 }
+            } else if (tud_hid_ready()) {
+                tud_hid_report(REPORT_GAMEPAD, payload, sizeof(GamepadReport));
             }
         }
         if (report_id == REPORT_XINPUT) {
