@@ -38,9 +38,8 @@ uint8_t const descriptor_report_xinput[] = {
 };
 
 uint8_t descriptor_configuration_generic[] = {
-    DESCRIPTOR_CONFIGURATION(2),
-    DESCRIPTOR_INTERFACE_HID(sizeof(descriptor_report_generic)),
-    DESCRIPTOR_INTERFACE_WEBUSB
+    DESCRIPTOR_CONFIGURATION(1),
+    DESCRIPTOR_INTERFACE_HID(sizeof(descriptor_report_generic))
 };
 
 uint8_t descriptor_configuration_xinput[] = {
@@ -95,7 +94,11 @@ uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance) {
 
 const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     debug_uart("USB: tud_descriptor_string_cb index=0x%x\n", index);
-    if (index == 0xEE && config_get_protocol() != PROTOCOL_XINPUT_UNIX) {
+    if (
+        index == 0xEE &&
+        config_get_protocol() != PROTOCOL_XINPUT_UNIX &&
+        config_get_protocol() != PROTOCOL_GENERIC
+    ) {
         static uint8_t msos[] = {MS_OS_DESCRIPTOR};
         return (uint16_t*)msos;
     }
@@ -136,17 +139,13 @@ const bool tud_vendor_control_xfer_cb(
             static uint8_t response[] = {MS_OS_COMPATIDS_ALL};
             return tud_control_xfer(rhport, request, response, sizeof(response));
         }
-        if (config_get_protocol() == PROTOCOL_GENERIC) {
-            static uint8_t response[] = {MS_OS_COMPATIDS_GENERIC};
-            return tud_control_xfer(rhport, request, response, sizeof(response));
-        }
-
     }
     // Extended properties.
     if (
         request->wIndex == 0x0005 &&
         request->bRequest == MS_OS_VENDOR &&
-        config_get_protocol() != PROTOCOL_XINPUT_UNIX
+        config_get_protocol() != PROTOCOL_XINPUT_UNIX &&
+        config_get_protocol() != PROTOCOL_GENERIC
     ) {
         static uint8_t response[] = {MS_OS_PROPERTIES};
         return tud_control_xfer(rhport, request, response, sizeof(response));

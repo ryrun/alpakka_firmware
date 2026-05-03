@@ -29,6 +29,7 @@ static uint8_t webusb_pending_profile_share = 0;
 static uint8_t webusb_pending_section_share = 0;
 
 void webusb_flush_force() {
+    if (config_get_protocol() == PROTOCOL_GENERIC) return;
     uint16_t i = 0;
     while(true) {
         tud_task();
@@ -46,6 +47,7 @@ void webusb_flush_force() {
 }
 
 bool webusb_transfer_wired(Ctrl ctrl) {
+    if (config_get_protocol() == PROTOCOL_GENERIC) return false;
     // Check if TinyUSB device is ready (connected).
     if (!tud_ready()) return false;
     // Check if USB endpoint is free.
@@ -75,6 +77,7 @@ bool webusb_transfer(Ctrl ctrl) {
 }
 
 bool webusb_flush() {
+    if (config_get_protocol() == PROTOCOL_GENERIC) return true;
     // Check if there is anything to flush.
     if (
         webusb_ptr_in == 0 &&
@@ -219,6 +222,7 @@ void webusb_handle(Ctrl ctrl) {
 }
 
 void webusb_read() {
+    if (config_get_protocol() == PROTOCOL_GENERIC) return;
     // Parse data coming from the app.
     if (!tud_ready() || usbd_edpt_busy(0, ADDR_WEBUSB_OUT)) return;
     // Using static to ensure the variable lives long enough in memory to be

@@ -692,8 +692,10 @@ bool hid_report_wired() {
     tud_task();
     if (tud_ready()) {
         if (tud_hid_ready()) {
-            webusb_read();
-            webusb_flush();
+            if (config_get_protocol() != PROTOCOL_GENERIC) {
+                webusb_read();
+                webusb_flush();
+            }
             if (device_to_report == REPORT_KEYBOARD) hid_report_keyboard(true);
             if (device_to_report == REPORT_MOUSE) hid_report_mouse(true);
             if (device_to_report == REPORT_GAMEPAD) hid_report_gamepad(true);
