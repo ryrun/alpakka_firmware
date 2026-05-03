@@ -25,7 +25,7 @@ static uint16_t xinput_open(
         itf_desc->iInterface,
         max_len
     );
-    if (itf_desc->iInterface == 0) {
+    if (itf_desc->bInterfaceNumber == ITF_XINPUT) {
         usbd_edpt_open(rhport, (tusb_desc_endpoint_t const *)ep_in);
         usbd_edpt_open(rhport, (tusb_desc_endpoint_t const *)ep_out);
         return (

@@ -16,21 +16,25 @@
 #define CFG_TUD_VENDOR_RX_BUFSIZE 64
 #define CFG_TUD_VENDOR_TX_BUFSIZE 64
 
-#define CFG_TUD_HID 1
+#define CFG_TUD_HID 3
 #define CFG_TUD_CDC 0
 #define CFG_TUD_MSC 0
 #define CFG_TUD_MIDI 0
 #define CFG_TUD_VENDOR 1
 
-#define ITF_HID 0
-#define ITF_WEBUSB 1
-#define ITF_XINPUT 2
+#define ITF_KEYBOARD 0
+#define ITF_MOUSE 1
+#define ITF_GAMEPAD 2
+#define ITF_WEBUSB 3
+#define ITF_XINPUT 4
 
-#define ADDR_HID_IN 0x86
-#define ADDR_WEBUSB_IN 0x83
+#define ADDR_KEYBOARD_IN 0x81
+#define ADDR_MOUSE_IN 0x82
+#define ADDR_GAMEPAD_IN 0x83
+#define ADDR_WEBUSB_IN 0x84
 #define ADDR_WEBUSB_OUT 0x04
-#define ADDR_XINPUT_IN 0x81
-#define ADDR_XINPUT_OUT 0x02
+#define ADDR_XINPUT_IN 0x85
+#define ADDR_XINPUT_OUT 0x05
 
 #define STRING_VENDOR "Input Labs"
 
@@ -44,6 +48,10 @@
 #define STRING_HID "HID"
 #define STRING_WEBUSB "WEBUSB"
 #define STRING_XINPUT "XINPUT_GENERIC_CONTROLLER"
+
+#define STRING_INDEX_HID 4
+#define STRING_INDEX_WEBUSB 5
+#define STRING_INDEX_XINPUT 6
 
 #define MS_OS_VENDOR 0x17
 
@@ -95,21 +103,30 @@
     0x80,        /* bmAttributes */\
     0xFA         /* bMaxPower */
 
-#define DESCRIPTOR_INTERFACE_HID(report_size) \
+#define DESCRIPTOR_INTERFACE_HID_N(itf, stridx, ep_in, report_size) \
     TUD_HID_DESCRIPTOR( \
-        ITF_HID,                /* Interface index */\
-        ITF_HID + 4,            /* String index */\
+        itf,                    /* Interface index */\
+        stridx,                 /* String index */\
         HID_ITF_PROTOCOL_NONE,  /* Boot protocol */\
         report_size,            /* Report descriptor length */\
-        ADDR_HID_IN,            /* Interface address */\
+        ep_in,                  /* Interface address */\
         32,                     /* Endpoint buffer size */\
         1                       /* Interface interval (ms) */\
     )
 
+#define DESCRIPTOR_INTERFACE_KEYBOARD(report_size) \
+    DESCRIPTOR_INTERFACE_HID_N(ITF_KEYBOARD, STRING_INDEX_HID, ADDR_KEYBOARD_IN, report_size)
+
+#define DESCRIPTOR_INTERFACE_MOUSE(report_size) \
+    DESCRIPTOR_INTERFACE_HID_N(ITF_MOUSE, STRING_INDEX_HID, ADDR_MOUSE_IN, report_size)
+
+#define DESCRIPTOR_INTERFACE_GAMEPAD(report_size) \
+    DESCRIPTOR_INTERFACE_HID_N(ITF_GAMEPAD, STRING_INDEX_HID, ADDR_GAMEPAD_IN, report_size)
+
 #define DESCRIPTOR_INTERFACE_WEBUSB \
     TUD_VENDOR_DESCRIPTOR( \
         ITF_WEBUSB,       /* Interface index */\
-        ITF_WEBUSB + 4,   /* String index */\
+        STRING_INDEX_WEBUSB, /* String index */\
         ADDR_WEBUSB_OUT,  /* Address out */\
         ADDR_WEBUSB_IN,   /* Address in */\
         64                /* Size */\
@@ -124,7 +141,7 @@
     0xFF,        /* bInterfaceClass */\
     0x5D,        /* bInterfaceSubClass */\
     0x01,        /* bInterfaceProtocol */\
-    0x00,        /* iInterface */\
+    STRING_INDEX_XINPUT,  /* iInterface */\
     /* Undocumented */\
     0x10, 0x21, 0x10, 0x01, 0x01, 0x24, 0x81, 0x14, \
     0x03, 0x00, 0x03, 0x13, 0x02, 0x00, 0x03, 0x00, \

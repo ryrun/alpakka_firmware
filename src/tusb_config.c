@@ -26,26 +26,31 @@ static const char *const descriptor_string[] = {
     STRING_XINPUT
 };
 
-uint8_t const descriptor_report_generic[] = {
+uint8_t const descriptor_report_keyboard[] = {
     TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(REPORT_KEYBOARD)),
+};
+
+uint8_t const descriptor_report_mouse[] = {
     TUD_HID_REPORT_DESC_MOUSE_CUSTOM(HID_REPORT_ID(REPORT_MOUSE)),
+};
+
+uint8_t const descriptor_report_gamepad[] = {
     TUD_HID_REPORT_DESC_GAMEPAD_CUSTOM(HID_REPORT_ID(REPORT_GAMEPAD)),
 };
 
-uint8_t const descriptor_report_xinput[] = {
-    TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(REPORT_KEYBOARD)),
-    TUD_HID_REPORT_DESC_MOUSE_CUSTOM(HID_REPORT_ID(REPORT_MOUSE)),
-};
-
 uint8_t descriptor_configuration_generic[] = {
-    DESCRIPTOR_CONFIGURATION(2),
-    DESCRIPTOR_INTERFACE_HID(sizeof(descriptor_report_generic)),
+    DESCRIPTOR_CONFIGURATION(4),
+    DESCRIPTOR_INTERFACE_KEYBOARD(sizeof(descriptor_report_keyboard)),
+    DESCRIPTOR_INTERFACE_MOUSE(sizeof(descriptor_report_mouse)),
+    DESCRIPTOR_INTERFACE_GAMEPAD(sizeof(descriptor_report_gamepad)),
     DESCRIPTOR_INTERFACE_WEBUSB
 };
 
 uint8_t descriptor_configuration_xinput[] = {
-    DESCRIPTOR_CONFIGURATION(3),
-    DESCRIPTOR_INTERFACE_HID(sizeof(descriptor_report_xinput)),
+    DESCRIPTOR_CONFIGURATION(5),
+    DESCRIPTOR_INTERFACE_KEYBOARD(sizeof(descriptor_report_keyboard)),
+    DESCRIPTOR_INTERFACE_MOUSE(sizeof(descriptor_report_mouse)),
+    DESCRIPTOR_INTERFACE_GAMEPAD(sizeof(descriptor_report_gamepad)),
     DESCRIPTOR_INTERFACE_WEBUSB,
     DESCRIPTOR_INTERFACE_XINPUT
 };
@@ -89,8 +94,9 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
 
 uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance) {
     debug_uart("USB: tud_hid_descriptor_report_cb\n");
-    if (config_get_protocol() == PROTOCOL_GENERIC) return descriptor_report_generic;
-    else return descriptor_report_xinput;
+    if (instance == ITF_KEYBOARD) return descriptor_report_keyboard;
+    if (instance == ITF_MOUSE) return descriptor_report_mouse;
+    return descriptor_report_gamepad;
 }
 
 const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
