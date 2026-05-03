@@ -347,4 +347,17 @@ typedef struct __packed _GamepadReport {
     uint32_t buttons;
 } GamepadReport;
 
+typedef struct __packed _StadiaGamepadReport {
+    uint8_t hat;
+    uint8_t buttons_1;
+    uint8_t buttons_2;
+    uint8_t lx;
+    uint8_t ly;
+    uint8_t rx;
+    uint8_t ry;
+    uint8_t lz;
+    uint8_t rz;
+    uint8_t consumer;
+} StadiaGamepadReport;
+
 void hid_report_dongle(uint8_t report_id, uint8_t* payload);

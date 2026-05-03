@@ -389,6 +389,117 @@ GamepadReport hid_get_gamepad_report() {
     return report;
 }
 
+static uint8_t hid_axis_to_stadia(double value) {
+    int16_t report = 128 + (constrain(value, -1, 1) * 127);
+    return constrain(report, 1, 255);
+}
+
+static uint8_t hid_trigger_to_stadia(double value) {
+    return constrain(value, 0, 1) * BIT_8;
+}
+
+static uint8_t hid_get_stadia_hat(bool left, bool right, bool up, bool down) {
+    int8_t x = (!!right) - (!!left);
+    int8_t y = (!!down) - (!!up);
+    if (x ==  0 && y == -1) return 0;  // N
+    if (x ==  1 && y == -1) return 1;  // NE
+    if (x ==  1 && y ==  0) return 2;  // E
+    if (x ==  1 && y ==  1) return 3;  // SE
+    if (x ==  0 && y ==  1) return 4;  // S
+    if (x == -1 && y ==  1) return 5;  // SW
+    if (x == -1 && y ==  0) return 6;  // W
+    if (x == -1 && y == -1) return 7;  // NW
+    return 8;
+}
+
+static uint8_t hid_axis_report_to_stadia(int16_t value) {
+    return hid_axis_to_stadia((double)value / BIT_15);
+}
+
+static uint8_t hid_trigger_report_to_stadia(int16_t value) {
+    double normalized = (((double)value / BIT_15) + 1) / 2;
+    return hid_trigger_to_stadia(normalized);
+}
+
+static StadiaGamepadReport hid_gamepad_to_stadia_report(GamepadReport report) {
+    uint8_t lz = hid_trigger_report_to_stadia(report.lz);
+    uint8_t rz = hid_trigger_report_to_stadia(report.rz);
+    uint32_t buttons = report.buttons;
+    StadiaGamepadReport stadia = {
+        .hat = hid_get_stadia_hat(
+            buttons & (1 << 8),
+            buttons & (1 << 9),
+            buttons & (1 << 10),
+            buttons & (1 << 11)
+        ),
+        .buttons_1 =
+            ((lz > 0)              << 2) +
+            ((rz > 0)              << 3) +
+            ((!!(buttons & (1 << 14))) << 4) +
+            ((!!(buttons & (1 << 13))) << 5) +
+            ((!!(buttons & (1 << 12))) << 6) +
+            ((!!(buttons & (1 <<  7))) << 7),
+        .buttons_2 =
+            ((!!(buttons & (1 << 6))) << 0) +
+            ((!!(buttons & (1 << 5))) << 1) +
+            ((!!(buttons & (1 << 4))) << 2) +
+            ((!!(buttons & (1 << 3))) << 3) +
+            ((!!(buttons & (1 << 2))) << 4) +
+            ((!!(buttons & (1 << 1))) << 5) +
+            ((!!(buttons & (1 << 0))) << 6),
+        .lx = hid_axis_report_to_stadia(report.lx),
+        .ly = hid_axis_report_to_stadia(report.ly),
+        .rx = hid_axis_report_to_stadia(report.rx),
+        .ry = hid_axis_report_to_stadia(report.ry),
+        .lz = lz,
+        .rz = rz,
+        .consumer = 0,
+    };
+    return stadia;
+}
+
+StadiaGamepadReport hid_get_stadia_gamepad_report() {
+    double lx = hid_axis(gamepad_axis[LX], GAMEPAD_AXIS_LX, GAMEPAD_AXIS_LX_NEG);
+    double ly = hid_axis(gamepad_axis[LY], GAMEPAD_AXIS_LY, GAMEPAD_AXIS_LY_NEG);
+    double rx = hid_axis(gamepad_axis[RX], GAMEPAD_AXIS_RX, GAMEPAD_AXIS_RX_NEG);
+    double ry = hid_axis(gamepad_axis[RY], GAMEPAD_AXIS_RY, GAMEPAD_AXIS_RY_NEG);
+    double lz = hid_axis(gamepad_axis[LZ], GAMEPAD_AXIS_LZ, 0);
+    double rz = hid_axis(gamepad_axis[RZ], GAMEPAD_AXIS_RZ, 0);
+    uint8_t lz_report = hid_trigger_to_stadia(lz);
+    uint8_t rz_report = hid_trigger_to_stadia(rz);
+    StadiaGamepadReport report = {
+        .hat = hid_get_stadia_hat(
+            state_matrix[GAMEPAD_LEFT],
+            state_matrix[GAMEPAD_RIGHT],
+            state_matrix[GAMEPAD_UP],
+            state_matrix[GAMEPAD_DOWN]
+        ),
+        .buttons_1 =
+            ((lz_report > 0)                  << 2) +
+            ((rz_report > 0)                  << 3) +
+            ((!!state_matrix[GAMEPAD_HOME])   << 4) +
+            ((!!state_matrix[GAMEPAD_START])  << 5) +
+            ((!!state_matrix[GAMEPAD_SELECT]) << 6) +
+            ((!!state_matrix[GAMEPAD_R3])     << 7),
+        .buttons_2 =
+            ((!!state_matrix[GAMEPAD_L3]) << 0) +
+            ((!!state_matrix[GAMEPAD_R1]) << 1) +
+            ((!!state_matrix[GAMEPAD_L1]) << 2) +
+            ((!!state_matrix[GAMEPAD_Y])  << 3) +
+            ((!!state_matrix[GAMEPAD_X])  << 4) +
+            ((!!state_matrix[GAMEPAD_B])  << 5) +
+            ((!!state_matrix[GAMEPAD_A])  << 6),
+        .lx = hid_axis_to_stadia(lx),
+        .ly = hid_axis_to_stadia(ly),
+        .rx = hid_axis_to_stadia(rx),
+        .ry = hid_axis_to_stadia(ry),
+        .lz = lz_report,
+        .rz = rz_report,
+        .consumer = 0,
+    };
+    return report;
+}
+
 XInputReport hid_get_xinput_report() {
     int8_t buttons_0 = 0;
     int8_t buttons_1 = 0;
@@ -474,8 +585,16 @@ void hid_report_mouse(bool wired) {
 
 void hid_report_gamepad(bool wired) {
     GamepadReport report = hid_get_gamepad_report();
-    if (wired) tud_hid_report(REPORT_GAMEPAD, &report, sizeof(report));
-    else wireless_send_hid(REPORT_GAMEPAD, &report, sizeof(report));
+    if (wired) {
+        if (config_get_protocol() == PROTOCOL_GENERIC) {
+            StadiaGamepadReport stadia_report = hid_get_stadia_gamepad_report();
+            tud_hid_report(REPORT_GAMEPAD, &stadia_report, sizeof(stadia_report));
+        } else {
+            tud_hid_report(REPORT_GAMEPAD, &report, sizeof(report));
+        }
+    } else {
+        wireless_send_hid(REPORT_GAMEPAD, &report, sizeof(report));
+    }
     hid_set_gamepad_synced();
     last_report_gamepad = report;
 }
@@ -628,7 +747,12 @@ void hid_report_dongle(uint8_t report_id, uint8_t* payload) {
         }
         if (report_id == REPORT_GAMEPAD) {
             if (tud_hid_ready()) {
-                tud_hid_report(REPORT_GAMEPAD, payload, sizeof(GamepadReport));
+                if (config_get_protocol() == PROTOCOL_GENERIC) {
+                    StadiaGamepadReport stadia_report = hid_gamepad_to_stadia_report(*(GamepadReport*)payload);
+                    tud_hid_report(REPORT_GAMEPAD, &stadia_report, sizeof(stadia_report));
+                } else {
+                    tud_hid_report(REPORT_GAMEPAD, payload, sizeof(GamepadReport));
+                }
             }
         }
         if (report_id == REPORT_XINPUT) {

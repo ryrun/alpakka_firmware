@@ -29,7 +29,7 @@ static const char *const descriptor_string[] = {
 uint8_t const descriptor_report_generic[] = {
     TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(REPORT_KEYBOARD)),
     TUD_HID_REPORT_DESC_MOUSE_CUSTOM(HID_REPORT_ID(REPORT_MOUSE)),
-    TUD_HID_REPORT_DESC_GAMEPAD_CUSTOM(HID_REPORT_ID(REPORT_GAMEPAD)),
+    TUD_HID_REPORT_DESC_GAMEPAD_STADIA(HID_REPORT_ID(REPORT_GAMEPAD)),
 };
 
 uint8_t const descriptor_report_xinput[] = {
@@ -104,6 +104,9 @@ const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     }
     static uint16_t response[64];
     const char *string = descriptor_string[index];
+    if (config_get_protocol() == PROTOCOL_GENERIC && index == 1) {
+        string = STRING_VENDOR_STADIA;
+    }
     uint8_t i = 0;
     for (i=0; string[i]; i++) {
         response[i + 1] = string[i];
