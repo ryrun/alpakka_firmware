@@ -74,6 +74,7 @@ uint8_t const *tud_descriptor_device_cb() {
     }
     if (config_get_protocol() == PROTOCOL_GENERIC) {
         descriptor_device.idVendor = USB_GENERIC_VENDOR;
+        descriptor_device.bcdDevice = 0x0201;
         #ifdef DEVICE_IS_ALPAKKA
             descriptor_device.idProduct = USB_GENERIC_PRODUCT_ALPAKKA;
         #elif defined DEVICE_DONGLE
@@ -121,6 +122,9 @@ const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     const char *string = descriptor_string[index];
     if (config_get_protocol() == PROTOCOL_GENERIC && index == 1) {
         string = STRING_VENDOR_STADIA;
+    }
+    if (config_get_protocol() == PROTOCOL_GENERIC && index == 3) {
+        string = STRING_SERIAL_STADIA_TEST;
     }
     uint8_t i = 0;
     for (i=0; string[i]; i++) {
