@@ -57,7 +57,7 @@ void gyro_accel_correction() {
 void gyro_absolute_output(float value, uint8_t *actions, bool *pressed) {
     for(uint8_t i=0; i<4; i++) {
         uint8_t action = actions[i];
-        if (hid_is_axis(action)) {
+        if (hid_is_gamepad_axis(action)) {
             value = fabs(value);
             if      (action == GAMEPAD_AXIS_LX)     hid_gamepad_axis(LX,  value);
             else if (action == GAMEPAD_AXIS_LY)     hid_gamepad_axis(LY,  value);
@@ -149,9 +149,6 @@ void Gyro__report_absolute(Gyro *self) {
 }
 
 void Gyro__report_incremental(Gyro *self) {
-    static double sub_x = 0;
-    static double sub_y = 0;
-    static double sub_z = 0;
      // Read gyro values.
     Vector imu_gyro = imu_read_gyro();
     double x = imu_gyro.x * CFG_GYRO_SENSITIVITY_X * sensitivity_multiplier;
@@ -166,14 +163,6 @@ void Gyro__report_incremental(Gyro *self) {
     else if (y < 0 && y > -t) y = -hssnf(t, k, -y);
     if      (z > 0 && z <  t) z =  hssnf(t, k,  z);
     else if (z < 0 && z > -t) z = -hssnf(t, k, -z);
-    // Reintroduce subpixel leftovers.
-    x += sub_x;
-    y += sub_y;
-    z += sub_z;
-    // Round down and save leftovers.
-    sub_x = modf(x, &x);
-    sub_y = modf(y, &y);
-    sub_z = modf(z, &z);
     // Report.
     if (x >= 0) gyro_incremental_output( x, self->actions_x_pos);
     else        gyro_incremental_output(-x, self->actions_x_neg);

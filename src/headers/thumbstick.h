@@ -15,11 +15,6 @@ typedef enum ThumbstickMode_enum {
     THUMBSTICK_MODE_8DIR,
 } ThumbstickMode;
 
-typedef enum ThumbstickDistance_enum {
-    THUMBSTICK_DISTANCE_AXIAL,
-    THUMBSTICK_DISTANCE_RADIAL,
-} ThumbstickDistance;
-
 typedef struct ThumbstickPosition_struct {
     float x;
     float y;
@@ -57,9 +52,10 @@ typedef enum Dir8_enum {
 typedef struct Thumbstick_struct Thumbstick;
 struct Thumbstick_struct {
     void (*report) (Thumbstick *self);
-    void (*report_4dir_axial) (Thumbstick *self, ThumbstickPosition pos);
-    void (*report_4dir_radial) (Thumbstick *self, ThumbstickPosition pos);
-    void (*report_8dir) (Thumbstick *self, ThumbstickPosition pos);
+    void (*report_4dir) (Thumbstick *self, ThumbstickPosition pos, float raw_radius);
+    void (*report_4dir_dir) (Thumbstick *self, Button *direction, float value);
+    void (*report_4dir_axis) (Thumbstick *self, uint8_t axis, float value);
+    void (*report_8dir) (Thumbstick *self, ThumbstickPosition pos, float raw_radius);
     void (*report_push_auto_toggle) (Thumbstick *self, ThumbstickPosition pos);
     void (*report_alphanumeric) (Thumbstick *self, ThumbstickPosition pos);
     void (*report_glyphstick) (Thumbstick *self, Glyph input);
@@ -75,7 +71,7 @@ struct Thumbstick_struct {
     bool invert_x;
     bool invert_y;
     ThumbstickMode mode;
-    ThumbstickDistance distance_mode;
+    bool radial_mode;
     bool deadzone_override;
     float deadzone;
     float antideadzone;
@@ -111,7 +107,7 @@ Thumbstick Thumbstick_ (
     bool invert_x,
     bool invert_y,
     ThumbstickMode mode,
-    ThumbstickDistance distance_mode,
+    bool radial_mode,
     bool deadzone_override,
     float deadzone,
     float antideadzone,

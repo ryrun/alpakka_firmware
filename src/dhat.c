@@ -33,26 +33,26 @@ bool Dhat__update(Dhat *self) {
     if (up && left) {
         self->up_left.virtual_press = true;
         // Trigger cardinals if mapped to axis.
-        if (hid_is_axis(self->up_center.actions[0])) self->up_center.virtual_press = true;
-        if (hid_is_axis(self->mid_left.actions[0])) self->mid_left.virtual_press = true;
+        if (hid_is_gamepad_axis(self->up_center.actions[0])) self->up_center.virtual_press = true;
+        if (hid_is_gamepad_axis(self->mid_left.actions[0])) self->mid_left.virtual_press = true;
     }
     if (up && right) {
         self->up_right.virtual_press = true;
         // Trigger cardinals if mapped to axis.
-        if (hid_is_axis(self->up_center.actions[0])) self->up_center.virtual_press = true;
-        if (hid_is_axis(self->mid_right.actions[0])) self->mid_right.virtual_press = true;
+        if (hid_is_gamepad_axis(self->up_center.actions[0])) self->up_center.virtual_press = true;
+        if (hid_is_gamepad_axis(self->mid_right.actions[0])) self->mid_right.virtual_press = true;
     }
     if (down && left) {
         self->down_left.virtual_press = true;
         // Trigger cardinals if mapped to axis.
-        if (hid_is_axis(self->down_center.actions[0])) self->down_center.virtual_press = true;
-        if (hid_is_axis(self->mid_left.actions[0])) self->mid_left.virtual_press = true;
+        if (hid_is_gamepad_axis(self->down_center.actions[0])) self->down_center.virtual_press = true;
+        if (hid_is_gamepad_axis(self->mid_left.actions[0])) self->mid_left.virtual_press = true;
     }
     if (down && right) {
         self->down_right.virtual_press = true;
         // Trigger cardinals if mapped to axis.
-        if (hid_is_axis(self->down_center.actions[0])) self->down_center.virtual_press = true;
-        if (hid_is_axis(self->mid_right.actions[0])) self->mid_right.virtual_press = true;
+        if (hid_is_gamepad_axis(self->down_center.actions[0])) self->down_center.virtual_press = true;
+        if (hid_is_gamepad_axis(self->mid_right.actions[0])) self->mid_right.virtual_press = true;
     }
     // Push.
     self->mid_center.virtual_press = (push && !left && !right && !up && !down);
