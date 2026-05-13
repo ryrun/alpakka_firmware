@@ -151,26 +151,30 @@ void Profile__load_from_config(Profile *self, CtrlProfile *profile) {
         ctrl_gyro.mode,
         ctrl_gyro.engage
     );
+    info("%d %d %d\n", ctrl_gyro_x.sens, ctrl_gyro_y.sens, ctrl_gyro_z.sens);
     self->gyro.config_x(
         &(self->gyro),
         (int8_t)ctrl_gyro_x.angle_min,
         (int8_t)ctrl_gyro_x.angle_max,
         ctrl_gyro_x.actions_neg,
-        ctrl_gyro_x.actions_pos
+        ctrl_gyro_x.actions_pos,
+        (ctrl_gyro_x.sens ?: 100.0f) / 100.0f
     );
     self->gyro.config_y(
         &(self->gyro),
         (int8_t)ctrl_gyro_y.angle_min,
         (int8_t)ctrl_gyro_y.angle_max,
         ctrl_gyro_y.actions_neg,
-        ctrl_gyro_y.actions_pos
+        ctrl_gyro_y.actions_pos,
+        (ctrl_gyro_y.sens ?: 100.0f) / 100.0f
     );
     self->gyro.config_z(
         &(self->gyro),
         (int8_t)ctrl_gyro_z.angle_min,
         (int8_t)ctrl_gyro_z.angle_max,
         ctrl_gyro_z.actions_neg,
-        ctrl_gyro_z.actions_pos
+        ctrl_gyro_z.actions_pos,
+        (ctrl_gyro_z.sens ?: 100.0f) / 100.0f
     );
 }
 

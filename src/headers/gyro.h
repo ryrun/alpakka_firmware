@@ -18,9 +18,9 @@ struct Gyro_struct {
     void (*report_incremental) (Gyro *self);
     void (*report_absolute) (Gyro *self);
     void (*reset) (Gyro *self);
-    void (*config_x) (Gyro *self, double min, double max, Actions neg, Actions pos);
-    void (*config_y) (Gyro *self, double min, double max, Actions neg, Actions pos);
-    void (*config_z) (Gyro *self, double min, double max, Actions neg, Actions pos);
+    void (*config_x) (Gyro *self, double min, double max, Actions neg, Actions pos, float sens);
+    void (*config_y) (Gyro *self, double min, double max, Actions neg, Actions pos, float sens);
+    void (*config_z) (Gyro *self, double min, double max, Actions neg, Actions pos, float sens);
     GyroMode mode;
     uint8_t engage;
     Button engage_button;
@@ -42,6 +42,9 @@ struct Gyro_struct {
     Actions actions_x_neg;
     Actions actions_y_neg;
     Actions actions_z_neg;
+    float sens_x;
+    float sens_y;
+    float sens_z;
 };
 
 Gyro Gyro_ (

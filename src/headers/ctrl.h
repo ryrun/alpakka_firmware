@@ -227,7 +227,8 @@ typedef struct __packed _CtrlGyroAxis {
     uint8_t angle_max;
     uint8_t hint_neg[14];
     uint8_t hint_pos[14];
-    uint8_t _padding[20];
+    uint8_t sens;
+    uint8_t _padding[19];
 } CtrlGyroAxis;
 
 typedef struct __packed _CtrlMacro {

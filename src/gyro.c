@@ -164,12 +164,12 @@ void Gyro__report_incremental(Gyro *self) {
     if      (z > 0 && z <  t) z =  hssnf(t, k,  z);
     else if (z < 0 && z > -t) z = -hssnf(t, k, -z);
     // Report.
-    if (x >= 0) gyro_incremental_output( x, self->actions_x_pos);
-    else        gyro_incremental_output(-x, self->actions_x_neg);
-    if (y >= 0) gyro_incremental_output( y, self->actions_y_pos);
-    else        gyro_incremental_output(-y, self->actions_y_neg);
-    if (z >= 0) gyro_incremental_output( z, self->actions_z_pos);
-    else        gyro_incremental_output(-z, self->actions_z_neg);
+    if (x >= 0) gyro_incremental_output( x * self->sens_x, self->actions_x_pos);
+    else        gyro_incremental_output(-x * self->sens_x, self->actions_x_neg);
+    if (y >= 0) gyro_incremental_output( y * self->sens_y, self->actions_y_pos);
+    else        gyro_incremental_output(-y * self->sens_y, self->actions_y_neg);
+    if (z >= 0) gyro_incremental_output( z * self->sens_z, self->actions_z_pos);
+    else        gyro_incremental_output(-z * self->sens_z, self->actions_z_neg);
 }
 
 bool Gyro__is_engaged(Gyro *self) {
@@ -206,25 +206,28 @@ void Gyro__reset(Gyro *self) {
     self->pressed_z_neg = false;
 }
 
-void Gyro__config_x(Gyro *self, double min, double max, Actions neg, Actions pos) {
+void Gyro__config_x(Gyro *self, double min, double max, Actions neg, Actions pos, float sens) {
     self->absolute_x_min = min;
     self->absolute_x_max = max;
     memcpy(self->actions_x_neg, neg, ACTIONS_LEN);
     memcpy(self->actions_x_pos, pos, ACTIONS_LEN);
+    self->sens_x = sens;
 }
 
-void Gyro__config_y(Gyro *self, double min, double max, Actions neg, Actions pos) {
+void Gyro__config_y(Gyro *self, double min, double max, Actions neg, Actions pos, float sens) {
     self->absolute_y_min = min;
     self->absolute_y_max = max;
     memcpy(self->actions_y_neg, neg, ACTIONS_LEN);
     memcpy(self->actions_y_pos, pos, ACTIONS_LEN);
+    self->sens_y = sens;
 }
 
-void Gyro__config_z(Gyro *self, double min, double max, Actions neg, Actions pos) {
+void Gyro__config_z(Gyro *self, double min, double max, Actions neg, Actions pos, float sens) {
     self->absolute_z_min = min;
     self->absolute_z_max = max;
     memcpy(self->actions_z_neg, neg, ACTIONS_LEN);
     memcpy(self->actions_z_pos, pos, ACTIONS_LEN);
+    self->sens_z = sens;
 }
 
 Gyro Gyro_ (
