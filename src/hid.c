@@ -285,7 +285,11 @@ bool hid_is_axis(uint8_t action) {
 }
 
 bool hid_is_mouse_axis(uint8_t action) {
-    return is_between(action, MOUSE_SCROLL_UP, MOUSE_Y_NEG);
+    return is_between(action, MOUSE_X, MOUSE_Y_NEG);
+}
+
+bool hid_is_scroll_axis(uint8_t action) {
+    return is_between(action, MOUSE_SCROLL_UP, MOUSE_SCROLL_DOWN);
 }
 
 bool hid_is_gamepad_axis(uint8_t action) {

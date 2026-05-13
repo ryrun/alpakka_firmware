@@ -107,6 +107,7 @@ target_sources(${PROJECT} PUBLIC
     src/rotary.c
     src/self_test.c
     src/thanks.c
+    src/thumbstick/rotation.c
     src/thumbstick.c
     src/touch.c
     src/tusb_config.c
