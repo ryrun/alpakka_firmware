@@ -361,6 +361,7 @@ void Thumbstick__report_4dir_axis(Thumbstick *self, uint8_t axis, float value) {
         else if (axis == GAMEPAD_AXIS_LZ)     hid_gamepad_axis(LZ, value);
         else if (axis == GAMEPAD_AXIS_RZ)     hid_gamepad_axis(RZ, value);
     }
+    // Mouse.
     else if (hid_is_mouse_axis(axis)) {
         float mouse_value = value * self->sens_mouse / CFG_TICK_FREQUENCY;
         if      (axis == MOUSE_X)     hid_mouse_move( mouse_value, 0);
@@ -368,6 +369,7 @@ void Thumbstick__report_4dir_axis(Thumbstick *self, uint8_t axis, float value) {
         else if (axis == MOUSE_Y)     hid_mouse_move(0,  mouse_value);
         else if (axis == MOUSE_Y_NEG) hid_mouse_move(0, -mouse_value);
     }
+    // Scroll.
     else if (hid_is_scroll_axis(axis)) {
         float scroll_value = value * self->sens_scroll / CFG_TICK_FREQUENCY;
         if      (axis == MOUSE_SCROLL_UP)   hid_mouse_scroll(0,  scroll_value);

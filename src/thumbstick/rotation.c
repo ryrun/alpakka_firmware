@@ -109,6 +109,15 @@ static void report_gamepad(Thumbstick *ts, float delta_angle, uint8_t action, bo
 }
 
 static void report_gamepad_resend(Thumbstick *ts) {
+    /*
+    Since HID gamepad logic aggregates multiple values from separate inputs, it
+    reset the value to zero in each tick. This is convenient for most use cases,
+    except the corner case of the rotation mode "holding" the value while is at
+    the stick is at the center (keep value setting). So we have to resend the
+    value each tick.
+    Note that resending values to the HID layer does not imply data is send via
+    USB all ticks.
+    */
     uint8_t action = ts->rot.last_action - GAMEPAD_AXIS_INDEX;
     hid_gamepad_axis(action, ts->rot.last_value);
 }
@@ -118,7 +127,6 @@ static void calc_flick_time(Thumbstick *ts) {
     Calculate the factor for a max flick (180 degrees) to exponentially decay
     into less than 1 degree, in the target time, with the current polling rate.
     */
-    if (ts->rot_flick_time == 0) return;  // Flick time disabled.
     float base = 1.0f / 180.0f;
     float exp = 1.0f / (ts->rot_flick_time / CFG_TICK_INTERVAL_IN_MS);
     ts->rot.flick_time_factor = 1 - pow(base, exp);
@@ -126,7 +134,6 @@ static void calc_flick_time(Thumbstick *ts) {
 
 static void apply_flick_time(Thumbstick *ts) {
     if (fabsf(ts->rot.flick_angle) < 0.1f) return;
-    // info("F %f\n", factor);
     float factor = ts->rot.flick_time_factor;
     float delta_angle = ts->rot.flick_angle * factor;
     ts->rot.flick_angle *= 1-factor;
@@ -150,7 +157,7 @@ void Thumbstick__report_rotation(Thumbstick *self, ThumbstickPosition pos, float
     // When stick moves from center to perimeter.
     if (!self->rot.has_action) {
         find_action(self, pos);
-        calc_flick_time(self);
+        if (self->rot_flick_time != 0) calc_flick_time(self);
     }
     // Determine angle.
     float angle = pos.angle;
