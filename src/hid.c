@@ -55,6 +55,7 @@ Flow diagram: docs/replay.md
 #include "logging.h"
 #include "thanks.h"
 #include "power.h"
+#include "loop.h"
 
 // Toggle to prevent any further communication. Main use case being turning it
 // off while the protocol is being changed to avoid incoherent outputs.
@@ -454,38 +455,50 @@ void hid_evaluate_gamepad_synced() {
     }
 }
 
-void hid_report_keyboard(bool wired) {
+bool hid_report_keyboard(bool wired) {
     KeyboardReport report = hid_get_keyboard_report();
-    if (wired) tud_hid_report(REPORT_KEYBOARD, &report, sizeof(report));
+    bool sent = true;
+    if (wired) sent = tud_hid_report(REPORT_KEYBOARD, &report, sizeof(report));
     else wireless_send_hid(REPORT_KEYBOARD, &report, sizeof(report));
+    if (!sent) return false;
     synced_keyboard = true;
     last_report_keyboard = report;
+    return true;
 }
 
-void hid_report_mouse(bool wired) {
+bool hid_report_mouse(bool wired) {
     MouseReport report = hid_get_mouse_report();
-    if (wired) tud_hid_report(REPORT_MOUSE, &report, sizeof(report));
+    bool sent = true;
+    if (wired) sent = tud_hid_report(REPORT_MOUSE, &report, sizeof(report));
     else wireless_send_hid(REPORT_MOUSE, &report, sizeof(report));
+    if (!sent) return false;
     hid_reset_mouse();
     synced_mouse = true;
     priority_mouse = 0;
     last_report_mouse = report;
+    return true;
 }
 
-void hid_report_gamepad(bool wired) {
+bool hid_report_gamepad(bool wired) {
     GamepadReport report = hid_get_gamepad_report();
-    if (wired) tud_hid_report(REPORT_GAMEPAD, &report, sizeof(report));
+    bool sent = true;
+    if (wired) sent = tud_hid_report(REPORT_GAMEPAD, &report, sizeof(report));
     else wireless_send_hid(REPORT_GAMEPAD, &report, sizeof(report));
+    if (!sent) return false;
     hid_set_gamepad_synced();
     last_report_gamepad = report;
+    return true;
 }
 
-void hid_report_xinput(bool wired) {
+bool hid_report_xinput(bool wired) {
     XInputReport report = hid_get_xinput_report();
-    if (wired) xinput_send_report(&report);
+    bool sent = true;
+    if (wired) sent = xinput_send_report(&report);
     else wireless_send_hid(REPORT_XINPUT, &report, sizeof(report));
+    if (!sent) return false;
     hid_set_gamepad_synced();
     last_report_xinput = report;
+    return true;
 }
 
 void hid_replay_keyboard() {
@@ -567,9 +580,36 @@ ReportType hid_get_priority() {
     return 0;
 }
 
+void hid_report_wired_stats(ReportType type, bool sent) {
+    if (logging_get_level() < LOG_DEBUG) return;
+    static uint32_t last_ts = 0;
+    static uint16_t attempts[5] = {0,};
+    static uint16_t successes[5] = {0,};
+    uint32_t now = time_us_32();
+    if (type >= REPORT_KEYBOARD && type <= REPORT_XINPUT) {
+        attempts[type]++;
+        if (sent) successes[type]++;
+    }
+    if ((now - last_ts) < 1000000) return;
+    last_ts = now;
+    info(
+        "HID: k=%i/%i m=%i/%i g=%i/%i x=%i/%i freq=%i\n",
+        successes[REPORT_KEYBOARD], attempts[REPORT_KEYBOARD],
+        successes[REPORT_MOUSE], attempts[REPORT_MOUSE],
+        successes[REPORT_GAMEPAD], attempts[REPORT_GAMEPAD],
+        successes[REPORT_XINPUT], attempts[REPORT_XINPUT],
+        loop_get_tick_frequency()
+    );
+    for(uint8_t i=0; i<5; i++) {
+        attempts[i] = 0;
+        successes[i] = 0;
+    }
+}
+
 bool hid_report_wired() {
     if (!hid_allow_communication) return true;
     ReportType device_to_report = hid_get_priority();
+    bool sent = false;
     tud_task();
     if (tud_ready()) {
         if (tud_hid_ready()) {
@@ -580,14 +620,15 @@ bool hid_report_wired() {
                 webusb_read();
                 webusb_flush();
             }
-            if (device_to_report == REPORT_KEYBOARD) hid_report_keyboard(true);
-            if (device_to_report == REPORT_MOUSE) hid_report_mouse(true);
-            if (device_to_report == REPORT_GAMEPAD) hid_report_gamepad(true);
+            if (device_to_report == REPORT_KEYBOARD) sent = hid_report_keyboard(true);
+            if (device_to_report == REPORT_MOUSE) sent = hid_report_mouse(true);
+            if (device_to_report == REPORT_GAMEPAD) sent = hid_report_gamepad(true);
         }
         if (device_to_report == REPORT_XINPUT) {
             if (tud_suspended()) tud_remote_wakeup();
-            hid_report_xinput(true);
+            sent = hid_report_xinput(true);
         }
+        hid_report_wired_stats(device_to_report, sent);
         hid_reset_gamepad_axis();
         return true;
     } else {
