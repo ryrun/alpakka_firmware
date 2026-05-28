@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <pico/stdio.h>
 #include <pico/bootrom.h>
+#include <pico/time.h>
 #include <hardware/watchdog.h>
 #include "uart.h"
 #include "config.h"
@@ -51,10 +52,10 @@ void uart_listen_serial_do(bool limited) {
 }
 
 void uart_listen_serial() {
-    static uint16_t i = 0;
-    i += 1;
-    // Execute only once per second.
-    if (i % CFG_TICK_FREQUENCY) return;
+    static uint32_t last_listen_ts = 0;
+    uint32_t now = time_us_32();
+    if ((now - last_listen_ts) < 1000000) return;
+    last_listen_ts = now;
     uart_listen_serial_do(false);
 }
 

@@ -31,6 +31,20 @@ DeviceMode loop_get_device_mode() {
     return device_mode;
 }
 
+uint16_t loop_get_tick_frequency() {
+    #ifdef DEVICE_DONGLE
+        return CFG_TICK_FREQUENCY_DONGLE;
+    #elif defined DEVICE_ALPAKKA_V1
+        return device_mode == WIRED ? CFG_TICK_FREQUENCY_WIRED : CFG_TICK_FREQUENCY_WIRELESS;
+    #else
+        return CFG_TICK_FREQUENCY_WIRELESS;
+    #endif
+}
+
+uint32_t loop_get_tick_interval_us() {
+    return 1000000 / loop_get_tick_frequency();
+}
+
 void loop_set_battery_low(bool state) {
     battery_low = state;
 }
@@ -198,9 +212,12 @@ void loop_controller_task() {
     if (device_mode == WIRELESS) {
         wireless_controller_task();
         // Switch to wired if USB is connected (check once per second).
-        static uint16_t i = 0;
-        i++;
-        if ((!(i % CFG_TICK_FREQUENCY)) && usb_is_connected()) set_wired();
+        static uint32_t last_usb_check_ts = 0;
+        uint32_t now = time_us_32();
+        if ((now - last_usb_check_ts) > 1000000) {
+            last_usb_check_ts = now;
+            if (usb_is_connected()) set_wired();
+        }
     }
     // Listen to UART commands.
     uart_listen_serial();
@@ -258,15 +275,16 @@ void loop_run() {
         #endif
         // Calculate used time.
         uint32_t used = time_us_32() - start;
-        int32_t unused = CFG_TICK_INTERVAL_IN_US - (int32_t)used;
+        uint16_t tick_frequency = loop_get_tick_frequency();
+        int32_t unused = loop_get_tick_interval_us() - (int32_t)used;
         // Timing stats.
         if (logging_get_level() >= LOG_DEBUG) {
             static float average = 0;
             static float max = 0;
             average += used;
             if (used > max) max = used;
-            if (!(i % CFG_TICK_FREQUENCY)) {
-                info("Loop: avg=%.0f max=%.0f\n", average/1000, max);
+            if (!(i % tick_frequency)) {
+                info("Loop: avg=%.0f max=%.0f freq=%i\n", average/tick_frequency, max, tick_frequency);
                 average = max = 0;
             }
         }

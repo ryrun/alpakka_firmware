@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <hardware/sync.h>
+#include <pico/time.h>
 #include <pico/unique_id.h>
 #include "config.h"
 #include "nvm.h"
@@ -105,11 +106,10 @@ void config_profile_set_sync(uint8_t index, bool state) {
 }
 
 void config_sync() {
-    // Do not check in every cycle.
-    static uint16_t i = 0;
-    i++;
-    if (i != NVM_SYNC_FREQUENCY) return;
-    else i = 0;
+    static uint32_t last_sync_ts = 0;
+    uint32_t now = time_us_32();
+    if ((now - last_sync_ts) < 500000) return;
+    last_sync_ts = now;
     // Sync main config.
     if (!config_cache_synced) {
         config_write();
@@ -646,5 +646,3 @@ void config_init() {
     #endif
     logging_load_from_config();
 }
-
-

@@ -27,6 +27,8 @@ uint64_t get_system_clock();
 void set_system_clock(uint64_t time);
 
 DeviceMode loop_get_device_mode();
+uint16_t loop_get_tick_frequency();
+uint32_t loop_get_tick_interval_us();
 void loop_set_battery_low(bool state);
 
 void loop_controller_init();

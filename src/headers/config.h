@@ -25,18 +25,12 @@
 
 #define CFG_LED_BRIGHTNESS 0.2
 
-#ifdef DEVICE_DONGLE
-    #define CFG_TICK_FREQUENCY 1000  // Hz.
-#else
-    #define CFG_TICK_FREQUENCY 250  // Hz.
-#endif
+#define CFG_TICK_FREQUENCY_WIRED 1000  // Hz.
+#define CFG_TICK_FREQUENCY_WIRELESS 250  // Hz.
+#define CFG_TICK_FREQUENCY_DONGLE 1000  // Hz.
 
-#define CFG_IMU_TICK_SAMPLES 128  // Multi-sampling per pooling cycle.
-
-#define CFG_TICK_INTERVAL_IN_MS  (1000 / CFG_TICK_FREQUENCY)
-#define CFG_TICK_INTERVAL_IN_US  (1000000 / CFG_TICK_FREQUENCY)
-
-#define NVM_SYNC_FREQUENCY  (CFG_TICK_FREQUENCY / 2)
+#define CFG_IMU_TICK_SAMPLES_WIRED 16  // Multi-sampling per polling cycle.
+#define CFG_IMU_TICK_SAMPLES_WIRELESS 128  // Multi-sampling per polling cycle.
 
 #define CFG_CALIBRATION_SAMPLES_THUMBSTICK 100000  // Samples.
 #define CFG_CALIBRATION_SAMPLES_GYRO 500000  // Samples.
@@ -185,4 +179,3 @@ void config_profile_overwrite(uint8_t indexTo, int8_t indexFrom);
 void config_set_problem(uint8_t flag, bool state);
 void config_ignore_problems();
 uint8_t config_get_problems();
-

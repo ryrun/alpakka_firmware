@@ -137,7 +137,7 @@ float touch_get_auto_threshold(float elapsed, float ratio) {
     // Update baseline (with smoothing) if the surface is considered disengaged.
     bool engaged = elapsed >= threshold;
     if (!engaged) {
-        baseline = smooth(baseline, elapsed, TOUCH_AUTO_SMOOTH);
+        baseline = smooth(baseline, elapsed, loop_get_tick_frequency());
     }
     // Return.
     return threshold;
@@ -198,11 +198,11 @@ bool touch_status() {
 // Probe timings and show them in the startup log.
 void touch_log_probe() {
     uint8_t t0 = touch_get_elapsed();
-    sleep_ms(CFG_TICK_INTERVAL_IN_MS);
+    sleep_us(loop_get_tick_interval_us());
     uint8_t t1 = touch_get_elapsed();
-    sleep_ms(CFG_TICK_INTERVAL_IN_MS);
+    sleep_us(loop_get_tick_interval_us());
     uint8_t t2 = touch_get_elapsed();
-    sleep_ms(CFG_TICK_INTERVAL_IN_MS);
+    sleep_us(loop_get_tick_interval_us());
     uint8_t t3 = touch_get_elapsed();
     info("  Touch readings: %ius %ius %ius %ius\n", t0, t1, t2, t3);
 }

@@ -13,6 +13,7 @@
 #include "pin.h"
 #include "touch.h"
 #include "vector.h"
+#include "loop.h"
 
 double sensitivity_multiplier;
 
@@ -105,11 +106,12 @@ void Gyro__report_absolute(Gyro *self) {
     gyro_accel_correction();
     // Get data from gyros.
     Vector gyro = imu_read_gyro();
+    double tick_scale = (double)CFG_TICK_FREQUENCY_WIRELESS / loop_get_tick_frequency();
     static float sens = -BIT_18 * M_PI;
     // Rotate world space orientation.
-    Vector4 rx = quaternion(world_right, gyro.y / sens);
-    Vector4 ry = quaternion(world_fw, gyro.z / sens);
-    Vector4 rz = quaternion(world_top, gyro.x / sens);
+    Vector4 rx = quaternion(world_right, gyro.y * tick_scale / sens);
+    Vector4 ry = quaternion(world_fw, gyro.z * tick_scale / sens);
+    Vector4 rz = quaternion(world_top, gyro.x * tick_scale / sens);
     static uint8_t i = 0;
     Vector4 r;
     if      (i==0) r = qmultiply(qmultiply(rx, ry), rz);
@@ -152,11 +154,12 @@ void Gyro__report_incremental(Gyro *self) {
     static double sub_x = 0;
     static double sub_y = 0;
     static double sub_z = 0;
-     // Read gyro values.
+    // Read gyro values.
     Vector imu_gyro = imu_read_gyro();
-    double x = imu_gyro.x * CFG_GYRO_SENSITIVITY_X * sensitivity_multiplier;
-    double y = imu_gyro.y * CFG_GYRO_SENSITIVITY_Y * sensitivity_multiplier;
-    double z = imu_gyro.z * CFG_GYRO_SENSITIVITY_Z * sensitivity_multiplier;
+    double tick_scale = (double)CFG_TICK_FREQUENCY_WIRELESS / loop_get_tick_frequency();
+    double x = imu_gyro.x * CFG_GYRO_SENSITIVITY_X * sensitivity_multiplier * tick_scale;
+    double y = imu_gyro.y * CFG_GYRO_SENSITIVITY_Y * sensitivity_multiplier * tick_scale;
+    double z = imu_gyro.z * CFG_GYRO_SENSITIVITY_Z * sensitivity_multiplier * tick_scale;
     // Additional processing.
     double t = 1.0;
     double k = 0.5;

@@ -22,9 +22,6 @@
 #define TOUCH_AUTO_RATIO_WIRELESS_PRESET2 1.20
 #define TOUCH_AUTO_RATIO_WIRELESS_PRESET3 1.15
 
-// Smooting of the dynamic threshold (not the sampling).
-#define TOUCH_AUTO_SMOOTH  (CFG_TICK_FREQUENCY)  // 1 second.
-
 // Debounce.
 #define TOUCH_DEBOUNCE 100  // Milliseconds.
 
