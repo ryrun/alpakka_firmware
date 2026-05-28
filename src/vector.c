@@ -45,11 +45,7 @@ Vector vector_smooth(Vector a, Vector b, float weight) {
 }
 
 float vector_lenght(Vector v) {
-    return sqrt(
-        powf(fabs(v.x), 2) +
-        powf(fabs(v.y), 2) +
-        powf(fabs(v.z), 2)
-    );
+    return sqrtf((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
 }
 
 Vector4 quaternion(Vector vector, float rotation /*radians*/) {
@@ -86,4 +82,3 @@ Vector qrotate(Vector4 q1, Vector v) {
 Vector qvector(Vector4 q) {
     return vector_normalize((Vector){q.x, q.y, q.z});
 }
-

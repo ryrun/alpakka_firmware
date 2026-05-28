@@ -32,6 +32,9 @@
 #define CFG_IMU_TICK_SAMPLES_WIRED 16  // Multi-sampling per polling cycle.
 #define CFG_IMU_TICK_SAMPLES_WIRELESS 128  // Multi-sampling per polling cycle.
 
+#define CFG_IO_SCAN_FREQUENCY_WIRED 250  // Hz.
+#define CFG_WEBUSB_FREQUENCY_WIRED 250  // Hz.
+
 #define CFG_CALIBRATION_SAMPLES_THUMBSTICK 100000  // Samples.
 #define CFG_CALIBRATION_SAMPLES_GYRO 500000  // Samples.
 #define CFG_CALIBRATION_SAMPLES_ACCEL 100000  // Samples.

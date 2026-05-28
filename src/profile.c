@@ -16,6 +16,7 @@
 #include "common.h"
 #include "power.h"
 #include "wireless.h"
+#include "loop.h"
 
 Profile profiles[PROFILE_SLOTS];
 uint8_t profile_active_index = -1;
@@ -37,9 +38,25 @@ bool enabled_all = true;
 bool enabled_abxy = true;
 bool profile_led_lock = false;  // Extern.
 
+void profile_io_cache_update() {
+    static bool initialized = false;
+    static uint32_t last_update_ts = 0;
+    uint32_t now = time_us_32();
+    if (
+        initialized &&
+        loop_get_tick_frequency() == CFG_TICK_FREQUENCY_WIRED &&
+        (now - last_update_ts) < (1000000 / CFG_IO_SCAN_FREQUENCY_WIRED)
+    ) {
+        return;
+    }
+    bus_i2c_io_cache_update();
+    initialized = true;
+    last_update_ts = now;
+}
+
 void Profile__report(Profile *self) {
     if (!enabled_all) return;
-    bus_i2c_io_cache_update();
+    profile_io_cache_update();
     home.report(&home);
     if (enabled_abxy) {
         self->a.report(&self->a);
