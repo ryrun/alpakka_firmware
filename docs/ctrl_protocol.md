@@ -214,10 +214,10 @@ Direction: `Controller` -> `App`
 | - | - |
 | 0 | Sequence |
 | 1..3 | 24-bit physical button bitmask |
-| 4 | Left stick X (`int8`, `-127..127`) |
-| 5 | Left stick Y (`int8`, `-127..127`) |
-| 6 | Right stick X (`int8`, `-127..127`) |
-| 7 | Right stick Y (`int8`, `-127..127`) |
+| 4 | Left stick X telemetry (`int8`, `-127..127`) |
+| 5 | Left stick Y telemetry (`int8`, `-127..127`) |
+| 6 | Right stick X telemetry (`int8`, `-127..127`) |
+| 7 | Right stick Y telemetry (`int8`, `-127..127`) |
 | 8 | Dhat X (`int8`, `-127..127`) |
 | 9 | Dhat Y (`int8`, `-127..127`) |
 | 10..11 | Gyro X (`int16`) |
@@ -230,6 +230,8 @@ Direction: `Controller` -> `App`
 | 23 | Flags |
 | 24 | Active profile index |
 | 25 | Visible LED bitmask |
+
+Stick telemetry values represent the calibrated physical stick position after saturation and axis inversion, but before profile deadzone, antideadzone, acceleration curve, XY ratio, and stick mode processing.
 
 Button bit assignments:
 - 0 `A`
