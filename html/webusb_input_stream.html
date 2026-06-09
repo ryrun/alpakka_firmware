@@ -893,6 +893,22 @@
                             "
                         >
                             <label
+                                >Model
+                                <select id="model-select">
+                                    <option value="alpakka">Alpakka</option>
+                                    <option value="alpakka2">Alpakka 2</option>
+                                </select></label
+                            >
+                        </div>
+                        <div
+                            style="
+                                margin-top: 1rem;
+                                display: flex;
+                                gap: 0.7rem;
+                                flex-wrap: wrap;
+                            "
+                        >
+                            <label
                                 >Offset X
                                 <input
                                     id="model-offset-x"
@@ -1157,7 +1173,18 @@
             const MSG_STATUS_GET = 9;
             const MSG_INPUT_STREAM_SET = 13;
             const MSG_INPUT_STREAM_SHARE = 14;
-            const MODEL_URL = "./alpakka.obj?v=20260326";
+            const MODEL_OPTIONS = [
+                {
+                    id: "alpakka",
+                    label: "Alpakka",
+                    url: "./alpakka.obj?v=20260326",
+                },
+                {
+                    id: "alpakka2",
+                    label: "Alpakka 2",
+                    url: "./alpakka2.obj?v=20260609",
+                },
+            ];
 
             const INPUT_FLAGS = {
                 touch: 1 << 0,
@@ -1270,6 +1297,7 @@
             const DEFAULT_SCENE_BACKGROUND_COLOR = "#000000";
             const COLOR_STORAGE_KEY = "alpakka-webusb-colors";
             const CAMERA_STORAGE_KEY = "alpakka-webusb-camera";
+            const MODEL_STORAGE_KEY = "alpakka-webusb-model";
             const DEFAULT_CAMERA_POSITION = { x: 0, y: 12, z: 0 };
             const DEFAULT_CAMERA_TARGET = { x: 0, y: -1.55, z: 0 };
 
@@ -1288,6 +1316,7 @@
                     "scene-overlay-controls",
                 ),
                 interval: document.getElementById("interval"),
+                modelSelect: document.getElementById("model-select"),
                 modelOffsetX: document.getElementById("model-offset-x"),
                 modelOffsetY: document.getElementById("model-offset-y"),
                 modelOffsetZ: document.getElementById("model-offset-z"),
@@ -1366,6 +1395,7 @@
                 renderer: null,
                 controllerGroup: null,
                 modelGroup: null,
+                modelId: "alpakka",
                 sceneButtons: new Map(),
                 sceneStickRings: new Map(),
                 sceneReady: false,
@@ -2014,6 +2044,17 @@
                 ui.cameraLookZ.value = String(state.cameraTarget.z);
             }
 
+            function getSelectedModelOption() {
+                return (
+                    MODEL_OPTIONS.find((option) => option.id === state.modelId) ||
+                    MODEL_OPTIONS[0]
+                );
+            }
+
+            function applyModelStateToInputs() {
+                ui.modelSelect.value = getSelectedModelOption().id;
+            }
+
             function saveColorSettings() {
                 const payload = {
                     groupColors: state.groupColors,
@@ -2041,6 +2082,15 @@
                     window.localStorage.setItem(
                         CAMERA_STORAGE_KEY,
                         JSON.stringify(payload),
+                    );
+                } catch {}
+            }
+
+            function saveModelSettings() {
+                try {
+                    window.localStorage.setItem(
+                        MODEL_STORAGE_KEY,
+                        getSelectedModelOption().id,
                     );
                 } catch {}
             }
@@ -2104,6 +2154,17 @@
                             ...DEFAULT_CAMERA_TARGET,
                             ...parsed.cameraTarget,
                         };
+                    }
+                } catch {}
+            }
+
+            function loadModelSettings() {
+                try {
+                    const modelId = window.localStorage.getItem(
+                        MODEL_STORAGE_KEY,
+                    );
+                    if (MODEL_OPTIONS.some((option) => option.id === modelId)) {
+                        state.modelId = modelId;
                     }
                 } catch {}
             }
@@ -2236,8 +2297,9 @@
 
             function loadGlbModel(parent) {
                 const objectLoader = new OBJLoader();
+                const modelOption = getSelectedModelOption();
                 objectLoader.load(
-                    MODEL_URL,
+                    modelOption.url,
                     (model) => {
                         fitModelToScene(model);
                         model.traverse((child) => {
@@ -2289,7 +2351,9 @@
                         });
                         parent.add(model);
                         state.modelGroup = model;
-                        log(`loaded alpakka.obj from ${MODEL_URL}`);
+                        log(
+                            `loaded ${modelOption.label} from ${modelOption.url}`,
+                        );
                     },
                     undefined,
                     (error) => {
@@ -2310,6 +2374,33 @@
                 material.dispose();
             }
 
+            function disposeObject3d(object) {
+                if (!object) return;
+                object.traverse((child) => {
+                    if (child.geometry) {
+                        child.geometry.dispose();
+                    }
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(disposeMaterial);
+                    } else if (child.material) {
+                        disposeMaterial(child.material);
+                    }
+                });
+            }
+
+            function reloadSelectedModel() {
+                if (!state.controllerGroup) return;
+                if (state.modelGroup) {
+                    state.controllerGroup.remove(state.modelGroup);
+                    disposeObject3d(state.modelGroup);
+                }
+                state.modelGroup = null;
+                state.sceneButtons.clear();
+                state.sceneStickRings.clear();
+                state.wheelActive = false;
+                loadGlbModel(state.controllerGroup);
+            }
+
             function disposeThreeScene() {
                 if (state.animationFrameId != null) {
                     cancelAnimationFrame(state.animationFrameId);
@@ -2319,18 +2410,7 @@
                     bindSceneResizeWindow(null);
                     state.resizeHandler = null;
                 }
-                if (state.scene) {
-                    state.scene.traverse((child) => {
-                        if (child.geometry) {
-                            child.geometry.dispose();
-                        }
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(disposeMaterial);
-                        } else if (child.material) {
-                            disposeMaterial(child.material);
-                        }
-                    });
-                }
+                disposeObject3d(state.scene);
                 if (state.renderer) {
                     state.renderer.dispose();
                     state.renderer.forceContextLoss();
@@ -2796,6 +2876,15 @@
                 restore3dLayout();
             });
 
+            ui.modelSelect.addEventListener("change", () => {
+                state.modelId = ui.modelSelect.value;
+                saveModelSettings();
+                reloadSelectedModel();
+                applyPoseState();
+                applyModelColors();
+                log(`model switched to ${getSelectedModelOption().label}`);
+            });
+
             window.addEventListener("mousemove", () => {
                 showSceneOverlayControls();
             });
@@ -2892,8 +2981,10 @@
 
             loadColorSettings();
             loadCameraSettings();
+            loadModelSettings();
             applyColorStateToInputs();
             applyCameraStateToInputs();
+            applyModelStateToInputs();
             initThreeScene();
             syncActiveColorFromInput();
             applyPoseState();
