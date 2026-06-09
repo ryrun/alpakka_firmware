@@ -132,7 +132,9 @@ struct Thumbstick_struct {
     uint8_t glyphstick_index;
     Actions daisywheel[8][4];
     ThumbstickPosition last_position;
+    ThumbstickPosition telemetry_position;
     bool has_last_position;
+    bool has_telemetry_position;
 };
 
 Thumbstick Thumbstick_ (
@@ -174,6 +176,7 @@ void thumbstick_update_smooth_samples();
 void thumbstick_from_ctrl(Thumbstick *thumbstick, CtrlProfile *ctrl, uint8_t index);
 uint8_t thumbstick_get_direction(float angle, float overlap);
 ThumbstickPosition thumbstick_get_last_position(Thumbstick *self);
+ThumbstickPosition thumbstick_get_telemetry_position(Thumbstick *self);
 
 // thumbstick/dir4.c
 void Thumbstick__config_4dir(Thumbstick *self, Button left, Button right, Button up, Button down, Button push, Button inner, Button outer);

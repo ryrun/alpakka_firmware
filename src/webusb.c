@@ -90,7 +90,7 @@ static bool webusb_input_stream_get_dhat_push(Profile *profile) {
 
 static ThumbstickPosition webusb_input_stream_get_right_position(Profile *profile) {
     #ifdef DEVICE_ALPAKKA_V1
-        return thumbstick_get_last_position(&(profile->right_thumbstick));
+        return thumbstick_get_telemetry_position(&(profile->right_thumbstick));
     #else
         (void)profile;
         return (ThumbstickPosition){0,};
@@ -107,7 +107,7 @@ static CtrlInputStream webusb_input_stream_snapshot() {
     CtrlInputStream input_stream = {0,};
     Profile *profile = profile_get_active(false);
     if (!profile) return input_stream;
-    ThumbstickPosition left = thumbstick_get_last_position(&(profile->left_thumbstick));
+    ThumbstickPosition left = thumbstick_get_telemetry_position(&(profile->left_thumbstick));
     ThumbstickPosition right = webusb_input_stream_get_right_position(profile);
     ThumbstickPosition dhat = webusb_input_stream_get_dhat_position(profile);
     Vector gyro = imu_get_last_gyro_iteration() == loop_get_iteration()

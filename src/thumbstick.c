@@ -237,6 +237,11 @@ ThumbstickPosition thumbstick_get_last_position(Thumbstick *self) {
     return self->last_position;
 }
 
+ThumbstickPosition thumbstick_get_telemetry_position(Thumbstick *self) {
+    if (!self->has_telemetry_position) return (ThumbstickPosition){0, 0, 0, 0};
+    return self->telemetry_position;
+}
+
 // ============================================================================
 // Class.
 
@@ -246,7 +251,9 @@ void Thumbstick__report(Thumbstick *self) {
     // Do not report if not calibrated.
     if (offset_x == 0 && offset_y == 0) {
         self->last_position = (ThumbstickPosition){0, 0, 0, 0};
+        self->telemetry_position = (ThumbstickPosition){0, 0, 0, 0};
         self->has_last_position = true;
+        self->has_telemetry_position = true;
         return;
     }
     // Get values from ADC.
@@ -256,6 +263,10 @@ void Thumbstick__report(Thumbstick *self) {
     float y = raw_y / self->saturation;
     x = constrain(x, -1, 1) * (self->invert_x? -1 : 1);
     y = constrain(y, -1, 1) * (self->invert_y? -1 : 1);
+    float telemetry_radius = constrain(sqrt(powf(x, 2) + powf(y, 2)), 0, 1);
+    float telemetry_angle = telemetry_radius ? atan2(x, -y) * (180 / M_PI) : 0;
+    self->telemetry_position = (ThumbstickPosition){x, y, telemetry_angle, telemetry_radius};
+    self->has_telemetry_position = true;
     // Get correct deadzone.
     float deadzone = 0;
     if (self->mode == THUMBSTICK_MODE_ROTATION) {
@@ -296,7 +307,9 @@ void Thumbstick__report(Thumbstick *self) {
 
 void Thumbstick__reset(Thumbstick *self) {
     self->last_position = (ThumbstickPosition){0, 0, 0, 0};
+    self->telemetry_position = (ThumbstickPosition){0, 0, 0, 0};
     self->has_last_position = false;
+    self->has_telemetry_position = false;
     if (self->mode == THUMBSTICK_MODE_4DIR) {
         self->left.reset(&self->left);
         self->right.reset(&self->right);
@@ -386,6 +399,8 @@ Thumbstick Thumbstick_ (
     thumbstick.rot_flick_time = rot_flick_time;
     thumbstick.rot_keep_value = rot_keep_value;
     thumbstick.last_position = (ThumbstickPosition){0, 0, 0, 0};
+    thumbstick.telemetry_position = (ThumbstickPosition){0, 0, 0, 0};
     thumbstick.has_last_position = false;
+    thumbstick.has_telemetry_position = false;
     return thumbstick;
 }
