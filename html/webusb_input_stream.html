@@ -1322,6 +1322,8 @@
             const LEFT_STICK_RING_SCALE = 0.8;
             const RIGHT_STICK_RING_Y_OFFSET = 0;
             const RIGHT_STICK_RING_SCALE = 0.8;
+            const STICK_ACTIVE_ON_THRESHOLD = 0.1;
+            const STICK_ACTIVE_OFF_THRESHOLD = 0.06;
 
             const ui = {
                 connect: document.getElementById("connect"),
@@ -1762,11 +1764,11 @@
                 return ringGroup;
             }
 
-            function updateStickRingAppearance(ringGroup, intensity) {
+            function updateStickRingAppearance(ringGroup, intensity, active) {
                 if (!ringGroup) return;
                 const strength = clamp(intensity, 0, 1);
-                const active = strength > 0.01;
-                ringGroup.userData.active = active;
+                const visible = active ?? strength > 0.01;
+                ringGroup.userData.active = visible;
                 ringGroup.userData.intensity = strength;
                 const stickColor =
                     ringGroup.userData.stickMesh?.userData.baseColor ||
@@ -1779,22 +1781,26 @@
                 const glow = ringGroup.userData.glow;
                 if (core?.material) {
                     core.material.color.copy(color);
-                    core.material.opacity = active ? 0.96 : 0;
+                    core.material.opacity = visible ? 0.96 : 0;
                 }
                 if (glow?.material) {
                     glow.material.color.copy(color);
-                    glow.material.opacity = active ? 0.24 : 0;
+                    glow.material.opacity = visible ? 0.24 : 0;
                 }
-                ringGroup.visible = active;
+                ringGroup.visible = visible;
             }
 
             function updateSceneStickRing(stickId, x, y) {
                 const ringGroup = state.sceneStickRings.get(stickId);
                 if (!ringGroup) return;
                 const radius = Math.min(1, Math.hypot(x, y));
+                let active = !!ringGroup.userData.active;
+                if (radius > STICK_ACTIVE_ON_THRESHOLD) active = true;
+                if (radius < STICK_ACTIVE_OFF_THRESHOLD) active = false;
                 updateStickRingAppearance(
                     ringGroup,
                     clamp((radius - 0.05) / 0.95, 0, 1),
+                    active,
                 );
             }
 
