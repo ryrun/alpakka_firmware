@@ -1059,8 +1059,12 @@
                                 >Route
                                 <select id="connection-route">
                                     <option value="auto">Auto</option>
-                                    <option value="wired">Wired Controller</option>
-                                    <option value="wireless">Wireless via Dongle</option>
+                                    <option value="wired">
+                                        Wired Controller
+                                    </option>
+                                    <option value="wireless">
+                                        Wireless via Dongle
+                                    </option>
                                 </select></label
                             >
                         </div>
@@ -1314,6 +1318,10 @@
             const USB_CLOSE_TIMEOUT_MS = 900;
             const USB_PRIME_DELAY_MS = 40;
             const USB_READ_LOOP_DRAIN_MS = 220;
+            const LEFT_STICK_RING_Y_OFFSET = -1.0;
+            const LEFT_STICK_RING_SCALE = 0.8;
+            const RIGHT_STICK_RING_Y_OFFSET = 0;
+            const RIGHT_STICK_RING_SCALE = 0.8;
 
             const ui = {
                 connect: document.getElementById("connect"),
@@ -1677,7 +1685,19 @@
                 setStick(dot, x, y);
             }
 
-            function createStickRingMesh(stickMesh) {
+            function getStickRingScale(stickId) {
+                if (stickId === "l3") return LEFT_STICK_RING_SCALE;
+                if (stickId === "r3") return RIGHT_STICK_RING_SCALE;
+                return 1;
+            }
+
+            function getStickRingYOffset(stickId) {
+                if (stickId === "l3") return LEFT_STICK_RING_Y_OFFSET;
+                if (stickId === "r3") return RIGHT_STICK_RING_Y_OFFSET;
+                return 0;
+            }
+
+            function createStickRingMesh(stickMesh, stickId) {
                 if (!stickMesh?.geometry) return null;
                 stickMesh.geometry.computeBoundingBox();
                 const bounds = stickMesh.geometry.boundingBox;
@@ -1685,22 +1705,31 @@
 
                 const size = new THREE.Vector3();
                 bounds.getSize(size);
-                const ringRadius = Math.max(size.x, size.z) * 0.34;
+                const ringScale = getStickRingScale(stickId);
+                const ringRadius = Math.max(size.x, size.z) * 0.34 * ringScale;
                 const ringTube = Math.max(ringRadius * 0.08, 0.007);
                 const ringY = bounds.max.y + ringTube * 0.9;
 
                 const ringGroup = new THREE.Group();
                 ringGroup.name = `${stickMesh.name}_HighlightRing`;
-                ringGroup.position.set(0, ringY, 0);
+                ringGroup.position.set(
+                    0,
+                    ringY + getStickRingYOffset(stickId),
+                    0,
+                );
                 ringGroup.rotation.x = Math.PI / 2;
                 ringGroup.userData.active = false;
+                ringGroup.userData.intensity = 0;
+                ringGroup.userData.stickMesh = stickMesh;
 
                 const core = new THREE.Mesh(
                     new THREE.TorusGeometry(ringRadius, ringTube, 18, 64),
                     new THREE.MeshBasicMaterial({
-                        color: state.highlightColor,
+                        color:
+                            stickMesh.userData.baseColor ||
+                            state.highlightColor,
                         transparent: true,
-                        opacity: 0.12,
+                        opacity: 0.96,
                         depthWrite: false,
                     }),
                 );
@@ -1714,9 +1743,11 @@
                         64,
                     ),
                     new THREE.MeshBasicMaterial({
-                        color: state.highlightColor,
+                        color:
+                            stickMesh.userData.baseColor ||
+                            state.highlightColor,
                         transparent: true,
-                        opacity: 0,
+                        opacity: 0.24,
                         depthWrite: false,
                     }),
                 );
@@ -1726,24 +1757,33 @@
                 ringGroup.add(core);
                 ringGroup.userData.core = core;
                 ringGroup.userData.glow = glow;
-                updateStickRingAppearance(ringGroup, false);
+                updateStickRingAppearance(ringGroup, 0);
                 stickMesh.add(ringGroup);
                 return ringGroup;
             }
 
-            function updateStickRingAppearance(ringGroup, active) {
+            function updateStickRingAppearance(ringGroup, intensity) {
                 if (!ringGroup) return;
+                const strength = clamp(intensity, 0, 1);
+                const active = strength > 0.01;
                 ringGroup.userData.active = active;
-                const color = new THREE.Color(state.highlightColor);
+                ringGroup.userData.intensity = strength;
+                const stickColor =
+                    ringGroup.userData.stickMesh?.userData.baseColor ||
+                    state.highlightColor;
+                const color = new THREE.Color(stickColor).lerp(
+                    new THREE.Color(state.highlightColor),
+                    strength,
+                );
                 const core = ringGroup.userData.core;
                 const glow = ringGroup.userData.glow;
                 if (core?.material) {
                     core.material.color.copy(color);
-                    core.material.opacity = active ? 0.95 : 0.14;
+                    core.material.opacity = active ? 0.96 : 0;
                 }
                 if (glow?.material) {
                     glow.material.color.copy(color);
-                    glow.material.opacity = active ? 0.3 : 0;
+                    glow.material.opacity = active ? 0.24 : 0;
                 }
                 ringGroup.visible = active;
             }
@@ -1751,14 +1791,18 @@
             function updateSceneStickRing(stickId, x, y) {
                 const ringGroup = state.sceneStickRings.get(stickId);
                 if (!ringGroup) return;
-                updateStickRingAppearance(ringGroup, Math.hypot(x, y) > 0.05);
+                const radius = Math.min(1, Math.hypot(x, y));
+                updateStickRingAppearance(
+                    ringGroup,
+                    clamp((radius - 0.05) / 0.95, 0, 1),
+                );
             }
 
             function refreshSceneStickRingColors() {
                 for (const ringGroup of state.sceneStickRings.values()) {
                     updateStickRingAppearance(
                         ringGroup,
-                        !!ringGroup.userData.active,
+                        ringGroup.userData.intensity || 0,
                     );
                 }
             }
@@ -2079,8 +2123,9 @@
 
             function getSelectedModelOption() {
                 return (
-                    MODEL_OPTIONS.find((option) => option.id === state.modelId) ||
-                    MODEL_OPTIONS[0]
+                    MODEL_OPTIONS.find(
+                        (option) => option.id === state.modelId,
+                    ) || MODEL_OPTIONS[0]
                 );
             }
 
@@ -2193,9 +2238,8 @@
 
             function loadModelSettings() {
                 try {
-                    const modelId = window.localStorage.getItem(
-                        MODEL_STORAGE_KEY,
-                    );
+                    const modelId =
+                        window.localStorage.getItem(MODEL_STORAGE_KEY);
                     if (MODEL_OPTIONS.some((option) => option.id === modelId)) {
                         state.modelId = modelId;
                     }
@@ -2284,8 +2328,7 @@
                     Number.isNaN(gyroModelMultiplier) ? 1 : gyroModelMultiplier,
                 );
                 ui.highlightMix.value = state.highlightMix.toFixed(2);
-                ui.wheelHighlightMix.value =
-                    state.wheelHighlightMix.toFixed(2);
+                ui.wheelHighlightMix.value = state.wheelHighlightMix.toFixed(2);
                 ui.gyroModelMultiplier.value =
                     state.gyroModelMultiplier.toFixed(2);
                 document
@@ -2352,8 +2395,10 @@
                                         child.rotation.x;
                                     child.userData.baseRotationZ =
                                         child.rotation.z;
-                                    const ringMesh =
-                                        createStickRingMesh(child);
+                                    const ringMesh = createStickRingMesh(
+                                        child,
+                                        buttonId,
+                                    );
                                     if (ringMesh) {
                                         state.sceneStickRings.set(
                                             buttonId,
@@ -2739,12 +2784,15 @@
                 // the link. Use STATUS_GET as a harmless primer before stream
                 // control messages.
                 await sendMessage(MSG_STATUS_GET);
-                if (state.device !== device || state.disconnectingDevice) return;
+                if (state.device !== device || state.disconnectingDevice)
+                    return;
                 await sleep(USB_PRIME_DELAY_MS);
                 await sendMessage(MSG_STATUS_GET);
-                if (state.device !== device || state.disconnectingDevice) return;
+                if (state.device !== device || state.disconnectingDevice)
+                    return;
                 await sleep(USB_PRIME_DELAY_MS);
-                if (state.device !== device || state.disconnectingDevice) return;
+                if (state.device !== device || state.disconnectingDevice)
+                    return;
                 state.linkPrimed = true;
                 ui.toggleStream.disabled = false;
                 setStatus(
@@ -2756,7 +2804,8 @@
 
             async function enableStream(enabled) {
                 if (state.streamChanging || state.disconnectingDevice) return;
-                if (!state.device) throw new Error("No WebUSB device connected.");
+                if (!state.device)
+                    throw new Error("No WebUSB device connected.");
                 state.streamChanging = true;
                 ui.toggleStream.disabled = true;
                 try {
@@ -2927,7 +2976,8 @@
                         );
                     }
                     state.device = selectedDevice;
-                    state.detectedWirelessRoute = isDongleDevice(selectedDevice);
+                    state.detectedWirelessRoute =
+                        isDongleDevice(selectedDevice);
                     setStatus(
                         `Connected: ${selectedDevice.productName || "device"} (${getConnectionRouteLabel()})`,
                         true,
@@ -2997,12 +3047,15 @@
                                 );
                             }
                         } catch (error) {
-                            releaseTimedOut = error.message.includes("timed out");
+                            releaseTimedOut =
+                                error.message.includes("timed out");
                             log(`release interface failed: ${error.message}`);
                         }
                         try {
                             if (releaseTimedOut) {
-                                log("close device skipped after release timeout");
+                                log(
+                                    "close device skipped after release timeout",
+                                );
                             } else {
                                 await withTimeout(
                                     device.close(),
