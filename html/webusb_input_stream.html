@@ -1055,6 +1055,14 @@
                                     max="50"
                                     value="16"
                             /></label>
+                            <label
+                                >Route
+                                <select id="connection-route">
+                                    <option value="auto">Auto</option>
+                                    <option value="wired">Wired Controller</option>
+                                    <option value="wireless">Wireless via Dongle</option>
+                                </select></label
+                            >
                         </div>
                     </section>
                     <section class="panel">
@@ -1169,10 +1177,12 @@
             import { OBJLoader } from "https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/loaders/OBJLoader.js";
 
             const CTRL_FLAG_NONE = 1;
+            const CTRL_FLAG_WIRELESS = 2;
             const DEVICE_ID_ALPAKKA = 1;
             const MSG_STATUS_GET = 9;
             const MSG_INPUT_STREAM_SET = 13;
             const MSG_INPUT_STREAM_SHARE = 14;
+            const DONGLE_PRODUCT_IDS = new Set([0xda80, 0xdc80]);
             const MODEL_OPTIONS = [
                 {
                     id: "alpakka",
@@ -1316,6 +1326,7 @@
                     "scene-overlay-controls",
                 ),
                 interval: document.getElementById("interval"),
+                connectionRoute: document.getElementById("connection-route"),
                 modelSelect: document.getElementById("model-select"),
                 modelOffsetX: document.getElementById("model-offset-x"),
                 modelOffsetY: document.getElementById("model-offset-y"),
@@ -1389,6 +1400,8 @@
                 openingDevice: false,
                 readLoopActive: false,
                 streamEnabled: false,
+                streamProtocolFlags: null,
+                detectedWirelessRoute: false,
                 lastSequenceTs: 0,
                 scene: null,
                 camera: null,
@@ -2643,10 +2656,46 @@
                 state.lastSequenceTs = performance.now();
             }
 
-            async function sendMessage(messageType, payload = []) {
+            function isDongleDevice(device) {
+                const productName = (device?.productName || "").toLowerCase();
+                return (
+                    DONGLE_PRODUCT_IDS.has(device?.productId) ||
+                    productName.includes("dongle")
+                );
+            }
+
+            function usesWirelessRoute() {
+                if (ui.connectionRoute.value === "wireless") return true;
+                if (ui.connectionRoute.value === "wired") return false;
+                return state.detectedWirelessRoute;
+            }
+
+            function getCtrlProtocolFlags() {
+                return usesWirelessRoute()
+                    ? CTRL_FLAG_WIRELESS
+                    : CTRL_FLAG_NONE;
+            }
+
+            function getConnectionRouteLabel() {
+                return usesWirelessRoute()
+                    ? "Wireless via Dongle"
+                    : "Wired Controller";
+            }
+
+            function getProtocolFlagsLabel(protocolFlags) {
+                return protocolFlags === CTRL_FLAG_WIRELESS
+                    ? "Wireless via Dongle"
+                    : "Wired Controller";
+            }
+
+            async function sendMessage(
+                messageType,
+                payload = [],
+                protocolFlags = getCtrlProtocolFlags(),
+            ) {
                 if (!state.device || state.outEndpoint == null) return;
                 const buffer = new Uint8Array(64);
-                buffer[0] = CTRL_FLAG_NONE;
+                buffer[0] = protocolFlags;
                 buffer[1] = DEVICE_ID_ALPAKKA;
                 buffer[2] = messageType;
                 buffer[3] = payload.length;
@@ -2669,7 +2718,7 @@
                 state.linkPrimed = true;
                 ui.toggleStream.disabled = false;
                 setStatus(
-                    `Connected: ${state.device?.productName || "device"}`,
+                    `Connected: ${state.device?.productName || "device"} (${getConnectionRouteLabel()})`,
                     true,
                 );
                 log("webusb link primed");
@@ -2679,18 +2728,28 @@
                 if (!state.linkPrimed) {
                     await primeWebUsbLink();
                 }
-                const interval = clamp(Number(ui.interval.value) || 16, 8, 50);
+                const minInterval = usesWirelessRoute() ? 16 : 8;
+                const interval = clamp(
+                    Number(ui.interval.value) || 16,
+                    minInterval,
+                    50,
+                );
+                const protocolFlags = enabled
+                    ? getCtrlProtocolFlags()
+                    : state.streamProtocolFlags || getCtrlProtocolFlags();
                 ui.interval.value = String(interval);
-                await sendMessage(MSG_INPUT_STREAM_SET, [
-                    enabled ? 1 : 0,
-                    interval,
-                ]);
+                await sendMessage(
+                    MSG_INPUT_STREAM_SET,
+                    [enabled ? 1 : 0, interval],
+                    protocolFlags,
+                );
                 state.streamEnabled = enabled;
+                state.streamProtocolFlags = enabled ? protocolFlags : null;
                 ui.toggleStream.textContent = enabled
                     ? "Pause stream"
                     : "Start stream";
                 log(
-                    `${enabled ? "enabled" : "disabled"} input stream (${interval} ms)`,
+                    `${enabled ? "enabled" : "disabled"} input stream (${interval} ms, ${getProtocolFlagsLabel(protocolFlags)})`,
                 );
             }
 
@@ -2783,14 +2842,15 @@
                         );
                     }
                     state.device = device;
+                    state.detectedWirelessRoute = isDongleDevice(device);
                     setStatus(
-                        `Connected: ${device.productName || "device"}`,
+                        `Connected: ${device.productName || "device"} (${getConnectionRouteLabel()})`,
                         true,
                     );
                     ui.toggleStream.disabled = true;
                     ui.disconnect.disabled = false;
                     log(
-                        `connected to ${device.productName || device.manufacturerName || "device"}`,
+                        `connected to ${device.productName || device.manufacturerName || "device"} (${getConnectionRouteLabel()})`,
                     );
                     readLoop();
                     await primeWebUsbLink();
@@ -2827,6 +2887,8 @@
                 state.inEndpoint = null;
                 state.outEndpoint = null;
                 state.streamEnabled = false;
+                state.streamProtocolFlags = null;
+                state.detectedWirelessRoute = false;
                 state.linkPrimed = false;
                 ui.toggleStream.disabled = true;
                 ui.disconnect.disabled = true;
@@ -2874,6 +2936,25 @@
 
             ui.restoreScene.addEventListener("click", () => {
                 restore3dLayout();
+            });
+
+            ui.connectionRoute.addEventListener("change", async () => {
+                const wasStreaming = state.streamEnabled;
+                if (wasStreaming) {
+                    try {
+                        await enableStream(false);
+                    } catch (error) {
+                        log(`route switch stop failed: ${error.message}`);
+                    }
+                }
+                state.linkPrimed = false;
+                if (state.device) {
+                    setStatus(
+                        `Connected: ${state.device.productName || "device"} (${getConnectionRouteLabel()})`,
+                        true,
+                    );
+                    log(`route set to ${getConnectionRouteLabel()}`);
+                }
             });
 
             ui.modelSelect.addEventListener("change", () => {
@@ -2974,7 +3055,11 @@
 
             window.addEventListener("beforeunload", () => {
                 if (state.device && state.streamEnabled) {
-                    sendMessage(MSG_INPUT_STREAM_SET, [0]).catch(() => {});
+                    sendMessage(
+                        MSG_INPUT_STREAM_SET,
+                        [0],
+                        state.streamProtocolFlags || getCtrlProtocolFlags(),
+                    ).catch(() => {});
                 }
                 cleanupApp();
             });

@@ -181,8 +181,8 @@ bool webusb_get_input_stream_enabled() {
 
 void webusb_input_stream_tick() {
     if (!webusb_input_stream_enabled) return;
-    if (loop_get_device_mode() != WIRED) return;
-    if (!tud_ready()) return;
+    if (loop_get_device_mode() != WIRED && loop_get_device_mode() != WIRELESS) return;
+    if (loop_get_device_mode() == WIRED && !tud_ready()) return;
     uint64_t now = time_us_64();
     uint64_t interval = (uint64_t)webusb_input_stream_interval_ms * 1000;
     if (webusb_input_stream_last_ts && now < (webusb_input_stream_last_ts + interval)) return;
